@@ -74,5 +74,5 @@ public class SourceSwitchTests
     }
 
     private static List<UnitState> OwnVillagers(Match match) =>
-        match.State.Units.Where(unit => unit.Owner == TestMatches.FirstPlayer).ToList();
+        match.State.UnitsOf(TestMatches.FirstPlayer).ToList();
 }

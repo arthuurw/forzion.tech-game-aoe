@@ -33,9 +33,8 @@ public class StateHashTests
     [Fact]
     public void Matches_on_maps_of_different_size_have_different_hashes()
     {
-        var players = new[] { new PlayerConfig(TestMatches.FirstFaction) };
-        var wide = Match.Create(new MatchConfig(1, new MapConfig(64, 48), players));
-        var tall = Match.Create(new MatchConfig(1, new MapConfig(48, 64), players));
+        var wide = Match.Create(TestMatches.SinglePlayerConfig() with { Map = new MapConfig(64, 48) });
+        var tall = Match.Create(TestMatches.SinglePlayerConfig() with { Map = new MapConfig(48, 64) });
 
         Assert.NotEqual(wide.StateHash, tall.StateHash);
     }
@@ -43,9 +42,8 @@ public class StateHashTests
     [Fact]
     public void Matches_with_different_Factions_have_different_hashes()
     {
-        var map = new MapConfig(64, 48);
-        var first = Match.Create(new MatchConfig(1, map, [new PlayerConfig(new FactionId(1))]));
-        var second = Match.Create(new MatchConfig(1, map, [new PlayerConfig(new FactionId(2))]));
+        var first = Match.Create(TestMatches.SinglePlayerConfig() with { Players = [new PlayerConfig(new FactionId(1))] });
+        var second = Match.Create(TestMatches.SinglePlayerConfig() with { Players = [new PlayerConfig(new FactionId(2))] });
 
         Assert.NotEqual(first.StateHash, second.StateHash);
     }
@@ -53,10 +51,8 @@ public class StateHashTests
     [Fact]
     public void Matches_with_a_different_number_of_Players_have_different_hashes()
     {
-        var map = new MapConfig(64, 48);
-        var player = new PlayerConfig(TestMatches.FirstFaction);
-        var solo = Match.Create(new MatchConfig(1, map, [player]));
-        var duel = Match.Create(new MatchConfig(1, map, [player, player]));
+        var solo = Match.Create(TestMatches.SinglePlayerConfig(seed: 1));
+        var duel = Match.Create(TestMatches.TwoPlayerConfig(seed: 1));
 
         Assert.NotEqual(solo.StateHash, duel.StateHash);
     }

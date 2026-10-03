@@ -1,3 +1,5 @@
+using Forzion.Simulation.Tests.Matches;
+
 namespace Forzion.Simulation.Tests.Maps;
 
 /// <summary>Questions the map tests ask of a match's public state.</summary>
@@ -58,7 +60,7 @@ internal static class MapProbe
     /// <summary>The Resources every Villager of the Player can walk up to a source of.</summary>
     public static IEnumerable<ResourceKind> ReachableResources(MatchState state, PlayerId player)
     {
-        var villagers = state.Units.Where(unit => unit.Owner == player).ToList();
+        var villagers = state.UnitsOf(player).ToList();
         var reachable = state.ResourceSources.Select(source => source.Kind).ToHashSet();
 
         foreach (var villager in villagers)

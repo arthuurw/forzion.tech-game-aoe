@@ -66,9 +66,9 @@ public class StartingEntitiesTests
         Assert.NotEmpty(state.Units);
         Assert.All(state.Units, unit => Assert.Equal(UnitKind.Villager, unit.Kind));
         Assert.Equal(
-            state.Units.Count(unit => unit.Owner == TestMatches.FirstPlayer),
-            state.Units.Count(unit => unit.Owner == TestMatches.SecondPlayer));
-        Assert.Equal(state.Units.Count, state.Units.Count(unit => unit.Owner == TestMatches.FirstPlayer) * 2);
+            state.UnitsOf(TestMatches.FirstPlayer).Count(),
+            state.UnitsOf(TestMatches.SecondPlayer).Count());
+        Assert.Equal(state.Units.Count, state.UnitsOf(TestMatches.FirstPlayer).Count() * 2);
     }
 
     [Fact]
@@ -100,7 +100,7 @@ public class StartingEntitiesTests
             CellsOf(TestMatches.SecondPlayer).ToHashSet());
 
         IEnumerable<CellPosition> CellsOf(PlayerId player) =>
-            state.Units.Where(unit => unit.Owner == player).Select(unit => unit.Position.Cell);
+            state.UnitsOf(player).Select(unit => unit.Position.Cell);
     }
 
     [Fact]
@@ -122,9 +122,7 @@ public class StartingEntitiesTests
     [Fact]
     public void A_match_with_a_single_Player_has_only_that_Players_entities()
     {
-        var config = new MatchConfig(1, new MapConfig(64, 48), [new PlayerConfig(TestMatches.FirstFaction)]);
-
-        var state = Match.Create(config).State;
+        var state = Match.Create(TestMatches.SinglePlayerConfig()).State;
 
         Assert.Single(state.Buildings);
         Assert.All(state.Units, unit => Assert.Equal(TestMatches.FirstPlayer, unit.Owner));

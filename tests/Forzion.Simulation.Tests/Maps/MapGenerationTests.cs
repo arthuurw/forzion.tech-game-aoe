@@ -32,6 +32,18 @@ public class MapGenerationTests
             Assert.Equal(AllResources, MapProbe.ReachableResources(state, player.Id).Order()));
     }
 
+    [Theory]
+    [MemberData(nameof(SizesAndSeeds))]
+    public void Every_resource_source_on_the_map_can_be_walked_up_to_from_both_homes(int width, int height, ulong seed)
+    {
+        var state = TwoPlayerMatch(width, height, seed).State;
+        var reached = MapProbe.ReachableFrom(state.Map, state.Units[0].Position.Cell);
+
+        Assert.All(state.Units, unit => Assert.Contains(unit.Position.Cell, reached));
+        Assert.All(state.ResourceSources, source =>
+            Assert.Contains(MapProbe.NeighboursOf(state.Map, source.Cell), reached.Contains));
+    }
+
     [Fact]
     public void Each_resource_source_holds_a_finite_amount_and_occupies_its_Cell()
     {
@@ -131,8 +143,5 @@ public class MapGenerationTests
     }
 
     private static Match TwoPlayerMatch(int width, int height, ulong seed) =>
-        Match.Create(new MatchConfig(
-            seed,
-            new MapConfig(width, height),
-            [new PlayerConfig(TestMatches.FirstFaction), new PlayerConfig(TestMatches.FirstFaction)]));
+        Match.Create(TestMatches.TwoPlayerConfig(seed) with { Map = new MapConfig(width, height) });
 }
