@@ -72,8 +72,9 @@ public sealed class PlayerControl
 
     /// <summary>
     /// Sends the selected units of the Player the order that fits what the mouse points at,
-    /// as a command the next tick applies: gather from a resource source, otherwise walk to
-    /// the Cell under the mouse. Nothing is sent while no unit is selected. The command goes
+    /// as a command the next tick applies: gather from a resource source, attack a unit or
+    /// building of another Player, otherwise walk to the Cell under the mouse. Nothing is
+    /// sent while no unit is selected. The command goes
     /// out even when the match will refuse it; the refusal comes back as a
     /// <see cref="CommandRejected"/> event.
     /// </summary>
@@ -91,12 +92,14 @@ public sealed class PlayerControl
     }
 
     /// <summary>
-    /// The command a right-click on <paramref name="target"/> gives. Attacking an enemy unit or
-    /// building and building on a construction site each join as one more case.
+    /// The command a right-click on <paramref name="target"/> gives. Building on a
+    /// construction site joins as one more case.
     /// </summary>
     private Command OrderFor(IReadOnlyList<EntityId> units, object? target, CellPosition ground) => target switch
     {
         ResourceSourceState source => new GatherCommand(player, units, source.Id),
+        UnitState enemy when enemy.Owner != player => new AttackCommand(player, units, enemy.Id),
+        BuildingState enemy when enemy.Owner != player => new AttackCommand(player, units, enemy.Id),
         _ => new MoveCommand(player, units, ground),
     };
 

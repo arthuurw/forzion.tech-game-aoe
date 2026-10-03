@@ -248,15 +248,63 @@ public class PlayerControlTests
         Assert.Equal(RejectionReason.DestinationOutsideMap, rejection.Reason);
     }
 
-    private PlayerControl NewControl(out Match match, Func<ScreenPoint, SightLine?>? camera = null)
+    [Fact]
+    public void Right_clicking_an_enemy_unit_sends_the_selected_soldiers_to_attack_it()
     {
-        var faction = new FactionId(1);
-        var config = new MatchConfig(42, new MapConfig(64, 48), [new PlayerConfig(faction), new PlayerConfig(faction)]);
-        driver = new MatchDriver(Match.Create(config), new TickClock(Match.TicksPerSecond));
+        var control = NewControl(out var match, config: WithSoldier());
+        var soldier = SoldierOf(match);
+        control.Select(Over(soldier.Position), Over(soldier.Position));
+        var enemy = UnitsOf(match, SecondPlayer)[0];
+
+        control.OrderAt(Over(enemy.Position));
+        Tick(match);
+
+        Assert.Equal(enemy.Id, soldier.Target);
+    }
+
+    [Fact]
+    public void Right_clicking_an_enemy_building_sends_the_selected_soldiers_to_attack_it()
+    {
+        var control = NewControl(out var match, config: WithSoldier());
+        var soldier = SoldierOf(match);
+        control.Select(Over(soldier.Position), Over(soldier.Position));
+        var townCenter = match.State.Buildings.First(building => building.Owner == SecondPlayer);
+
+        control.OrderAt(new ScreenPoint(townCenter.Origin.X + 1.5, townCenter.Origin.Y + 1.5));
+        Tick(match);
+
+        Assert.Equal(townCenter.Id, soldier.Target);
+    }
+
+    private PlayerControl NewControl(out Match match, Func<ScreenPoint, SightLine?>? camera = null, MatchConfig? config = null)
+    {
+        driver = new MatchDriver(Match.Create(config ?? PlainConfig()), new TickClock(Match.TicksPerSecond));
         match = driver.Match;
 
         return new PlayerControl(driver, FirstPlayer, camera ?? TopDown, Sizes);
     }
+
+    private static MatchConfig PlainConfig(IReadOnlyList<StartingUnit>? firstExtras = null)
+    {
+        var faction = new FactionId(1);
+
+        return new MatchConfig(42, new MapConfig(64, 48), [new PlayerConfig(faction, firstExtras), new PlayerConfig(faction)]);
+    }
+
+    /// <summary>
+    /// The plain match, with the first Player starting with a melee soldier two Cells left of
+    /// the centre of its Town Center: a free Cell, away from the Villagers' row.
+    /// </summary>
+    private static MatchConfig WithSoldier()
+    {
+        var townCenter = Match.Create(PlainConfig()).State.Buildings.First(building => building.Owner == FirstPlayer);
+        var cell = new CellPosition(townCenter.Origin.X + (townCenter.Width / 2) - 2, townCenter.Origin.Y + (townCenter.Height / 2));
+
+        return PlainConfig([new StartingUnit(UnitKind.MeleeSoldier, cell)]);
+    }
+
+    private static UnitState SoldierOf(Match match) =>
+        match.State.Units.Single(unit => unit.Owner == FirstPlayer && unit.Kind == UnitKind.MeleeSoldier);
 
     /// <summary>Runs one tick of the match, applying the commands sent so far, and returns its events.</summary>
     private IReadOnlyList<MatchEvent> Tick(Match match)
