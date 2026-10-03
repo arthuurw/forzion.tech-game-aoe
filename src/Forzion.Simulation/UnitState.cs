@@ -71,6 +71,14 @@ public sealed class UnitState
         path.AddRange(cells);
     }
 
+    /// <summary>Drops the unit's target and stops it where it is.</summary>
+    internal void StopAttacking()
+    {
+        Target = null;
+        AttackProgress = 0;
+        path.Clear();
+    }
+
     /// <summary>Stops the unit where it is, even between two Cell centres.</summary>
     internal void Stop() => path.Clear();
 

@@ -5,6 +5,11 @@ namespace Forzion.Simulation;
 /// ticks of its attack interval on it, and the hit lands at the end of them. Ranged units hit
 /// from where they stand; nothing flies between the two (no simulated projectile).
 /// </summary>
+/// <remarks>
+/// Hits are simultaneous: a unit struck down earlier in the tick still lands its own hit, so
+/// acting first in ID order is no advantage. Whatever is left without hit points is removed at
+/// the end of the tick's combat, in the same tick, and the units attacking it stop.
+/// </remarks>
 internal sealed class CombatSystem : ISystem
 {
     public void Run(TickContext context)
@@ -13,56 +18,74 @@ internal sealed class CombatSystem : ISystem
 
         foreach (var unit in state.Units)
         {
-            if (unit.Target is not { } targetId || Balance.Attack(unit.Kind) is not { } attack)
+            if (unit.Target is { } target && Balance.Attack(unit.Kind) is { } attack)
             {
-                continue;
+                Fight(state, unit, target, attack);
             }
+        }
 
-            var targetUnit = state.FindUnit(targetId);
-            var targetBuilding = targetUnit is null ? state.FindBuilding(targetId) : null;
-            var distance = targetUnit is not null
-                ? Distance(unit.Position, targetUnit.Position)
-                : Distance(unit.Position, targetBuilding!);
+        var destroyed = state.RemoveDestroyed();
 
-            if (distance > attack.Range)
+        foreach (var id in destroyed)
+        {
+            context.Emit(new EntityDestroyed(id));
+        }
+
+        foreach (var unit in state.Units)
+        {
+            if (unit.Target is { } target && destroyed.Contains(target))
             {
-                unit.AttackProgress = 0;
-
-                if (targetUnit is not null)
-                {
-                    Chase(state.Map, unit, targetUnit.Position.Cell);
-                }
-                else if (!unit.IsMoving)
-                {
-                    // A building stays put, so the way to it is only searched again when the unit stopped short.
-                    MovementSystem.WalkTo(state.Map, unit, NearestCellOf(targetBuilding!, unit.Position.Cell));
-                }
-
-                continue;
+                unit.StopAttacking();
             }
+        }
+    }
 
-            if (unit.IsMoving)
-            {
-                unit.Stop();
-            }
+    private static void Fight(MatchState state, UnitState unit, EntityId target, AttackStats attack)
+    {
+        var targetUnit = state.FindUnit(target);
+        var targetBuilding = targetUnit is null ? state.FindBuilding(target) : null;
+        var distance = targetUnit is not null
+            ? Distance(unit.Position, targetUnit.Position)
+            : Distance(unit.Position, targetBuilding!);
 
-            unit.AttackProgress++;
-
-            if (unit.AttackProgress < attack.IntervalTicks)
-            {
-                continue;
-            }
-
+        if (distance > attack.Range)
+        {
             unit.AttackProgress = 0;
 
             if (targetUnit is not null)
             {
-                targetUnit.HitPoints -= attack.Damage;
+                Chase(state.Map, unit, targetUnit.Position.Cell);
             }
-            else
+            else if (!unit.IsMoving)
             {
-                targetBuilding!.HitPoints -= attack.Damage;
+                // A building stays put, so the way to it is only searched again when the unit stopped short.
+                MovementSystem.WalkTo(state.Map, unit, NearestCellOf(targetBuilding!, unit.Position.Cell));
             }
+
+            return;
+        }
+
+        if (unit.IsMoving)
+        {
+            unit.Stop();
+        }
+
+        unit.AttackProgress++;
+
+        if (unit.AttackProgress < attack.IntervalTicks)
+        {
+            return;
+        }
+
+        unit.AttackProgress = 0;
+
+        if (targetUnit is not null)
+        {
+            targetUnit.HitPoints -= attack.Damage;
+        }
+        else
+        {
+            targetBuilding!.HitPoints -= attack.Damage;
         }
     }
 

@@ -125,6 +125,16 @@ public sealed class MatchState
         return unit;
     }
 
+    /// <summary>Removes every unit left without hit points and returns their IDs in ascending order.</summary>
+    internal List<EntityId> RemoveDestroyed()
+    {
+        var destroyed = units.Where(unit => unit.HitPoints <= 0).Select(unit => unit.Id).ToList();
+
+        units.RemoveAll(unit => unit.HitPoints <= 0);
+
+        return destroyed;
+    }
+
     /// <summary>
     /// Writes everything that influences future ticks. State added to the match must be added
     /// here too, or two diverged matches would report the same hash.
