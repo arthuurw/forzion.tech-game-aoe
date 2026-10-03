@@ -1,4 +1,5 @@
 using Forzion.Simulation.Tests.Economy;
+using Forzion.Simulation.Tests.Maps;
 using Forzion.Simulation.Tests.Matches;
 using Forzion.Simulation.Tests.Movement;
 
@@ -59,6 +60,36 @@ public class CompletedBuildingTests
         delivery = DeliveryBy(match, player, gatherer);
 
         Assert.True(Gather.Touches(storehouse, delivery));
+    }
+
+    [Fact]
+    public void A_complete_Barracks_stands_on_the_map_and_units_walk_around_it()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var villagers = Site.VillagersOf(match, TestMatches.FirstPlayer);
+        var barracks = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.Barracks, villagers.Select(villager => villager.Id).ToList());
+        var completed = new List<MatchEvent>();
+        Gather.Until(match, () =>
+        {
+            completed.AddRange(match.Events.OfType<BuildingCompleted>());
+
+            return barracks.IsComplete;
+        });
+
+        // A walk from one side of the Barracks to the other, through the middle of it in a straight line.
+        var walker = villagers[0];
+        var middle = barracks.Origin.Y + (barracks.Height / 2);
+        match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [walker.Id], new CellPosition(barracks.Origin.X - 1, middle)));
+        Walk.UntilStopped(match, walker);
+        var destination = new CellPosition(barracks.Origin.X + barracks.Width, middle);
+        match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [walker.Id], destination));
+        var visited = Walk.UntilStopped(match, walker);
+
+        Assert.Equal([new BuildingCompleted(barracks.Id)], completed);
+        Assert.Equal(TestMatches.FirstPlayer, barracks.Owner);
+        Assert.Contains(barracks, match.State.Buildings);
+        Assert.Equal(MapPosition.CentreOf(destination), walker.Position);
+        Assert.DoesNotContain(visited, cell => MapProbe.Footprint(barracks).Contains(cell));
     }
 
     /// <summary>Ticks until the Player receives Wood and returns the Cell the Villager handed it over from.</summary>
