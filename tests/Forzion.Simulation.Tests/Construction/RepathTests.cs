@@ -70,6 +70,31 @@ public class RepathTests
         Assert.True(Gather.Touch(villager.Position.Cell, source.Cell));
     }
 
+    [Fact]
+    public void A_Villager_walking_to_a_site_whose_way_new_buildings_block_still_walks_up_to_it_and_builds_it()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var state = match.State;
+        Site.Stockpile(match, TestMatches.FirstPlayer, 4 * Match.BuildingCost(BuildingKind.House).Wood);
+        var builder = Site.VillagersOf(match, TestMatches.FirstPlayer)[1];
+        var size = Match.BuildingSize(BuildingKind.House);
+
+        // Two rings of free Cells around the site leave room for Houses all around it.
+        var ringed = Site.FreeOriginNear(state, AwayFrom(state.Buildings[0]), size + 2);
+        var origin = new CellPosition(ringed.X + 1, ringed.Y + 1);
+        match.Enqueue(new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.House, origin, [builder.Id]));
+        match.Tick();
+        var site = state.Buildings[^1];
+
+        PlaceHouses(match, HousesHemmingIn(match, builder, cell => Gather.Touches(site, cell)));
+        Walk.UntilStopped(match, builder);
+        match.Tick();
+
+        Assert.Equal(site.Id, builder.ConstructionSite);
+        Assert.True(Gather.Touches(site, builder.Position.Cell));
+        Assert.True(site.BuildProgress > 0);
+    }
+
     /// <summary>A Cell some way out from the side of the building with the highest X.</summary>
     private static CellPosition AwayFrom(BuildingState building) =>
         new(building.Origin.X + building.Width + 5, building.Origin.Y + (building.Height / 2));
