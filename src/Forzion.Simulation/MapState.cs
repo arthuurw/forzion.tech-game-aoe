@@ -56,6 +56,9 @@ public sealed class MapState
     public bool Contains(CellPosition cell) =>
         cell.X >= 0 && cell.X < Width && cell.Y >= 0 && cell.Y < Height;
 
+    /// <summary>Whether the Cell is inside the map and free, so units can walk on it.</summary>
+    internal bool IsFree(CellPosition cell) => Contains(cell) && this[cell] == CellKind.Free;
+
     /// <summary>The Cell the map's symmetry takes <paramref name="cell"/> to.</summary>
     internal CellPosition Mirror(CellPosition cell) => new(Width - 1 - cell.X, Height - 1 - cell.Y);
 

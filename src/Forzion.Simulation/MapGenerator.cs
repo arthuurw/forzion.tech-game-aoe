@@ -229,7 +229,7 @@ internal static class MapGenerator
     /// about the Cell answers for its mirror too.
     /// </summary>
     private static bool CanScatterOn(MapState map, CellPosition home, CellPosition cell) =>
-        map[cell] == CellKind.Free
+        map.IsFree(cell)
         && cell != map.Mirror(cell)
         && Distance(cell, home) > ClearingRadius
         && Distance(cell, map.Mirror(home)) > ClearingRadius;
@@ -248,9 +248,13 @@ internal static class MapGenerator
 
         while (frontier.Count > 0)
         {
-            foreach (var next in SideNeighbours(frontier.Dequeue()))
+            var cell = frontier.Dequeue();
+
+            foreach (var step in CellStep.Sides)
             {
-                if (map.Contains(next) && map[next] == CellKind.Free && reached.Add(next))
+                var next = step.From(cell);
+
+                if (map.IsFree(next) && reached.Add(next))
                 {
                     frontier.Enqueue(next);
                 }
@@ -269,7 +273,9 @@ internal static class MapGenerator
         MapState map, CellPosition home, List<SourcePlacement> sources)
     {
         var reached = ReachableFrom(map, home);
-        var walledIn = sources.Where(source => !SideNeighbours(source.Cell).Any(reached.Contains)).ToHashSet();
+        var walledIn = sources
+            .Where(source => !CellStep.Sides.Any(step => reached.Contains(step.From(source.Cell))))
+            .ToHashSet();
 
         foreach (var source in walledIn)
         {
@@ -278,11 +284,6 @@ internal static class MapGenerator
 
         sources.RemoveAll(walledIn.Contains);
     }
-
-    private static CellPosition[] SideNeighbours(CellPosition cell) =>
-    [
-        new(cell.X + 1, cell.Y), new(cell.X - 1, cell.Y), new(cell.X, cell.Y + 1), new(cell.X, cell.Y - 1),
-    ];
 
     private static void PlaceSourcePair(
         MapState map, CellPosition cell, ResourceKind kind, List<SourcePlacement> sources)

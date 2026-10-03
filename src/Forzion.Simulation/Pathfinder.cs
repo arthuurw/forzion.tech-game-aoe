@@ -22,11 +22,6 @@ internal static class Pathfinder
     private const int StraightCost = 10;
     private const int DiagonalCost = 14;
 
-    private static readonly (int X, int Y)[] Steps =
-    [
-        (1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1),
-    ];
-
     /// <summary>
     /// The Cells to walk through, in order, from <paramref name="start"/> (not included) to
     /// <paramref name="destination"/> (included). When the destination cannot be reached, the
@@ -66,20 +61,19 @@ internal static class Pathfinder
 
             var cell = map.CellAt(index);
 
-            foreach (var (stepX, stepY) in Steps)
+            foreach (var step in CellStep.All)
             {
-                var next = new CellPosition(cell.X + stepX, cell.Y + stepY);
-                var diagonal = stepX != 0 && stepY != 0;
+                var next = step.From(cell);
 
-                if (!IsFree(map, next)
-                    || (diagonal
-                        && !(IsFree(map, new CellPosition(next.X, cell.Y)) && IsFree(map, new CellPosition(cell.X, next.Y)))))
+                if (!map.IsFree(next)
+                    || (step.IsDiagonal
+                        && !(map.IsFree(new CellPosition(next.X, cell.Y)) && map.IsFree(new CellPosition(cell.X, next.Y)))))
                 {
                     continue;
                 }
 
                 var nextIndex = map.IndexOf(next);
-                var cost = costs[index] + (diagonal ? DiagonalCost : StraightCost);
+                var cost = costs[index] + (step.IsDiagonal ? DiagonalCost : StraightCost);
 
                 if (!closed[nextIndex] && cost < costs[nextIndex])
                 {
@@ -137,9 +131,6 @@ internal static class Pathfinder
 
         return nearest;
     }
-
-    private static bool IsFree(MapState map, CellPosition cell) =>
-        map.Contains(cell) && map[cell] == CellKind.Free;
 
     /// <summary>
     /// Cost of the way between the two Cells on an empty map: diagonal steps while both
