@@ -58,10 +58,10 @@ public sealed class BuildingState
     public bool IsComplete => BuildProgress == BuildTime;
 
     /// <summary>
-    /// Whether Villagers deliver their loads here. Every kind of drop-off point takes every
-    /// Resource; the Storehouse joins this list when it is added.
+    /// Whether Villagers deliver their loads here: a complete Town Center or Storehouse. Every
+    /// kind of drop-off point takes every Resource.
     /// </summary>
-    internal bool IsDropOffPoint => Kind is BuildingKind.TownCenter;
+    internal bool IsDropOffPoint => Kind is (BuildingKind.TownCenter or BuildingKind.Storehouse) && IsComplete;
 
     /// <summary>The Cell of the footprint nearest to the given Cell.</summary>
     internal CellPosition NearestCellTo(CellPosition cell) => new(
