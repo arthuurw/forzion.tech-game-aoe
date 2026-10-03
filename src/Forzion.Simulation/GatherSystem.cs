@@ -44,7 +44,7 @@ internal sealed class GatherSystem : ISystem
                     unit.GatherPhase = GatherPhase.Gathering;
                     break;
                 case GatherPhase.Gathering:
-                    TakeFromSource(state, state.FindResourceSource(unit.GatherSource!.Value)!, unit);
+                    TakeFromSource(context, state.FindResourceSource(unit.GatherSource!.Value)!, unit);
                     break;
                 case GatherPhase.ToDropOff when !unit.IsMoving:
                     Deliver(state, unit);
@@ -53,8 +53,10 @@ internal sealed class GatherSystem : ISystem
         }
     }
 
-    private static void TakeFromSource(MatchState state, ResourceSourceState source, UnitState villager)
+    private static void TakeFromSource(TickContext context, ResourceSourceState source, UnitState villager)
     {
+        var state = context.State;
+
         villager.GatherProgress++;
 
         if (villager.GatherProgress < Balance.GatherTicksPerUnit(source.Kind))
@@ -71,6 +73,49 @@ internal sealed class GatherSystem : ISystem
         {
             CarryToDropOff(state, villager);
         }
+
+        if (source.Amount == 0)
+        {
+            Deplete(context, source);
+        }
+    }
+
+    /// <summary>
+    /// Takes the source off the map. Its Villagers stop where they are, except those already
+    /// carrying a load away, which deliver it first.
+    /// </summary>
+    private static void Deplete(TickContext context, ResourceSourceState source)
+    {
+        var state = context.State;
+
+        state.RemoveResourceSource(source);
+        context.Emit(new ResourceSourceDepleted(source.Id));
+
+        foreach (var unit in state.Units)
+        {
+            if (unit.GatherSource != source.Id)
+            {
+                continue;
+            }
+
+            unit.GatherSource = null;
+
+            if (unit.GatherPhase != GatherPhase.ToDropOff)
+            {
+                StopGathering(state.Map, unit);
+            }
+        }
+    }
+
+    /// <summary>
+    /// The Villager stops gathering and stands idle on the Cell it is in, keeping whatever it
+    /// carries.
+    /// </summary>
+    private static void StopGathering(MapState map, UnitState villager)
+    {
+        villager.GatherPhase = GatherPhase.None;
+        villager.GatherProgress = 0;
+        MovementSystem.WalkTo(map, villager, villager.Position.Cell);
     }
 
     /// <summary>Sends the Villager walking to the drop-off point of its Player nearest to it.</summary>
@@ -90,7 +135,15 @@ internal sealed class GatherSystem : ISystem
     {
         state.FindPlayer(villager.Owner)!.Receive(villager.CarriedResource, villager.CarriedAmount);
         villager.CarriedAmount = 0;
-        GatherFrom(state.Map, villager, state.FindResourceSource(villager.GatherSource!.Value)!);
+
+        if (villager.GatherSource is { } source)
+        {
+            GatherFrom(state.Map, villager, state.FindResourceSource(source)!);
+        }
+        else
+        {
+            StopGathering(state.Map, villager);
+        }
     }
 
     private static int SquaredDistance(CellPosition a, CellPosition b) =>

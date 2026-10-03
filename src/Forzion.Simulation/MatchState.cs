@@ -88,6 +88,13 @@ public sealed class MatchState
         return source;
     }
 
+    /// <summary>Removes a resource source and frees its Cell. Removing keeps the collection in ID order.</summary>
+    internal void RemoveResourceSource(ResourceSourceState source)
+    {
+        resourceSources.Remove(source);
+        Map[source.Cell] = CellKind.Free;
+    }
+
     /// <summary>
     /// Adds a building on free Cells and marks them occupied. IDs only grow, so appending
     /// keeps the collection in ID order.

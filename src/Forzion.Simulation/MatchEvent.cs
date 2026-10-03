@@ -14,6 +14,9 @@ public abstract record MatchEvent
 /// <summary>A Player was defeated and takes no further part in the match.</summary>
 public sealed record PlayerDefeated(PlayerId Player) : MatchEvent;
 
+/// <summary>A resource source was gathered to the end and left the map, freeing its Cell.</summary>
+public sealed record ResourceSourceDepleted(EntityId Source) : MatchEvent;
+
 /// <summary>A command was refused and changed nothing.</summary>
 public sealed record CommandRejected(Command Command, RejectionReason Reason) : MatchEvent;
 
