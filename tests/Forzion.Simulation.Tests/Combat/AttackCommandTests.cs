@@ -1,3 +1,4 @@
+using Forzion.Simulation.Tests.Economy;
 using Forzion.Simulation.Tests.Matches;
 
 namespace Forzion.Simulation.Tests.Combat;
@@ -153,15 +154,34 @@ public class AttackCommandTests
     }
 
     [Fact]
-    public void An_attack_by_a_Villager_is_rejected_and_sends_none_of_its_units()
+    public void An_attack_by_soldiers_and_Villagers_sends_the_soldiers_and_leaves_the_Villagers_to_what_they_were_doing()
     {
         var match = MatchWithSoldier();
         var soldier = Battle.Last(match);
         var villager = Battle.MiddleVillager(match, First);
+        var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Wood);
+        var target = Battle.TownCenter(match, Second).Id;
+        match.Enqueue(new GatherCommand(First, [villager.Id], source.Id));
+        match.Tick();
+
+        match.Enqueue(new AttackCommand(First, [villager.Id, soldier.Id], target));
+        match.Tick();
+
+        Assert.Empty(match.Events);
+        Assert.Equal(target, soldier.Target);
+        Assert.Null(villager.Target);
+        Assert.Equal(source.Id, villager.GatherSource);
+        Assert.NotEqual(GatherPhase.None, villager.GatherPhase);
+    }
+
+    [Fact]
+    public void An_attack_by_Villagers_alone_is_rejected()
+    {
+        var match = MatchWithSoldier();
+        var villager = Battle.MiddleVillager(match, First);
         var target = Battle.TownCenter(match, Second).Id;
 
-        AssertRejected(match, new AttackCommand(First, [soldier.Id, villager.Id], target), RejectionReason.UnitCannotAttack);
-        Assert.Null(soldier.Target);
+        AssertRejected(match, new AttackCommand(First, [villager.Id], target), RejectionReason.UnitCannotAttack);
         Assert.Null(villager.Target);
     }
 

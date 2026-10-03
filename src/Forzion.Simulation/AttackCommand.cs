@@ -6,9 +6,10 @@ namespace Forzion.Simulation;
 /// </summary>
 /// <remarks>
 /// The command is rejected as a whole, sending none of its units, when the target is not a
-/// unit or building of another Player, when any of the units belongs to another Player or
-/// cannot attack, or when none of the units exists. A unit that does not exist, because it
-/// died after the order was given, is skipped and the others still attack.
+/// unit or building of another Player, when any of the units belongs to another Player, when
+/// none of the units exists or when none of them can attack. A unit that does not exist,
+/// because it died after the order was given, is skipped and the others still attack; so is
+/// a unit that cannot attack, such as a Villager, which goes on with whatever it was doing.
 /// </remarks>
 /// <param name="Units">The units to attack with.</param>
 /// <param name="Target">The unit or building to attack.</param>
@@ -34,17 +35,11 @@ public sealed record AttackCommand(PlayerId Player, IReadOnlyList<EntityId> Unit
             return;
         }
 
-        var units = OrderedUnits.Find(context, this, issuer, Units);
+        var units = OrderedUnits.Find(
+            context, this, issuer, Units, unit => Balance.Attack(unit.Kind) is not null, RejectionReason.UnitCannotAttack);
 
         if (units is null)
         {
-            return;
-        }
-
-        if (units.Any(unit => Balance.Attack(unit.Kind) is null))
-        {
-            context.Reject(this, RejectionReason.UnitCannotAttack);
-
             return;
         }
 
