@@ -37,6 +37,7 @@ A integração contínua roda os dois comandos em Windows, Linux e macOS.
 | `tests/Forzion.Simulation.Tests` | Testes do núcleo (xUnit e FsCheck) |
 | `docs/adr` | Decisões de arquitetura |
 | `GLOSSARY.md` | Glossário do domínio |
+| `CODING_STANDARDS.md` | Padrões de código |
 | `AGENTS.md` | Regras de trabalho para agentes de código |
 
 ### Plano
@@ -86,6 +87,7 @@ Continuous integration runs both commands on Windows, Linux and macOS.
 | `tests/Forzion.Simulation.Tests` | Core tests (xUnit and FsCheck) |
 | `docs/adr` | Architecture decision records |
 | `GLOSSARY.md` | Domain glossary |
+| `CODING_STANDARDS.md` | Coding standards (in Portuguese) |
 | `AGENTS.md` | Working rules for coding agents |
 
 ### Roadmap
