@@ -15,6 +15,38 @@ internal static class Balance
     /// <summary>Sources of each Resource placed within reach of each Player's Town Center.</summary>
     public const int HomeSourcesPerResource = 2;
 
+    /// <summary>
+    /// Nearest a home resource source lies to the Cell its Town Center is centred on, in king's
+    /// moves. At least 3, which keeps the sources clear of the Town Center and of the Villagers
+    /// beside it.
+    /// </summary>
+    public const int NearestHomeSource = 3;
+
+    /// <summary>
+    /// Farthest a home resource source lies from the Cell its Town Center is centred on, in
+    /// king's moves. Less than the radius of the clearing the map generator keeps around each
+    /// home, so the sources stay inside it.
+    /// </summary>
+    public const int FarthestHomeSource = 5;
+
+    /// <summary>Cells of map area per attempt to scatter a pair of resource sources away from the homes.</summary>
+    public const int CellsPerFarSource = 512;
+
+    /// <summary>Cells of map area per obstacle, forest or water, scattered away from the homes.</summary>
+    public const int CellsPerObstacle = 128;
+
+    /// <summary>
+    /// Fewest steps of the random walk that lays an obstacle: every Cell the walk steps on
+    /// becomes forest or water.
+    /// </summary>
+    public const int ShortestObstacleWalk = 16;
+
+    /// <summary>
+    /// How many walk lengths an obstacle can have: from <see cref="ShortestObstacleWalk"/> up to
+    /// <see cref="ShortestObstacleWalk"/> + <see cref="ObstacleWalkSpread"/> - 1 steps.
+    /// </summary>
+    public const int ObstacleWalkSpread = 33;
+
     /// <summary>How much a new source of the given Resource holds.</summary>
     public static int SourceAmount(ResourceKind kind) => kind switch
     {

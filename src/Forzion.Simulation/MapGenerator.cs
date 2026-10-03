@@ -46,23 +46,14 @@ internal static class MapGenerator
 
     // Distance, in Cells, from the map's first corner to the nearest Cell a home may be
     // centred on, and the number of Cells past it the seed may push the home on each axis.
+    // These and the clearing's radius stay here, not in Balance: MinimumSize is worked out
+    // from them, so they are the generator's geometry rather than tuning.
     private const int HomeMargin = 7;
     private const int HomeJitter = 3;
 
-    // Distances are counted in king's moves from the home Cell. The clearing reaches out to
-    // ClearingRadius; home sources lie in the ring between the two source distances, clear of
-    // the Town Center and of the Villagers beside it, and inside the clearing's outer ring.
+    // Distance, in king's moves from the home Cell, the clearing reaches out to. It must
+    // exceed Balance.FarthestHomeSource, so home sources never touch the clearing's edge.
     private const int ClearingRadius = 6;
-    private const int NearestHomeSource = 3;
-    private const int FarthestHomeSource = 5;
-
-    // What is scattered outside the clearings, in proportion to the map's area.
-    private const int CellsPerFarSource = 512;
-    private const int CellsPerObstacle = 128;
-
-    // An obstacle is a random walk that turns every Cell it steps on into forest or water.
-    private const int ShortestObstacleWalk = 16;
-    private const int ObstacleWalkSpread = 33;
 
     private const int ScatterAttempts = 8;
 
@@ -111,13 +102,13 @@ internal static class MapGenerator
     {
         var candidates = new List<CellPosition>();
 
-        for (var y = home.Y - FarthestHomeSource; y <= home.Y + FarthestHomeSource; y++)
+        for (var y = home.Y - Balance.FarthestHomeSource; y <= home.Y + Balance.FarthestHomeSource; y++)
         {
-            for (var x = home.X - FarthestHomeSource; x <= home.X + FarthestHomeSource; x++)
+            for (var x = home.X - Balance.FarthestHomeSource; x <= home.X + Balance.FarthestHomeSource; x++)
             {
                 var cell = new CellPosition(x, y);
 
-                if (Distance(cell, home) >= NearestHomeSource)
+                if (Distance(cell, home) >= Balance.NearestHomeSource)
                 {
                     candidates.Add(cell);
                 }
@@ -144,7 +135,7 @@ internal static class MapGenerator
         List<SourcePlacement> sources,
         List<CellPosition> scattered)
     {
-        var count = map.Width * map.Height / CellsPerFarSource;
+        var count = map.Width * map.Height / Balance.CellsPerFarSource;
 
         for (var i = 0; i < count; i++)
         {
@@ -162,14 +153,14 @@ internal static class MapGenerator
 
     private static void ScatterObstacles(MapState map, MatchRandom random, CellPosition home, List<CellPosition> scattered)
     {
-        var count = map.Width * map.Height / CellsPerObstacle;
+        var count = map.Width * map.Height / Balance.CellsPerObstacle;
 
         for (var i = 0; i < count; i++)
         {
             var kind = random.NextInt(2) == 0 ? CellKind.Forest : CellKind.Water;
             var x = random.NextInt(map.Width);
             var y = random.NextInt(map.Height);
-            var steps = ShortestObstacleWalk + random.NextInt(ObstacleWalkSpread);
+            var steps = Balance.ShortestObstacleWalk + random.NextInt(Balance.ObstacleWalkSpread);
 
             for (var step = 0; step < steps; step++)
             {
