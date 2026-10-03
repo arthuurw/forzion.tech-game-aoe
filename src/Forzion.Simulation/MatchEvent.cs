@@ -10,3 +10,6 @@ public abstract record MatchEvent
     {
     }
 }
+
+/// <summary>A Player was defeated and takes no further part in the match.</summary>
+public sealed record PlayerDefeated(PlayerId Player) : MatchEvent;

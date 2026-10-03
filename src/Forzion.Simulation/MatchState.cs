@@ -27,6 +27,10 @@ public sealed class MatchState
     /// <summary>The Players, ordered by ascending <see cref="PlayerState.Id"/>.</summary>
     public IReadOnlyList<PlayerState> Players => players;
 
+    /// <summary>The Player with the given ID, or null when the match has no such Player.</summary>
+    internal PlayerState? FindPlayer(PlayerId id) =>
+        id.Value >= 1 && id.Value <= players.Count ? players[id.Value - 1] : null;
+
     /// <summary>
     /// Writes everything that influences future ticks. State added to the match must be added
     /// here too, or two diverged matches would report the same hash.
@@ -79,9 +83,13 @@ public sealed class PlayerState
 
     public FactionId Faction { get; }
 
+    /// <summary>Whether the Player has been defeated. A defeated Player stays in the state.</summary>
+    public bool IsDefeated { get; internal set; }
+
     internal void WriteTo(StateHasher hasher)
     {
         hasher.Write(Id.Value);
         hasher.Write(Faction.Value);
+        hasher.Write(IsDefeated);
     }
 }

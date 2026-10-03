@@ -29,4 +29,6 @@ internal sealed class StateHasher
     public void Write(long value) => Write(unchecked((ulong)value));
 
     public void Write(int value) => Write((long)value);
+
+    public void Write(bool value) => Write(value ? 1UL : 0UL);
 }
