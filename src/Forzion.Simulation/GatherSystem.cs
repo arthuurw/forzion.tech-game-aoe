@@ -23,13 +23,25 @@ public enum GatherPhase
 /// </summary>
 internal sealed class GatherSystem : ISystem
 {
-    /// <summary>Sends the Villager walking up to the source to gather from it.</summary>
-    public static void GatherFrom(MapState map, UnitState villager, ResourceSourceState source)
+    /// <summary>
+    /// Sends the Villager walking up to the source to gather from it. A load of the source's
+    /// Resource is kept, and when it is already full the Villager delivers it first.
+    /// </summary>
+    public static void GatherFrom(MatchState state, UnitState villager, ResourceSourceState source)
     {
         villager.GatherSource = source.Id;
-        villager.GatherPhase = GatherPhase.ToSource;
         villager.GatherProgress = 0;
-        MovementSystem.WalkTo(map, villager, source.Cell);
+
+        // Taking more on top of a full load would carry past capacity and never deliver.
+        if (villager.Load.Resource == source.Kind && villager.Load.Amount >= Balance.VillagerCarryCapacity)
+        {
+            CarryToDropOffPoint(state, villager);
+
+            return;
+        }
+
+        villager.GatherPhase = GatherPhase.ToSource;
+        MovementSystem.WalkTo(state.Map, villager, source.Cell);
     }
 
     public void Run(TickContext context)
@@ -146,7 +158,7 @@ internal sealed class GatherSystem : ISystem
             }
             else
             {
-                GatherFrom(state.Map, unit, replacement);
+                GatherFrom(state, unit, replacement);
             }
         }
     }
@@ -245,7 +257,7 @@ internal sealed class GatherSystem : ISystem
 
         if (villager.GatherSource is { } source)
         {
-            GatherFrom(state.Map, villager, state.FindResourceSource(source)!);
+            GatherFrom(state, villager, state.FindResourceSource(source)!);
         }
         else
         {
