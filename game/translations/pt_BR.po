@@ -148,3 +148,55 @@ msgstr "Madeira"
 
 msgid "RESOURCE_GOLD"
 msgstr "Ouro"
+
+# Textos da HUD. {0} é trocado pelo nome ou número indicado no comentário de cada um.
+msgid "HUD_POPULATION"
+msgstr "População"
+
+# {0}: nome da próxima Era.
+msgid "HUD_ADVANCE_TO"
+msgstr "Avançar para a {0}"
+
+# {0}: nome da Era a que o Avanço leva.
+msgid "HUD_ADVANCING_TO"
+msgstr "Avançando para a {0}"
+
+# {0}: nome da Era que libera.
+msgid "HUD_LOCKED_UNTIL"
+msgstr "Liberado na {0}"
+
+msgid "HUD_BUILD"
+msgstr "Construir"
+
+msgid "HUD_TRAIN"
+msgstr "Treinar"
+
+msgid "HUD_TRAINING_QUEUE"
+msgstr "Fila de treino"
+
+msgid "HUD_CANCEL_TRAINING_HINT"
+msgstr "Clique para cancelar e receber o Custo de volta."
+
+msgid "HUD_CONSTRUCTION"
+msgstr "Obra"
+
+msgid "HUD_HIT_POINTS"
+msgstr "Pontos de vida"
+
+msgid "HUD_RALLY_POINT_HINT"
+msgstr "Botão direito no mapa define o Ponto de reunião."
+
+# {0}: nome da construção.
+msgid "HUD_PLACEMENT_HINT"
+msgstr "Posicionando: {0}. Clique no mapa para posicionar; botão direito ou Esc cancela."
+
+# {0}: quantidade de unidades.
+msgid "HUD_SELECTED_UNITS"
+msgstr "{0} unidades selecionadas"
+
+msgid "HUD_FREE"
+msgstr "Grátis"
+
+# {0}: nome da Era alcançada.
+msgid "HUD_AGE_REACHED"
+msgstr "Você chegou à {0}!"
