@@ -31,4 +31,11 @@ internal sealed class StateHasher
     public void Write(int value) => Write((long)value);
 
     public void Write(bool value) => Write(value ? 1UL : 0UL);
+
+    /// <summary>Writes the Cell's column, then its row.</summary>
+    public void Write(CellPosition cell)
+    {
+        Write(cell.X);
+        Write(cell.Y);
+    }
 }

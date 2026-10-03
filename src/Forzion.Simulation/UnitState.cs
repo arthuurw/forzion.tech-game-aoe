@@ -1,5 +1,6 @@
 namespace Forzion.Simulation;
 
+/// <summary>What a unit is. Its kind decides what the unit can do and how fast it walks.</summary>
 public enum UnitKind
 {
     Villager = 0,
@@ -75,8 +76,7 @@ public sealed class UnitState
 
         foreach (var cell in path)
         {
-            hasher.Write(cell.X);
-            hasher.Write(cell.Y);
+            hasher.Write(cell);
         }
 
         // A unit without a source writes 0, which no entity ID takes.

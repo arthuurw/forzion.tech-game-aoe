@@ -18,8 +18,8 @@ public class EconomyReplayTests
     private static ScheduledCommand[] Commands()
     {
         var state = TestMatches.TwoPlayerMatch(Seed).State;
-        var first = state.Units.Where(unit => unit.Owner == TestMatches.FirstPlayer).ToList();
-        var second = state.Units.Where(unit => unit.Owner == TestMatches.SecondPlayer).ToList();
+        var first = state.UnitsOf(TestMatches.FirstPlayer).ToList();
+        var second = state.UnitsOf(TestMatches.SecondPlayer).ToList();
 
         EntityId Nearest(UnitState unit, ResourceKind kind) => Gather.NearestSource(state, unit.Position.Cell, kind).Id;
 
