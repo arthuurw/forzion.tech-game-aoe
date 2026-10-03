@@ -87,7 +87,7 @@ public class MoveCommandTests
     public void Several_units_moved_by_one_command_all_reach_the_destination()
     {
         var match = TestMatches.TwoPlayerMatch();
-        var villagers = match.State.Units.Where(unit => unit.Owner == TestMatches.FirstPlayer).ToList();
+        var villagers = match.State.UnitsOf(TestMatches.FirstPlayer).ToList();
         var destination = Walk.BehindTownCenter(match);
         match.Enqueue(new MoveCommand(
             TestMatches.FirstPlayer, villagers.Select(villager => villager.Id).ToList(), destination));
@@ -179,7 +179,7 @@ public class MoveCommandTests
     {
         var match = TestMatches.TwoPlayerMatch();
         var own = Walk.MiddleVillager(match);
-        var foreign = match.State.Units.First(unit => unit.Owner == TestMatches.SecondPlayer);
+        var foreign = match.State.UnitsOf(TestMatches.SecondPlayer).First();
         var command = new MoveCommand(TestMatches.FirstPlayer, [own.Id, foreign.Id], Walk.BehindTownCenter(match));
         match.Enqueue(command);
 
@@ -195,7 +195,7 @@ public class MoveCommandTests
     {
         var withRejection = TestMatches.TwoPlayerMatch();
         var without = TestMatches.TwoPlayerMatch();
-        var foreign = withRejection.State.Units.First(unit => unit.Owner == TestMatches.SecondPlayer);
+        var foreign = withRejection.State.UnitsOf(TestMatches.SecondPlayer).First();
         withRejection.Enqueue(new MoveCommand(
             TestMatches.FirstPlayer,
             [Walk.MiddleVillager(withRejection).Id, foreign.Id],
