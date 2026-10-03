@@ -27,6 +27,9 @@ public sealed class Match
     //   next one on.
     // - Training after them, so a unit trained in a tick stands still until the next one, as
     //   any unit placed on the map does.
+    // - Age Advance after training. No other system reads the Ages or the advances underway,
+    //   and a Town Center destroyed in combat has left the match before it runs, so its place
+    //   among them changes no outcome; commands read the Age the tick after it is reached.
     // - Defeat last, after every removal of the tick: a Player whose Town Center falls is
     //   defeated, and the match ends, in the tick it falls.
     private static readonly ISystem[] Systems =
@@ -36,6 +39,7 @@ public sealed class Match
         new GatherSystem(),
         new ConstructionSystem(),
         new TrainingSystem(),
+        new AgeAdvanceSystem(),
         new DefeatSystem(),
     ];
 

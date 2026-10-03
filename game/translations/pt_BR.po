@@ -75,6 +75,15 @@ msgstr "Ordem recusada: a população chegou ao limite. Construa mais Casas."
 msgid "ORDER_REJECTED_BUILDING_CANNOT_TRAIN"
 msgstr "Ordem recusada: essa construção não treina unidades."
 
+msgid "ORDER_REJECTED_BUILDING_CANNOT_ADVANCE_AGE"
+msgstr "Ordem recusada: só o Centro faz o Avanço de Era."
+
+msgid "ORDER_REJECTED_AGE_ADVANCE_IN_PROGRESS"
+msgstr "Ordem recusada: o Avanço de Era já está em andamento."
+
+msgid "ORDER_REJECTED_LAST_AGE_REACHED"
+msgstr "Ordem recusada: você já está na última Era."
+
 # Nomes das Facções, das suas Eras e das suas unidades, sob as chaves que os dados de cada
 # Facção guardam.
 msgid "FACTION_PORTUGUESE"

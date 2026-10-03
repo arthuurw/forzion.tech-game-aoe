@@ -100,4 +100,13 @@ public enum RejectionReason
 
     /// <summary>The command names a building that trains no units: only the Town Center and the Barracks do.</summary>
     BuildingCannotTrain,
+
+    /// <summary>The command orders an Age Advance at a building other than the Town Center.</summary>
+    BuildingCannotAdvanceAge,
+
+    /// <summary>The Player ordered an Age Advance while one of its Age Advances is still underway.</summary>
+    AgeAdvanceInProgress,
+
+    /// <summary>The Player ordered an Age Advance while in the last Age of its Faction.</summary>
+    LastAgeReached,
 }
