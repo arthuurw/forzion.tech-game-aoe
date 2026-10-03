@@ -23,6 +23,23 @@ public sealed class MatchState
 
     /// <summary>The Players, ordered by ascending <see cref="PlayerState.Id"/>.</summary>
     public IReadOnlyList<PlayerState> Players => players;
+
+    /// <summary>
+    /// Writes everything that influences future ticks. State added to the match must be added
+    /// here too, or two diverged matches would report the same hash.
+    /// </summary>
+    internal void WriteTo(StateHasher hasher)
+    {
+        hasher.Write(Tick);
+        Map.WriteTo(hasher);
+
+        hasher.Write(players.Count);
+
+        foreach (var player in players)
+        {
+            player.WriteTo(hasher);
+        }
+    }
 }
 
 public sealed class MapState
@@ -38,6 +55,12 @@ public sealed class MapState
 
     /// <summary>Height in Cells.</summary>
     public int Height { get; }
+
+    internal void WriteTo(StateHasher hasher)
+    {
+        hasher.Write(Width);
+        hasher.Write(Height);
+    }
 }
 
 public sealed class PlayerState
@@ -51,4 +74,10 @@ public sealed class PlayerState
     public PlayerId Id { get; }
 
     public FactionId Faction { get; }
+
+    internal void WriteTo(StateHasher hasher)
+    {
+        hasher.Write(Id.Value);
+        hasher.Write(Faction.Value);
+    }
 }

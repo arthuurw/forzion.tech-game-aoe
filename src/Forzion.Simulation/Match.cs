@@ -25,6 +25,21 @@ public sealed class Match
     /// </summary>
     public IReadOnlyList<MatchEvent> Events => events;
 
+    /// <summary>
+    /// Hash of everything in the state that influences future ticks. Two matches whose
+    /// hashes differ at the same tick have diverged; comparing it is how divergence is detected.
+    /// </summary>
+    public ulong StateHash
+    {
+        get
+        {
+            var hasher = new StateHasher();
+            State.WriteTo(hasher);
+
+            return hasher.Hash;
+        }
+    }
+
     /// <summary>Advances the match by one fixed tick.</summary>
     public void Tick()
     {
