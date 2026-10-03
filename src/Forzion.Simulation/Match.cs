@@ -11,6 +11,10 @@ namespace Forzion.Simulation;
 /// </remarks>
 public sealed class Match
 {
+    // The systems, in the fixed order they run each tick. Order is part of the rules: changing
+    // it changes the outcome of a match.
+    private static readonly ISystem[] Systems = [];
+
     private readonly List<Command> pendingCommands = [];
     private IReadOnlyList<MatchEvent> events = [];
 
@@ -54,13 +58,21 @@ public sealed class Match
         pendingCommands.Add(command);
     }
 
-    /// <summary>Advances the match by one fixed tick, applying the pending commands first.</summary>
+    /// <summary>
+    /// Advances the match by one fixed tick: applies the pending commands, then runs every
+    /// system once.
+    /// </summary>
     public void Tick()
     {
         var context = new TickContext(State);
 
         State.Tick++;
         ApplyPendingCommands(context);
+
+        foreach (var system in Systems)
+        {
+            system.Run(context);
+        }
 
         events = context.Events;
     }
