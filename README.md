@@ -8,7 +8,7 @@ Jogo de estratégia em tempo real (RTS) em 3D sobre a história do Brasil. O jog
 
 É um projeto de portfólio de engenharia de software em C#. O foco está na arquitetura: toda a regra do jogo vive numa simulação determinística, escrita em C# puro e separada da engine.
 
-> **Estado:** em desenvolvimento. O jogo ainda não é jogável do início à vitória: ele abre o mapa com formas simples no lugar da arte, e pela HUD dá para coletar, construir, treinar unidades e fazer o Avanço de Era, mas o adversário ainda não joga. O primeiro marco jogável está descrito na [spec do vertical slice](https://github.com/arthuurw/forzion.tech-game-aoe/issues/1).
+> **Estado:** em desenvolvimento. O jogo abre o mapa com formas simples no lugar da arte; pela HUD dá para coletar, construir, treinar unidades e fazer o Avanço de Era, e o adversário, uma IA de roteiro fixo, coleta, constrói, treina, avança de Era e ataca o seu Centro. Ainda faltam o menu e a tela de fim de partida. O primeiro marco jogável está descrito na [spec do vertical slice](https://github.com/arthuurw/forzion.tech-game-aoe/issues/1).
 
 ### Arquitetura
 
@@ -80,7 +80,7 @@ A 3D real-time strategy (RTS) game about the history of Brazil. The player gathe
 
 This is a software engineering portfolio project in C#. The focus is the architecture: every game rule lives in a deterministic simulation written in plain C#, separate from the engine.
 
-> **Status:** in development. The game is not playable from start to victory yet: it opens the map with simple shapes in place of the art, and through the HUD you can gather, build, train units and make the Age Advance, but the opponent does not play yet. The first playable milestone is described in the [vertical slice spec](https://github.com/arthuurw/forzion.tech-game-aoe/issues/1) (in Portuguese).
+> **Status:** in development. The game opens the map with simple shapes in place of the art; through the HUD you can gather, build, train units and make the Age Advance, and the opponent, a fixed-script AI, gathers, builds, trains, advances its Age and attacks your Town Center. The menu and the end-of-match screen are still missing. The first playable milestone is described in the [vertical slice spec](https://github.com/arthuurw/forzion.tech-game-aoe/issues/1) (in Portuguese).
 
 ### Architecture
 
