@@ -41,7 +41,8 @@ public sealed class MatchState
                 factions.FirstOrDefault(faction => faction.Id == player.Faction)
                     ?? throw new ArgumentException(
                         $"Player {index + 1} controls Faction {player.Faction.Value}, which the match does not have.",
-                        nameof(config))))
+                        nameof(config)),
+                player.IsAi))
             .ToList();
 
         var generated = MapGenerator.Generate(Map, Random);
@@ -324,10 +325,11 @@ public sealed class PlayerState
     // How much of each Resource the Player has, indexed by ResourceKind.
     private readonly int[] resources = new int[Enum.GetValues<ResourceKind>().Length];
 
-    internal PlayerState(PlayerId id, Faction faction)
+    internal PlayerState(PlayerId id, Faction faction, bool isAi)
     {
         Id = id;
         Faction = faction;
+        IsAi = isAi;
 
         foreach (var kind in Enum.GetValues<ResourceKind>())
         {
@@ -346,6 +348,12 @@ public sealed class PlayerState
     /// the number of Ages of its Faction. What the Age is called comes from <see cref="Faction"/>.
     /// </summary>
     public int Age { get; internal set; } = 1;
+
+    /// <summary>
+    /// Whether the Player is an AI, as configured: the match itself plays it, deciding its
+    /// commands at the start of every tick. It never changes during the match.
+    /// </summary>
+    public bool IsAi { get; }
 
     /// <summary>Whether the Player has been defeated. A defeated Player stays in the state.</summary>
     public bool IsDefeated { get; internal set; }
@@ -393,5 +401,8 @@ public sealed class PlayerState
         // The Faction's data decides what the Player may train and place and what advancing
         // costs, so matches configured with different data for the same Faction ID diverge.
         Faction.WriteTo(hasher);
+
+        // Likewise an AI Player gives commands of its own every tick, and a human one does not.
+        hasher.Write(IsAi);
     }
 }

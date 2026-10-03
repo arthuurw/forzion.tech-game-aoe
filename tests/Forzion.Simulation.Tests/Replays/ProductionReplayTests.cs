@@ -122,7 +122,10 @@ public class ProductionReplayTests
     // each building's Age Advance underway), the model reproduced the value before from the
     // same final state with the layout before, gave this one with the Ages added and matched
     // the match's own hash at every tick.
-    private const ulong ExpectedFinalHash = 11357276573190627401UL;
+    // When whether each Player is an AI joined the hash, after its Faction's data, the model
+    // reproduced the value before from the same final state with the layout before, gave this
+    // one with the flag added and matched the match's own hash at every tick.
+    private const ulong ExpectedFinalHash = 12017350051636996777UL;
 
     [Fact]
     public void A_recorded_replay_of_production_reaches_the_recorded_final_hash()

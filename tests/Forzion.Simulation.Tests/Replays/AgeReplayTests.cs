@@ -111,7 +111,10 @@ public class AgeReplayTests
     // match's own hash at every tick of this replay, while advances were underway and after
     // the Players reached Age II. CI runs this on Windows, Linux and macOS: every system must
     // reach the same hash.
-    private const ulong ExpectedFinalHash = 1025558472475379430UL;
+    // When whether each Player is an AI joined the hash, after its Faction's data, the model
+    // reproduced the value before from the same final state with the layout before, gave this
+    // one with the flag added and matched the match's own hash at every tick.
+    private const ulong ExpectedFinalHash = 10717493146515073478UL;
 
     [Fact]
     public void A_recorded_replay_of_Age_Advances_reaches_the_recorded_final_hash()
