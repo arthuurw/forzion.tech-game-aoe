@@ -41,6 +41,12 @@ public enum RejectionReason
     /// <summary>The command names a resource source that is not in the match, or no longer is.</summary>
     UnknownResourceSource,
 
+    /// <summary>
+    /// A Cell of the building's footprint is outside the map, is not free or has a unit
+    /// standing on it.
+    /// </summary>
+    InvalidPlacement,
+
     /// <summary>The Player has less of some Resource than the cost asks for.</summary>
     NotEnoughResources,
 }

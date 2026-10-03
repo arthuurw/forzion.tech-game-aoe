@@ -31,6 +31,14 @@ public sealed class Match
     /// <summary>Side of the square footprint of a building of the given kind, in Cells.</summary>
     public static int BuildingSize(BuildingKind kind) => Balance.BuildingSize(kind);
 
+    /// <summary>
+    /// Whether a building of the given kind fits with its footprint starting on
+    /// <paramref name="origin"/>: every Cell inside the map, free and with no unit standing on
+    /// it. Cost is not considered. A placement that fits now may not fit by the tick that
+    /// applies it.
+    /// </summary>
+    public bool CanPlace(BuildingKind kind, CellPosition origin) => State.CanPlace(kind, origin);
+
     public MatchState State { get; }
 
     /// <summary>

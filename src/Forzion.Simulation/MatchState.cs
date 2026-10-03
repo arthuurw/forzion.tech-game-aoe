@@ -116,6 +116,33 @@ public sealed class MatchState
         return building;
     }
 
+    /// <summary>
+    /// Whether every Cell of the footprint a building of the given kind would have from
+    /// <paramref name="origin"/> is inside the map, free and has no unit standing on it.
+    /// </summary>
+    internal bool CanPlace(BuildingKind kind, CellPosition origin)
+    {
+        var size = Balance.BuildingSize(kind);
+
+        for (var y = origin.Y; y < origin.Y + size; y++)
+        {
+            for (var x = origin.X; x < origin.X + size; x++)
+            {
+                var cell = new CellPosition(x, y);
+
+                if (!Map.Contains(cell) || Map[cell] != CellKind.Free)
+                {
+                    return false;
+                }
+            }
+        }
+
+        // A unit inside the footprint would be walled in by it.
+        return !units.Any(unit =>
+            unit.Position.Cell.X >= origin.X && unit.Position.Cell.X < origin.X + size
+            && unit.Position.Cell.Y >= origin.Y && unit.Position.Cell.Y < origin.Y + size);
+    }
+
     /// <summary>Adds a unit. IDs only grow, so appending keeps the collection in ID order.</summary>
     internal UnitState AddUnit(PlayerId owner, UnitKind kind, MapPosition position)
     {
