@@ -8,5 +8,5 @@ Escolhemos isso em vez de um componente externo porque a aleatoriedade da IA tem
 
 - Não existe caminho de regra exclusivo da IA: ela só produz `Command`, validado e recusado pelo mesmo `Execute` que atende o humano. Ela lê só o estado público (o slice não tem névoa de guerra); o único acesso interno é o gerador da partida.
 - `IsAi` entra no hash (SIM-5), o que mudou uma vez todos os hashes gravados. O roteiro não guarda memória: cada decisão sai do estado do momento, e assim não há estado de IA a mais para o hash.
-- As ordens da IA geram `CommandRejected` como as do humano; a apresentação já mostra só as recusas do Jogador humano.
+- Os Comandos da IA geram `CommandRejected` como os do humano; a apresentação já mostra só as recusas do Jogador humano.
 - Tirar a IA do núcleo depois mudaria a configuração e o formato dos replays, que hoje não contêm os comandos da IA.

@@ -51,7 +51,7 @@ Participante de uma partida, humano ou IA, que controla uma Facção.
 _Avoid_: Time, lado
 
 **IA** (`AI`):
-Jogador controlado pelo próprio jogo. Lê o estado da Partida e dá as mesmas ordens que um Jogador humano daria, seguindo um roteiro fixo (`AI Script`): coletar, erguer Casas e um Quartel, treinar, fazer o Avanço de Era e atacar o Centro inimigo quando o Exército chega a um tamanho. Joga com as mesmas regras e Custos e não vê nada que um humano não veja. Quais Jogadores são IA é dado da configuração da Partida.
+Jogador controlado pelo próprio jogo. Lê o estado da Partida e envia os mesmos Comandos que as Ordens de um Jogador humano enviariam, seguindo um roteiro fixo (`AI Script`): coletar, erguer Casas e um Quartel, treinar, fazer o Avanço de Era e atacar o Centro inimigo quando o Exército chega a um tamanho. Joga com as mesmas regras e Custos e não vê nada que um humano não veja. Quais Jogadores são IA é dado da configuração da Partida.
 _Avoid_: Bot, computador, CPU
 
 **Facção** (`Faction`):
