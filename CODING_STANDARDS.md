@@ -6,7 +6,7 @@ O que o compilador e o `.editorconfig` já garantem (formatação, namespaces de
 
 ## Linguagem e nomes
 
-- **NOM-1**: código, comentários e mensagens de commit em inglês. Documentação e textos do jogo em português.
+- **NOM-1**: código, comentários e mensagens de commit em inglês. Documentação e textos do jogo em português. Texto de documentação em inglês (como a metade em inglês do README) usa os nomes em inglês do glossário.
 - **NOM-2**: todo conceito do domínio usa no código o nome em inglês registrado no `GLOSSARY.md`. Um conceito novo entra no glossário antes de ganhar nome no código.
 - **NOM-3**: os termos listados como _Avoid_ no glossário ficam fora de nomes de tipos, membros e testes.
 
@@ -46,7 +46,7 @@ A origem é o ADR 0001: as regras do jogo vivem no núcleo, sem referência à e
 - **TST-1**: os testes das regras passam só pela interface pública de `Match`: criam a partida, enfileiram comandos, avançam ticks e verificam estado, eventos ou hash. Nenhum teste alcança tipos `internal`.
 - **TST-2**: `Fix64` é o segundo ponto de teste e é testado direto, de preferência com propriedades FsCheck.
 - **TST-3**: o nome do teste é uma frase em inglês que descreve o comportamento observado, com sublinhados entre as palavras.
-- **TST-4**: um hash gravado como literal é validado por um meio independente da implementação. Quem altera o estado coberto pelo hash regrava os literais e diz como validou os novos valores.
+- **TST-4**: um hash gravado como literal fixa o resultado contra regressões e entre plataformas. Quando o layout do hash muda, o layout é validado por um meio independente da implementação; o comportamento por trás dos valores que entram no hash é validado por testes de comportamento. Quem altera o estado coberto pelo hash regrava os literais e diz como validou os novos valores.
 - **TST-5**: montagem repetida de cenário fica em auxiliares do projeto de testes (como `TestMatches` e `Walk`), que também usam só a interface pública.
 - **TST-6**: a camada Godot não tem teste automatizado; é verificada rodando o jogo.
 
