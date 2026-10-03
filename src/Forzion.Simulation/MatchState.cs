@@ -71,6 +71,9 @@ public sealed class MatchState
     /// <summary>The unit with the given ID, or null when the match has no such unit.</summary>
     internal UnitState? FindUnit(EntityId id) => units.Find(unit => unit.Id == id);
 
+    /// <summary>The resource source with the given ID, or null when the match has no such source.</summary>
+    internal ResourceSourceState? FindResourceSource(EntityId id) => resourceSources.Find(source => source.Id == id);
+
     /// <summary>
     /// Adds a resource source on a free Cell and marks the Cell occupied. IDs only grow, so
     /// appending keeps the collection in ID order.
@@ -83,6 +86,13 @@ public sealed class MatchState
         resourceSources.Add(source);
 
         return source;
+    }
+
+    /// <summary>Removes a resource source and frees its Cell. Removing keeps the collection in ID order.</summary>
+    internal void RemoveResourceSource(ResourceSourceState source)
+    {
+        resourceSources.Remove(source);
+        Map[source.Cell] = CellKind.Free;
     }
 
     /// <summary>
@@ -186,6 +196,9 @@ public sealed class MatchState
 /// <summary>A Player of the match, human or AI, as the state knows them.</summary>
 public sealed class PlayerState
 {
+    // How much of each Resource the Player has, indexed by ResourceKind.
+    private readonly int[] resources = new int[Enum.GetValues<ResourceKind>().Length];
+
     internal PlayerState(PlayerId id, FactionId faction)
     {
         Id = id;
@@ -201,10 +214,20 @@ public sealed class PlayerState
     /// <summary>Whether the Player has been defeated. A defeated Player stays in the state.</summary>
     public bool IsDefeated { get; internal set; }
 
+    /// <summary>How much of the given Resource the Player has.</summary>
+    public int AmountOf(ResourceKind kind) => resources[(int)kind];
+
+    internal void Receive(ResourceKind kind, int amount) => resources[(int)kind] += amount;
+
     internal void WriteTo(StateHasher hasher)
     {
         hasher.Write(Id.Value);
         hasher.Write(Faction.Value);
         hasher.Write(IsDefeated);
+
+        foreach (var amount in resources)
+        {
+            hasher.Write(amount);
+        }
     }
 }

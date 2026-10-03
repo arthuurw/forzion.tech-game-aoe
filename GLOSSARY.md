@@ -54,10 +54,6 @@ _Avoid_: Evolução, upgrade de era
 Bem acumulado pelo Jogador e gasto em unidades, construções e Avanço de Era. São três: Alimento (`Food`), Madeira (`Wood`) e Ouro (`Gold`).
 _Avoid_: Material, moeda
 
-**Fonte de Recurso** (`Resource Source`):
-Lugar do mapa onde os Aldeões coletam um Recurso. Ocupa uma Célula inteira e guarda uma quantidade finita, que se esgota.
-_Avoid_: Mina, jazida, nó de recurso
-
 **Aldeão** (`Villager`):
 Unidade civil que coleta Recursos e ergue construções.
 _Avoid_: Trabalhador, camponês, operário
@@ -65,6 +61,26 @@ _Avoid_: Trabalhador, camponês, operário
 **Depósito** (`Storehouse`):
 Construção onde Aldeões entregam os Recursos coletados.
 _Avoid_: Armazém, celeiro
+
+**Fonte de Recurso** (`Resource Source`):
+Lugar do mapa, de uma Célula, de onde se coleta um único Recurso. Guarda uma quantidade finita e sai do mapa ao se esgotar.
+_Avoid_: Nó, jazida, mina
+
+**Coleta** (`Gather`):
+Ciclo do Aldeão numa Fonte de Recurso: tirar Recurso até encher a Carga, entregá-la no Ponto de entrega mais próximo e voltar, sem nova ordem. Quando a Fonte se esgota, o Aldeão segue para outra Fonte próxima do mesmo Recurso ou fica Ocioso.
+_Avoid_: Colheita, extração, mineração
+
+**Carga** (`Load`):
+O Recurso que um Aldeão leva consigo, de um só tipo e até a capacidade de carga. Só passa ao Jogador quando é entregue.
+_Avoid_: Inventário, mochila
+
+**Ponto de entrega** (`Drop-off Point`):
+Construção onde o Aldeão entrega a Carga: o Centro e o Depósito.
+_Avoid_: Base, armazém
+
+**Ocioso** (`Idle`):
+Aldeão parado, sem ordem nem Coleta em andamento.
+_Avoid_: Livre, desocupado
 
 ## Unidades
 

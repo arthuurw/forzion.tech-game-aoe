@@ -57,16 +57,19 @@ public class ReplayTests
     // the resource sources, buildings and units in ID order, each unit followed by the number
     // of Cells in its path and those Cells, each value as eight little-endian bytes. When
     // paths joined the hash, the values were recomputed by a model of this layout that first
-    // reproduced the values recorded before. CI runs this on Windows, Linux and macOS: every
+    // reproduced the values recorded before. When the economy joined it (each Player's Food,
+    // Wood and Gold; each unit's gather source, gather phase, gather progress and load), the
+    // same was done again: a model that reproduced the previous values with the previous
+    // layout gave these with the new one. CI runs this on Windows, Linux and macOS: every
     // system must reach the same hash. A change that adds state to the hash changes these
     // values on purpose and must record the new ones.
-    private const ulong ExpectedFinalHash = 16333524943516671878UL;
+    private const ulong ExpectedFinalHash = 12557458399794215910UL;
 
     // Seed 3 is one whose first scattering of obstacles cuts the Players apart and is drawn again.
     // When walled-in sources began to be dropped, the value was recomputed by the same model of
     // the layout, which first reproduced the value recorded before from the state of the old
     // generator; the two states differ only by one walled-in source pair, freed.
-    private const ulong ExpectedInitialHashOfSeed3 = 3430533040211773573UL;
+    private const ulong ExpectedInitialHashOfSeed3 = 13624556660638430949UL;
 
     [Fact]
     public void A_recorded_replay_reaches_the_recorded_final_hash()
