@@ -8,10 +8,11 @@ namespace Forzion.Simulation;
 /// </summary>
 /// <remarks>
 /// The command is rejected, placing nothing and paying nothing, when a builder belongs to
-/// another Player or is not a Villager, when builders are named and none of them exists,
-/// when Players do not place that kind of building, when a Cell of the footprint is outside
-/// the map, is not free or has a unit standing on it, or when the Player cannot afford the
-/// cost. A builder that does not exist, because it died after the order was given, is skipped.
+/// another Player, when builders are named and none of them exists or none of them is a
+/// Villager, when Players do not place that kind of building, when a Cell of the footprint is
+/// outside the map, is not free or has a unit standing on it, or when the Player cannot afford
+/// the cost. A builder that does not exist, because it died after the order was given, is
+/// skipped; so is a builder that is not a Villager, which goes on with whatever it was doing.
 /// </remarks>
 /// <param name="Kind">The kind of building to place.</param>
 /// <param name="Origin">The Cell of the footprint with the lowest X and Y.</param>
@@ -23,17 +24,13 @@ public sealed record PlaceBuildingCommand(
     internal override void Execute(TickContext context, PlayerState issuer)
     {
         // No builder is a valid order: the site waits for a later build order.
-        var builders = Builders.Count == 0 ? [] : OrderedUnits.Find(context, this, issuer, Builders);
+        var builders = Builders.Count == 0
+            ? []
+            : OrderedUnits.Find(
+                context, this, issuer, Builders, unit => unit.Kind == UnitKind.Villager, RejectionReason.UnitCannotBuild);
 
         if (builders is null)
         {
-            return;
-        }
-
-        if (builders.Any(builder => builder.Kind != UnitKind.Villager))
-        {
-            context.Reject(this, RejectionReason.UnitCannotBuild);
-
             return;
         }
 

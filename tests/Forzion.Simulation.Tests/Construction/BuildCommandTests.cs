@@ -69,23 +69,49 @@ public class BuildCommandTests
     }
 
     [Fact]
-    public void A_build_order_given_to_a_soldier_is_rejected_and_sends_none_of_its_units()
+    public void A_build_order_given_to_Villagers_and_soldiers_sends_the_Villagers_and_leaves_the_soldiers_to_what_they_were_doing()
     {
-        var plain = TestMatches.TwoPlayerMatch();
-        var match = Match.Create(TestArmies.Config(
-            first: [new StartingUnit(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, TestMatches.FirstPlayer, -2, 0))]));
+        var match = MatchWithSoldier();
         var villager = Site.VillagersOf(match, TestMatches.FirstPlayer)[0];
         var soldier = match.State.UnitsOf(TestMatches.FirstPlayer).Single(unit => unit.Kind == UnitKind.MeleeSoldier);
         var house = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.House, []);
-        var command = new BuildCommand(TestMatches.FirstPlayer, [villager.Id, soldier.Id], house.Id);
+        match.Enqueue(new MoveCommand(
+            TestMatches.FirstPlayer, [soldier.Id], new CellPosition(soldier.Position.Cell.X - 6, soldier.Position.Cell.Y)));
+        match.Tick();
+        var destination = soldier.Path[^1];
+
+        match.Enqueue(new BuildCommand(TestMatches.FirstPlayer, [soldier.Id, villager.Id], house.Id));
+        match.Tick();
+
+        Assert.Empty(match.Events);
+        Assert.Equal(house.Id, villager.ConstructionSite);
+        Assert.Null(soldier.ConstructionSite);
+        Assert.Equal(destination, soldier.Path[^1]);
+    }
+
+    [Fact]
+    public void A_build_order_given_to_soldiers_alone_is_rejected_and_sends_none_of_them()
+    {
+        var match = MatchWithSoldier();
+        var soldier = match.State.UnitsOf(TestMatches.FirstPlayer).Single(unit => unit.Kind == UnitKind.MeleeSoldier);
+        var house = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.House, []);
+        var command = new BuildCommand(TestMatches.FirstPlayer, [soldier.Id], house.Id);
         match.Enqueue(command);
 
         match.Tick();
 
         Assert.Equal([new CommandRejected(command, RejectionReason.UnitCannotBuild)], match.Events);
-        Assert.Null(villager.ConstructionSite);
         Assert.Null(soldier.ConstructionSite);
-        Assert.False(villager.IsMoving);
+        Assert.False(soldier.IsMoving);
+    }
+
+    /// <summary>The default two-Player match, the first Player starting with a melee soldier beside its Town Center.</summary>
+    private static Match MatchWithSoldier()
+    {
+        var plain = TestMatches.TwoPlayerMatch();
+
+        return Match.Create(TestArmies.Config(
+            first: [new StartingUnit(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, TestMatches.FirstPlayer, -2, 0))]));
     }
 
     /// <summary>
