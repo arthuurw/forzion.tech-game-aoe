@@ -116,6 +116,22 @@ public sealed class Placeholders
         };
     }
 
+    /// <summary>
+    /// Raises a building's box as far as its construction has gone, from a low slab when the
+    /// site is placed to its full height once complete.
+    /// </summary>
+    public static void ShowConstruction(Node3D view, BuildingState building)
+    {
+        const float LowestShare = 0.15f;
+
+        var share = building.IsComplete || building.BuildTime <= 0
+            ? 1
+            : Math.Max(LowestShare, (float)building.BuildProgress / building.BuildTime);
+
+        view.Scale = new Vector3(1, share, 1);
+        view.Position = WorldSpace.CentreOf(building, BuildingHeight * share / 2);
+    }
+
     /// <summary>A capsule in the owner's colour. It is not placed: units move, so the caller places it every frame.</summary>
     public Node3D Unit(UnitState unit) => new MeshInstance3D
     {

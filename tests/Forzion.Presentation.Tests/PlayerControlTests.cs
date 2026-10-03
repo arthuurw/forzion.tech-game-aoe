@@ -219,18 +219,18 @@ public class PlayerControlTests
     }
 
     [Fact]
-    public void Right_clicking_with_no_unit_selected_gives_no_order()
+    public void Right_clicking_with_nothing_selected_gives_no_order()
     {
         var control = NewControl(out var match);
-        var townCenter = match.State.Buildings.First(building => building.Owner == FirstPlayer);
-        var middle = new ScreenPoint(townCenter.Origin.X + 1.5, townCenter.Origin.Y + 1.5);
-        control.Select(middle, middle);
+        var bareGround = Over(MapPosition.CentreOf(FreeCellAwayFromUnits(match)));
+        control.Select(bareGround, bareGround);
 
         control.OrderAt(new ScreenPoint(-5, -5));
         var events = Tick(match);
 
         Assert.Empty(events);
         Assert.DoesNotContain(match.State.Units, unit => unit.IsMoving);
+        Assert.All(match.State.Buildings, building => Assert.Null(building.RallyPoint));
     }
 
     // Whether an order can be carried out is for the match to say, not for the controls.
@@ -324,6 +324,158 @@ public class PlayerControlTests
         }
 
         Assert.Equal(UnitsOf(match, FirstPlayer).Select(unit => unit.Id), control.Selected);
+    }
+
+    [Fact]
+    public void Training_with_a_building_selected_puts_the_unit_in_its_training_queue()
+    {
+        var control = NewControl(out var match);
+        var townCenter = SelectFirstTownCenter(control, match);
+
+        control.Train(UnitKind.Villager);
+        Tick(match);
+
+        Assert.Equal([UnitKind.Villager], townCenter.TrainingQueue);
+    }
+
+    [Fact]
+    public void Training_with_no_building_selected_sends_nothing()
+    {
+        var control = NewControl(out var match);
+        var villager = UnitsOf(match, FirstPlayer)[0];
+        control.Select(Over(villager.Position), Over(villager.Position));
+
+        control.Train(UnitKind.Villager);
+        var events = Tick(match);
+
+        Assert.Empty(events);
+        Assert.All(match.State.Buildings, building => Assert.Empty(building.TrainingQueue));
+    }
+
+    [Fact]
+    public void Cancelling_a_queued_unit_takes_it_off_the_queue_of_the_selected_building_and_gives_its_cost_back()
+    {
+        var control = NewControl(out var match);
+        var townCenter = SelectFirstTownCenter(control, match);
+        var food = match.State.Players[0].AmountOf(ResourceKind.Food);
+        control.Train(UnitKind.Villager);
+        control.Train(UnitKind.Villager);
+        Tick(match);
+
+        control.CancelTraining(1);
+        Tick(match);
+
+        Assert.Equal([UnitKind.Villager], townCenter.TrainingQueue);
+        Assert.Equal(food - Match.UnitCost(UnitKind.Villager).Food, match.State.Players[0].AmountOf(ResourceKind.Food));
+    }
+
+    [Fact]
+    public void Advancing_the_Age_with_the_Town_Center_selected_starts_the_Age_Advance()
+    {
+        // The made-up Faction's Age Advance is free: the Portuguese one costs more than a Player starts with.
+        var faction = HudMatches.ThreeAges;
+        var config = PlainConfig() with { Players = [new PlayerConfig(faction.Id), new PlayerConfig(faction.Id)], Factions = [faction] };
+        var control = NewControl(out var match, config: config);
+        var townCenter = SelectFirstTownCenter(control, match);
+
+        control.AdvanceAge();
+        Tick(match);
+
+        Assert.NotNull(townCenter.AgeAdvanceProgress);
+    }
+
+    [Fact]
+    public void Right_clicking_the_ground_with_a_building_selected_sets_its_rally_point_on_the_Cell_under_the_mouse()
+    {
+        var control = NewControl(out var match);
+        var townCenter = SelectFirstTownCenter(control, match);
+        var cell = FreeCellAwayFromUnits(match);
+
+        control.OrderAt(Over(MapPosition.CentreOf(cell)));
+        Tick(match);
+
+        Assert.Equal(cell, townCenter.RallyPoint);
+    }
+
+    [Fact]
+    public void The_placement_preview_centres_the_chosen_building_on_the_mouse_and_is_valid_on_free_ground()
+    {
+        var control = NewControl(out var match);
+        var cell = FreeCellAwayFromUnits(match);
+
+        control.ChooseBuilding(BuildingKind.Barracks);
+        var placement = control.PlacementAt(Over(MapPosition.CentreOf(cell)));
+
+        Assert.Equal(
+            new BuildingPlacement(BuildingKind.Barracks, new CellPosition(cell.X - 1, cell.Y - 1), Match.BuildingSize(BuildingKind.Barracks), IsValid: true),
+            placement);
+    }
+
+    [Fact]
+    public void The_placement_preview_is_invalid_where_the_match_would_not_place_the_building()
+    {
+        var control = NewControl(out var match);
+        var townCenter = match.State.Buildings.First(building => building.Owner == FirstPlayer);
+
+        control.ChooseBuilding(BuildingKind.House);
+        var placement = control.PlacementAt(new ScreenPoint(townCenter.Origin.X + 1.5, townCenter.Origin.Y + 1.5));
+
+        Assert.False(placement!.IsValid);
+    }
+
+    [Fact]
+    public void With_no_building_chosen_there_is_no_placement_preview()
+    {
+        var control = NewControl(out var match);
+
+        Assert.Null(control.PlacingBuilding);
+        Assert.Null(control.PlacementAt(Over(MapPosition.CentreOf(FreeCellAwayFromUnits(match)))));
+    }
+
+    [Fact]
+    public void Placing_the_chosen_building_places_its_site_where_the_preview_was_with_the_selected_Villagers_as_builders()
+    {
+        var control = NewControl(out var match);
+        var villagers = UnitsOf(match, FirstPlayer);
+        var (from, to) = BoxAround(villagers.Select(unit => unit.Position));
+        control.Select(from, to);
+        var mouse = Over(MapPosition.CentreOf(FreeCellAwayFromUnits(match)));
+        control.ChooseBuilding(BuildingKind.House);
+        var preview = control.PlacementAt(mouse)!;
+
+        control.PlaceAt(mouse);
+        Tick(match);
+
+        var site = match.State.Buildings[^1];
+        Assert.Equal((BuildingKind.House, preview.Origin, false), (site.Kind, site.Origin, site.IsComplete));
+        Assert.All(villagers, villager => Assert.Equal(site.Id, villager.ConstructionSite));
+        Assert.Null(control.PlacingBuilding);
+    }
+
+    [Fact]
+    public void Cancelling_the_placement_places_nothing()
+    {
+        var control = NewControl(out var match);
+        var buildings = match.State.Buildings.Count;
+        control.ChooseBuilding(BuildingKind.House);
+
+        control.CancelPlacement();
+        control.PlaceAt(Over(MapPosition.CentreOf(FreeCellAwayFromUnits(match))));
+        Tick(match);
+
+        Assert.Null(control.PlacingBuilding);
+        Assert.Equal(buildings, match.State.Buildings.Count);
+    }
+
+    private static BuildingState SelectFirstTownCenter(PlayerControl control, Match match)
+    {
+        var townCenter = match.State.Buildings.First(building => building.Owner == FirstPlayer);
+        var middle = new ScreenPoint(townCenter.Origin.X + (townCenter.Width / 2.0), townCenter.Origin.Y + (townCenter.Height / 2.0));
+        control.Select(middle, middle);
+
+        Assert.Equal([townCenter.Id], control.Selected);
+
+        return townCenter;
     }
 
     /// <summary>
