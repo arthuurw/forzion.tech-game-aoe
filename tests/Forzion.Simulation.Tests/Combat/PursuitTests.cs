@@ -63,6 +63,30 @@ public class PursuitTests
     }
 
     [Fact]
+    public void A_move_order_calls_off_an_attack()
+    {
+        var match = Battle.Create(first: plain =>
+            [new StartingUnit(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, First, 2, 0))]);
+        var soldier = Battle.Last(match);
+        var townCenter = Battle.TownCenter(match, Second);
+        var home = soldier.Position.Cell;
+        match.Enqueue(new AttackCommand(First, [soldier.Id], townCenter.Id));
+
+        for (var tick = 0; tick < 40; tick++)
+        {
+            match.Tick();
+        }
+
+        match.Enqueue(new MoveCommand(First, [soldier.Id], home));
+        Battle.TickUntil(match, () => !soldier.IsMoving);
+        Battle.Run(match, 100);
+
+        Assert.Null(soldier.Target);
+        Assert.Equal(MapPosition.CentreOf(home), soldier.Position);
+        Assert.Equal(townCenter.MaxHitPoints, townCenter.HitPoints);
+    }
+
+    [Fact]
     public void A_melee_soldier_hits_a_building_from_beside_its_footprint()
     {
         var match = Battle.Create(first: plain =>
