@@ -41,6 +41,7 @@ internal sealed class AiScript
         script.BuildHouse();
         script.BuildBarracks();
         script.TrainVillager();
+        script.TrainSoldier();
         script.SendIdleVillagersToGather();
 
         return script.commands;
@@ -177,6 +178,33 @@ internal sealed class AiScript
     }
 
     /// <summary>
+    /// Puts a soldier in training at a complete Barracks while it trains none: of a kind drawn
+    /// from the match's generator among the soldiers unlocked by the latest Age, up to the
+    /// Player's, that unlocks any, leaving out those this tick's budget does not cover.
+    /// </summary>
+    private void TrainSoldier()
+    {
+        if (OwnBuildings(BuildingKind.Barracks).FirstOrDefault(barracks => barracks.IsComplete && barracks.TrainingQueue.Count == 0)
+                is not { } barracks
+            || state.PopulationOf(player.Id) >= state.PopulationLimitOf(player.Id))
+        {
+            return;
+        }
+
+        var latest = Enumerable.Range(1, player.Age)
+            .Reverse()
+            .Select(age => player.Faction.Ages[age - 1].Units.Where(kind => Balance.Attack(kind) is not null).Order().ToList())
+            .FirstOrDefault(soldiers => soldiers.Count > 0) ?? [];
+        var affordable = latest.Where(kind => CanSpend(Balance.UnitCost(kind))).ToList();
+
+        // Drawn only when there is something to train, so a Player saving up does not use up draws.
+        if (affordable.Count > 0)
+        {
+            Train(barracks, affordable[state.Random.NextInt(affordable.Count)]);
+        }
+    }
+
+    /// <summary>
     /// Puts a unit in the building's training queue, when the Player has room in its
     /// population and what it costs is still in this tick's budget.
     /// </summary>
@@ -190,10 +218,13 @@ internal sealed class AiScript
         commands.Add(new TrainCommand(player.Id, building.Id, kind));
     }
 
+    /// <summary>Whether this tick's budget covers the cost.</summary>
+    private bool CanSpend(Cost cost) => ResourceKinds.All(kind => budget[(int)kind] >= cost.AmountOf(kind));
+
     /// <summary>Takes the cost from this tick's budget, when it covers it.</summary>
     private bool Spend(Cost cost)
     {
-        if (ResourceKinds.Any(kind => budget[(int)kind] < cost.AmountOf(kind)))
+        if (!CanSpend(cost))
         {
             return false;
         }

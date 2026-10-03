@@ -54,6 +54,10 @@ internal static class AiMatches
         return events;
     }
 
+    /// <summary>The Player's army: its units that are not Villagers, in ascending ID order.</summary>
+    public static IEnumerable<UnitState> Army(Match match, PlayerId player) =>
+        match.State.UnitsOf(player).Where(unit => unit.Kind != UnitKind.Villager);
+
     /// <summary>The Player's Town Center.</summary>
     public static BuildingState TownCenter(Match match, PlayerId player) =>
         match.State.Buildings.Single(building => building.Owner == player && building.Kind == BuildingKind.TownCenter);
