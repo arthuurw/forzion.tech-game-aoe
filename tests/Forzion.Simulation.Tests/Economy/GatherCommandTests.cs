@@ -1,4 +1,3 @@
-using Forzion.Simulation.Tests.Maps;
 using Forzion.Simulation.Tests.Matches;
 using Forzion.Simulation.Tests.Movement;
 
@@ -135,7 +134,7 @@ public class GatherCommandTests
     {
         var match = TestMatches.TwoPlayerMatch();
         var own = Walk.MiddleVillager(match);
-        var foreign = match.State.Units.First(unit => unit.Owner == TestMatches.SecondPlayer);
+        var foreign = match.State.UnitsOf(TestMatches.SecondPlayer).First();
         var source = Gather.NearestSource(match.State, own.Position.Cell, ResourceKind.Wood);
         var command = new GatherCommand(TestMatches.FirstPlayer, [own.Id, foreign.Id], source.Id);
         match.Enqueue(command);
