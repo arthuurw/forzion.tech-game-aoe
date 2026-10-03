@@ -28,6 +28,34 @@ public class DestroyedBuildingTests
         Assert.Same(builder, Battle.Unit(match, builder.Id));
     }
 
+    // Combat runs before construction: a site is gone before its builders would work on it.
+    [Fact]
+    public void A_site_destroyed_in_a_tick_gets_no_work_from_its_builders_in_that_tick()
+    {
+        var match = Battle.Raiders();
+        var builder = Site.VillagersOf(match, First)[1];
+        var site = Site.Place(match, First, BuildingKind.House, []);
+        Battle.Raid(match, site);
+        Battle.TickUntil(match, () => site.HitPoints < site.MaxHitPoints);
+        match.Enqueue(new BuildCommand(First, [builder.Id], site.Id));
+        Battle.TickUntil(match, () => site.BuildProgress > 0);
+        var progress = site.BuildProgress;
+
+        Battle.TickUntil(match, () =>
+        {
+            if (Battle.Building(match, site.Id) is null)
+            {
+                return true;
+            }
+
+            progress = site.BuildProgress;
+
+            return false;
+        });
+
+        Assert.Equal(progress, site.BuildProgress);
+    }
+
     [Fact]
     public void A_Villager_carrying_its_load_to_a_Storehouse_destroyed_on_the_way_carries_it_to_the_Town_Center()
     {

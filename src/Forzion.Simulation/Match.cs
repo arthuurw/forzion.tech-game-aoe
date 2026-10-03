@@ -16,6 +16,17 @@ public sealed class Match
 
     // The systems, in the fixed order they run each tick. Order is part of the rules: changing
     // it changes the outcome of a match.
+    // - Combat first: hits are struck from where units stood when the tick began, and whatever
+    //   they destroy leaves the match before anything else runs, so a dead unit takes no step,
+    //   gathers nothing and builds nothing in the tick it dies, and a destroyed site gets no
+    //   work. The chases it starts are walked by movement in the same tick.
+    // - Movement next, so the systems after it see where units stand at the end of the tick.
+    // - Gathering, then construction, both after movement so they find Villagers where they
+    //   arrived. A Villager does one or the other, never both, so their order between
+    //   themselves only decides that a Storehouse completed in a tick takes loads from the
+    //   next one on.
+    // - Defeat last, after every removal of the tick: a Player whose Town Center falls is
+    //   defeated, and the match ends, in the tick it falls.
     private static readonly ISystem[] Systems =
     [
         new CombatSystem(),
