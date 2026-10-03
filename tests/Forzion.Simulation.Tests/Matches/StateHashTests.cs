@@ -60,4 +60,13 @@ public class StateHashTests
 
         Assert.NotEqual(duel.StateHash, trio.StateHash);
     }
+
+    [Fact]
+    public void Matches_created_from_different_seeds_have_different_hashes()
+    {
+        var first = TestMatches.TwoPlayerMatch(seed: 1);
+        var second = TestMatches.TwoPlayerMatch(seed: 2);
+
+        Assert.NotEqual(first.StateHash, second.StateHash);
+    }
 }

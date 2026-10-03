@@ -10,6 +10,7 @@ public sealed class MatchState
 
     internal MatchState(MatchConfig config)
     {
+        Random = new MatchRandom(config.Seed);
         Map = new MapState(config.Map.Width, config.Map.Height);
         players = config.Players
             .Select((player, index) => new PlayerState(new PlayerId(index + 1), player.Faction))
@@ -21,6 +22,8 @@ public sealed class MatchState
 
     public MapState Map { get; }
 
+    internal MatchRandom Random { get; }
+
     /// <summary>The Players, ordered by ascending <see cref="PlayerState.Id"/>.</summary>
     public IReadOnlyList<PlayerState> Players => players;
 
@@ -31,6 +34,7 @@ public sealed class MatchState
     internal void WriteTo(StateHasher hasher)
     {
         hasher.Write(Tick);
+        Random.WriteTo(hasher);
         Map.WriteTo(hasher);
 
         hasher.Write(players.Count);
