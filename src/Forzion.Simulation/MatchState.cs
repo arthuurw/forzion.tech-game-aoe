@@ -64,6 +64,14 @@ public sealed class MatchState
     /// <summary>The units, ordered by ascending <see cref="UnitState.Id"/>.</summary>
     public IReadOnlyList<UnitState> Units => units;
 
+    /// <summary>
+    /// How many units the Player may have at once: what its complete buildings provide, the
+    /// Town Center a base and each House more. Construction sites provide nothing.
+    /// </summary>
+    public int PopulationLimitOf(PlayerId player) => buildings
+        .Where(building => building.Owner == player && building.IsComplete)
+        .Sum(building => Balance.PopulationProvided(building.Kind));
+
     /// <summary>The Player with the given ID, or null when the match has no such Player.</summary>
     internal PlayerState? FindPlayer(PlayerId id) =>
         id.Value >= 1 && id.Value <= players.Count ? players[id.Value - 1] : null;

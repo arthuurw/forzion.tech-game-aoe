@@ -74,6 +74,19 @@ internal static class Balance
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
+    /// <summary>
+    /// How much a complete building of the given kind adds to its Player's population limit:
+    /// the Town Center gives the base and each House adds to it.
+    /// </summary>
+    public static int PopulationProvided(BuildingKind kind) => kind switch
+    {
+        BuildingKind.TownCenter => 5,
+        BuildingKind.House => 5,
+        BuildingKind.Storehouse => 0,
+        BuildingKind.Barracks => 0,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
     /// <summary>Ticks a Villager spends gathering one unit of the given Resource.</summary>
     public static int GatherTicksPerUnit(ResourceKind kind) => kind switch
     {
