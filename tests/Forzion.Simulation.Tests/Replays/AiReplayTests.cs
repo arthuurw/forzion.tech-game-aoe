@@ -43,8 +43,11 @@ public class AiReplayTests
     // matched the match's own hash at every tick of this replay. CI runs this on Windows,
     // Linux and macOS: every system must reach the same hash, which is what holds the AI's
     // decisions and its draws from the match's generator to the same result everywhere. This
-    // is the base for the replays of a whole match.
-    private const ulong ExpectedFinalHash = 13921820750332930433UL;
+    // is the base for the replays of a whole match. When a Villager whose way a new building
+    // blocks began to choose its job's destination again, the AIs' Villagers walked otherwise and
+    // the value was recorded again: the layout stayed the same, and the model gave this one and
+    // matched the match's own hash at every tick. The match still ends in the same tick.
+    private const ulong ExpectedFinalHash = 1636717598385792004UL;
 
     [Fact]
     public void A_recorded_match_of_two_AI_Players_reaches_the_recorded_final_hash()
