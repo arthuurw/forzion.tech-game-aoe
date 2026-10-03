@@ -81,7 +81,8 @@ public partial class MatchView : Node3D
 
     /// <summary>
     /// Makes the views match the state: a view for each entity that appeared, none for each
-    /// that is gone, and every unit drawn where it is in this frame.
+    /// that is gone, every construction site as high as it is built, and every unit drawn where
+    /// it is in this frame.
     /// </summary>
     private void SyncViews()
     {
@@ -90,6 +91,11 @@ public partial class MatchView : Node3D
         Sync(state.ResourceSources, sourceViews, source => source.Id, placeholders.ResourceSource);
         Sync(state.Buildings, buildingViews, building => building.Id, placeholders.Building);
         Sync(state.Units, unitViews, unit => unit.Id, placeholders.Unit);
+
+        foreach (var building in state.Buildings)
+        {
+            Placeholders.ShowConstruction(buildingViews[building.Id], building);
+        }
 
         foreach (var unit in state.Units)
         {
