@@ -23,3 +23,24 @@ public sealed record ResignCommand(PlayerId Player) : Command(Player)
         context.Emit(new PlayerDefeated(issuer.Id));
     }
 }
+
+/// <summary>
+/// Sends units of the Player walking to a Cell. Each unit finds its own way around obstacles,
+/// resource sources and buildings and stops on the centre of the Cell.
+/// </summary>
+/// <param name="Units">The units to move.</param>
+/// <param name="Destination">The Cell to walk to.</param>
+public sealed record MoveCommand(PlayerId Player, IReadOnlyList<EntityId> Units, CellPosition Destination)
+    : Command(Player)
+{
+    internal override void Execute(TickContext context, PlayerState issuer)
+    {
+        foreach (var id in Units)
+        {
+            if (context.State.FindUnit(id) is { } unit)
+            {
+                MovementSystem.WalkTo(context.State.Map, unit, Destination);
+            }
+        }
+    }
+}

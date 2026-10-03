@@ -23,4 +23,11 @@ internal static class Balance
         ResourceKind.Gold => 400,
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
+
+    /// <summary>How far a unit of the given kind walks, in Cells per second.</summary>
+    public static Fix64 Speed(UnitKind kind) => kind switch
+    {
+        UnitKind.Villager => Fix64.FromInt(2),
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
 }

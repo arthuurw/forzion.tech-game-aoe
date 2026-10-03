@@ -68,6 +68,9 @@ public sealed class MatchState
     internal PlayerState? FindPlayer(PlayerId id) =>
         id.Value >= 1 && id.Value <= players.Count ? players[id.Value - 1] : null;
 
+    /// <summary>The unit with the given ID, or null when the match has no such unit.</summary>
+    internal UnitState? FindUnit(EntityId id) => units.Find(unit => unit.Id == id);
+
     /// <summary>
     /// Adds a resource source and marks its Cell occupied. IDs only grow, so appending keeps
     /// the collection in ID order.
