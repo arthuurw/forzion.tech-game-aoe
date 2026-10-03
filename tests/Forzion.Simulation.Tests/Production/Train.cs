@@ -1,5 +1,6 @@
 using Forzion.Simulation.Tests.Construction;
 using Forzion.Simulation.Tests.Economy;
+using Forzion.Simulation.Tests.Matches;
 
 namespace Forzion.Simulation.Tests.Production;
 
@@ -42,5 +43,25 @@ internal static class Train
         }
 
         return happened;
+    }
+
+    /// <summary>
+    /// Prepares two default matches alike with <paramref name="prepare"/>, sends the command it
+    /// returns in one of them only, and checks that it was rejected for <paramref name="reason"/>
+    /// and left the two matches with the same hash.
+    /// </summary>
+    public static void AssertRejected(RejectionReason reason, Func<Match, Command> prepare)
+    {
+        var withRejection = TestMatches.TwoPlayerMatch();
+        var without = TestMatches.TwoPlayerMatch();
+        var command = prepare(withRejection);
+        prepare(without);
+        withRejection.Enqueue(command);
+
+        withRejection.Tick();
+        without.Tick();
+
+        Assert.Equal([new CommandRejected(command, reason)], withRejection.Events);
+        Assert.Equal(without.StateHash, withRejection.StateHash);
     }
 }
