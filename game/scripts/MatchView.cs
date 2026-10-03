@@ -52,6 +52,17 @@ public partial class MatchView : Node3D
     }
 
     /// <summary>
+    /// Runs every frame: lets the frame's time pass in the match, which runs the ticks that
+    /// became due (20 per second whatever the frame rate), then redraws.
+    /// </summary>
+    public override void _Process(double delta)
+    {
+        // The events of the ticks just run are not shown yet: nothing on screen reports them.
+        Driver.Advance(delta);
+        SyncViews();
+    }
+
+    /// <summary>
     /// Makes the views match the state: a view for each entity that appeared, none for each
     /// that is gone, and every unit drawn where it is in this frame.
     /// </summary>
