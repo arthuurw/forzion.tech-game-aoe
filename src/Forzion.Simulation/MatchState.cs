@@ -221,5 +221,10 @@ public sealed class PlayerState
         hasher.Write(Id.Value);
         hasher.Write(Faction.Value);
         hasher.Write(IsDefeated);
+
+        foreach (var amount in resources)
+        {
+            hasher.Write(amount);
+        }
     }
 }

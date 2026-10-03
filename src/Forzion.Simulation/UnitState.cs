@@ -78,5 +78,12 @@ public sealed class UnitState
             hasher.Write(cell.X);
             hasher.Write(cell.Y);
         }
+
+        // A unit without a source writes 0, which no entity ID takes.
+        hasher.Write(GatherSource?.Value ?? 0);
+        hasher.Write((int)GatherPhase);
+        hasher.Write(GatherProgress);
+        hasher.Write((int)Load.Resource);
+        hasher.Write(Load.Amount);
     }
 }
