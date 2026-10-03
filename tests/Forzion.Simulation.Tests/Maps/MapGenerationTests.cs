@@ -60,6 +60,76 @@ public class MapGenerationTests
             sources.Select(source => (MapProbe.Mirror(state.Map, source.Cell), source.Kind, source.Amount)).ToHashSet());
     }
 
+    [Theory]
+    [MemberData(nameof(SizesAndSeeds))]
+    public void The_Cells_are_symmetric_between_the_Players(int width, int height, ulong seed)
+    {
+        var map = TwoPlayerMatch(width, height, seed).State.Map;
+
+        Assert.All(MapProbe.AllCells(map), cell => Assert.Equal(map[cell], map[MapProbe.Mirror(map, cell)]));
+    }
+
+    [Theory]
+    [MemberData(nameof(SizesAndSeeds))]
+    public void The_Players_can_reach_each_other(int width, int height, ulong seed)
+    {
+        var state = TwoPlayerMatch(width, height, seed).State;
+        var reached = MapProbe.ReachableFrom(state.Map, state.Units[0].Position.Cell);
+
+        Assert.All(state.Units, unit => Assert.Contains(unit.Position.Cell, reached));
+    }
+
+    [Fact]
+    public void The_map_has_forest_and_water()
+    {
+        var map = TestMatches.TwoPlayerMatch().State.Map;
+        var kinds = MapProbe.AllCells(map).Select(cell => map[cell]).ToHashSet();
+
+        Assert.Contains(CellKind.Forest, kinds);
+        Assert.Contains(CellKind.Water, kinds);
+        Assert.Contains(CellKind.Free, kinds);
+    }
+
+    [Fact]
+    public void The_map_has_resource_sources_away_from_the_Town_Centers()
+    {
+        var state = TwoPlayerMatch(96, 96, seed: 42).State;
+
+        Assert.Contains(state.ResourceSources, source =>
+            state.Buildings.All(building =>
+                Math.Abs(source.Cell.X - building.Origin.X) > 12 || Math.Abs(source.Cell.Y - building.Origin.Y) > 12));
+    }
+
+    [Fact]
+    public void The_same_seed_generates_the_same_map()
+    {
+        var first = TestMatches.TwoPlayerMatch(seed: 7).State;
+        var second = TestMatches.TwoPlayerMatch(seed: 7).State;
+
+        Assert.Equal(Snapshot(first), Snapshot(second));
+    }
+
+    [Fact]
+    public void Different_seeds_generate_different_maps()
+    {
+        var snapshots = Enumerable.Range(1, 20)
+            .Select(seed => Snapshot(TestMatches.TwoPlayerMatch((ulong)seed).State))
+            .ToList();
+
+        Assert.Equal(snapshots.Count, snapshots.Distinct().Count());
+    }
+
+    /// <summary>The whole generated map as text: one character per Cell, then the sources, buildings and units.</summary>
+    private static string Snapshot(MatchState state)
+    {
+        var cells = string.Concat(MapProbe.AllCells(state.Map).Select(cell => (int)state.Map[cell]));
+        var sources = state.ResourceSources.Select(source => $"{source.Id}{source.Kind}{source.Cell}{source.Amount}");
+        var buildings = state.Buildings.Select(building => $"{building.Id}{building.Owner}{building.Kind}{building.Origin}");
+        var units = state.Units.Select(unit => $"{unit.Id}{unit.Owner}{unit.Kind}{unit.Position.X.RawValue},{unit.Position.Y.RawValue}");
+
+        return string.Join('|', sources.Concat(buildings).Concat(units).Prepend(cells));
+    }
+
     private static Match TwoPlayerMatch(int width, int height, ulong seed) =>
         Match.Create(new MatchConfig(
             seed,
