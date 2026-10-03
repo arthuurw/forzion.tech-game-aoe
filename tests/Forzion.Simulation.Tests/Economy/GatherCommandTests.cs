@@ -85,4 +85,67 @@ public class GatherCommandTests
 
         Assert.True(load > 1);
     }
+
+    [Fact]
+    public void A_gather_from_a_source_that_does_not_exist_is_rejected()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var villager = Walk.MiddleVillager(match);
+        var command = new GatherCommand(TestMatches.FirstPlayer, [villager.Id], match.State.Buildings[0].Id);
+        match.Enqueue(command);
+
+        match.Tick();
+
+        Assert.Equal([new CommandRejected(command, RejectionReason.UnknownResourceSource)], match.Events);
+        Assert.Equal(GatherPhase.None, villager.GatherPhase);
+        Assert.False(villager.IsMoving);
+    }
+
+    [Fact]
+    public void A_gather_by_a_unit_that_does_not_exist_is_rejected_and_sends_none_of_its_units()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var villager = Walk.MiddleVillager(match);
+        var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Wood);
+        var command = new GatherCommand(TestMatches.FirstPlayer, [villager.Id, new EntityId(100_000)], source.Id);
+        match.Enqueue(command);
+
+        match.Tick();
+
+        Assert.Equal([new CommandRejected(command, RejectionReason.UnknownUnit)], match.Events);
+        Assert.Equal(GatherPhase.None, villager.GatherPhase);
+        Assert.False(villager.IsMoving);
+    }
+
+    [Fact]
+    public void A_gather_by_another_Players_unit_is_rejected_and_sends_none_of_its_units()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var own = Walk.MiddleVillager(match);
+        var foreign = match.State.Units.First(unit => unit.Owner == TestMatches.SecondPlayer);
+        var source = Gather.NearestSource(match.State, own.Position.Cell, ResourceKind.Wood);
+        var command = new GatherCommand(TestMatches.FirstPlayer, [own.Id, foreign.Id], source.Id);
+        match.Enqueue(command);
+
+        match.Tick();
+
+        Assert.Equal([new CommandRejected(command, RejectionReason.UnitOfAnotherPlayer)], match.Events);
+        Assert.Equal(GatherPhase.None, own.GatherPhase);
+        Assert.Equal(GatherPhase.None, foreign.GatherPhase);
+    }
+
+    [Fact]
+    public void A_rejected_gather_leaves_the_state_as_if_it_had_not_been_sent()
+    {
+        var withRejection = TestMatches.TwoPlayerMatch();
+        var without = TestMatches.TwoPlayerMatch();
+        var villager = Walk.MiddleVillager(withRejection);
+        var source = Gather.NearestSource(withRejection.State, villager.Position.Cell, ResourceKind.Gold);
+        withRejection.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id, new EntityId(100_000)], source.Id));
+
+        withRejection.Tick();
+        without.Tick();
+
+        Assert.Equal(without.StateHash, withRejection.StateHash);
+    }
 }

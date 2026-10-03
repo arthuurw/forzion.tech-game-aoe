@@ -37,4 +37,7 @@ public enum RejectionReason
 
     /// <summary>The destination Cell is outside the map.</summary>
     DestinationOutsideMap,
+
+    /// <summary>The command names a resource source that is not in the match, or no longer is.</summary>
+    UnknownResourceSource,
 }
