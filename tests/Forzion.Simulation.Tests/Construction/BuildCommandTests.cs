@@ -41,10 +41,24 @@ public class BuildCommandTests
     }
 
     [Fact]
-    public void A_build_order_by_a_unit_that_does_not_exist_is_rejected_and_changes_nothing()
+    public void A_unit_that_no_longer_exists_is_skipped_and_the_other_units_of_the_build_order_set_out()
     {
-        AssertRejected(RejectionReason.UnknownUnit, (_, house, villager) =>
-            new BuildCommand(TestMatches.FirstPlayer, [villager.Id, new EntityId(100_000)], house.Id));
+        var match = TestMatches.TwoPlayerMatch();
+        var villager = Site.VillagersOf(match, TestMatches.FirstPlayer)[2];
+        var house = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.House, []);
+        match.Enqueue(new BuildCommand(TestMatches.FirstPlayer, [new EntityId(100_000), villager.Id], house.Id));
+
+        match.Tick();
+
+        Assert.Empty(match.Events);
+        Assert.Equal(house.Id, villager.ConstructionSite);
+    }
+
+    [Fact]
+    public void A_build_order_by_units_none_of_which_exist_is_rejected_and_changes_nothing()
+    {
+        AssertRejected(RejectionReason.UnknownUnit, (_, house, _) =>
+            new BuildCommand(TestMatches.FirstPlayer, [new EntityId(100_000), new EntityId(100_001)], house.Id));
     }
 
     [Fact]

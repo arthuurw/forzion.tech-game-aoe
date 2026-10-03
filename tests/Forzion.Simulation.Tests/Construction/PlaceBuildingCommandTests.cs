@@ -74,11 +74,27 @@ public class PlaceBuildingCommandTests
     }
 
     [Fact]
-    public void Placing_a_building_with_a_builder_that_does_not_exist_is_rejected_and_changes_nothing()
+    public void A_builder_that_no_longer_exists_is_skipped_and_the_other_builders_set_out()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var villager = Site.VillagersOf(match, TestMatches.FirstPlayer)[0];
+        var house = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.House, [new EntityId(100_000), villager.Id]);
+
+        Assert.Empty(match.Events);
+        Assert.Equal(BuildingKind.House, house.Kind);
+        Assert.Equal(house.Id, villager.ConstructionSite);
+    }
+
+    [Fact]
+    public void Placing_a_building_with_builders_none_of_which_exist_is_rejected_and_changes_nothing()
     {
         var withRejection = TestMatches.TwoPlayerMatch();
         var without = TestMatches.TwoPlayerMatch();
-        var command = AffordableHouseWith(withRejection, without, _ => new EntityId(100_000));
+        Site.Stockpile(withRejection, TestMatches.FirstPlayer, Match.BuildingCost(BuildingKind.House).Wood);
+        Site.Stockpile(without, TestMatches.FirstPlayer, Match.BuildingCost(BuildingKind.House).Wood);
+        var origin = Site.FreeOriginNear(withRejection.State, withRejection.State.Buildings[0].Origin, Match.BuildingSize(BuildingKind.House));
+        var command = new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.House, origin, [new EntityId(100_000)]);
+        withRejection.Enqueue(command);
 
         withRejection.Tick();
         without.Tick();
@@ -93,7 +109,7 @@ public class PlaceBuildingCommandTests
         var withRejection = TestMatches.TwoPlayerMatch();
         var without = TestMatches.TwoPlayerMatch();
         var command = AffordableHouseWith(
-            withRejection, without, _ => withRejection.State.Units.First(unit => unit.Owner == TestMatches.SecondPlayer).Id);
+            withRejection, without, withRejection.State.Units.First(unit => unit.Owner == TestMatches.SecondPlayer).Id);
 
         withRejection.Tick();
         without.Tick();
@@ -105,15 +121,15 @@ public class PlaceBuildingCommandTests
     /// <summary>
     /// Gives the first Player of both matches the Wood for a House and enqueues, in
     /// <paramref name="withRejection"/> only, a valid placement whose builders are its first
-    /// Villager and the unit <paramref name="other"/> names.
+    /// Villager and <paramref name="other"/>.
     /// </summary>
-    private static PlaceBuildingCommand AffordableHouseWith(Match withRejection, Match without, Func<UnitState, EntityId> other)
+    private static PlaceBuildingCommand AffordableHouseWith(Match withRejection, Match without, EntityId other)
     {
         Site.Stockpile(withRejection, TestMatches.FirstPlayer, Match.BuildingCost(BuildingKind.House).Wood);
         Site.Stockpile(without, TestMatches.FirstPlayer, Match.BuildingCost(BuildingKind.House).Wood);
         var villager = Site.VillagersOf(withRejection, TestMatches.FirstPlayer)[0];
         var origin = Site.FreeOriginNear(withRejection.State, withRejection.State.Buildings[0].Origin, Match.BuildingSize(BuildingKind.House));
-        var command = new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.House, origin, [villager.Id, other(villager)]);
+        var command = new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.House, origin, [villager.Id, other]);
         withRejection.Enqueue(command);
 
         return command;
