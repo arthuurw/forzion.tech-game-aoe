@@ -173,12 +173,14 @@ public sealed class MatchState
     {
         var reach = Balance.TownCenterSize / 2;
 
-        AddBuilding(
+        var townCenter = AddBuilding(
             player,
             BuildingKind.TownCenter,
             new CellPosition(home.X - reach, home.Y - reach),
             Balance.TownCenterSize,
             Balance.TownCenterSize);
+
+        townCenter.BuildProgress = townCenter.BuildTime;
 
         // The Villagers line up on the row just outside the Town Center, on the side facing
         // the centre of the map, so that the two Players' lines mirror each other.
@@ -215,6 +217,15 @@ public sealed class PlayerState
     public int AmountOf(ResourceKind kind) => resources[(int)kind];
 
     internal void Receive(ResourceKind kind, int amount) => resources[(int)kind] += amount;
+
+    /// <summary>Takes the cost from the Player, who must be able to afford it.</summary>
+    internal void Pay(Cost cost)
+    {
+        foreach (var kind in Enum.GetValues<ResourceKind>())
+        {
+            resources[(int)kind] -= cost.AmountOf(kind);
+        }
+    }
 
     internal void WriteTo(StateHasher hasher)
     {

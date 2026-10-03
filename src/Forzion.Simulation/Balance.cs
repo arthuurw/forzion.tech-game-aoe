@@ -41,6 +41,39 @@ internal static class Balance
     /// </summary>
     public const int SourceSearchRadius = 15;
 
+    /// <summary>Side of the square footprint of a building of the given kind, in Cells.</summary>
+    public static int BuildingSize(BuildingKind kind) => kind switch
+    {
+        BuildingKind.TownCenter => TownCenterSize,
+        BuildingKind.House => 2,
+        BuildingKind.Storehouse => 2,
+        BuildingKind.Barracks => 3,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
+    /// <summary>What placing a building of the given kind costs.</summary>
+    public static Cost BuildingCost(BuildingKind kind) => kind switch
+    {
+        BuildingKind.TownCenter => new Cost(0, 275, 100),
+        BuildingKind.House => new Cost(0, 30, 0),
+        BuildingKind.Storehouse => new Cost(0, 50, 0),
+        BuildingKind.Barracks => new Cost(0, 100, 0),
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
+    /// <summary>
+    /// Ticks of one Villager's work a building of the given kind takes to build. Villagers
+    /// building together each add their own work.
+    /// </summary>
+    public static int BuildTime(BuildingKind kind) => kind switch
+    {
+        BuildingKind.TownCenter => 60 * Match.TicksPerSecond,
+        BuildingKind.House => 15 * Match.TicksPerSecond,
+        BuildingKind.Storehouse => 20 * Match.TicksPerSecond,
+        BuildingKind.Barracks => 30 * Match.TicksPerSecond,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
     /// <summary>Ticks a Villager spends gathering one unit of the given Resource.</summary>
     public static int GatherTicksPerUnit(ResourceKind kind) => kind switch
     {

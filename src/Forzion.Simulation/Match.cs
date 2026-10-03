@@ -25,6 +25,12 @@ public sealed class Match
 
     public static Match Create(MatchConfig config) => new(config);
 
+    /// <summary>What placing a building of the given kind costs, paid in full when it is placed.</summary>
+    public static Cost BuildingCost(BuildingKind kind) => Balance.BuildingCost(kind);
+
+    /// <summary>Side of the square footprint of a building of the given kind, in Cells.</summary>
+    public static int BuildingSize(BuildingKind kind) => Balance.BuildingSize(kind);
+
     public MatchState State { get; }
 
     /// <summary>
