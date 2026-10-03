@@ -1,3 +1,4 @@
+using Forzion.Simulation.Tests.Maps;
 using Forzion.Simulation.Tests.Matches;
 using Forzion.Simulation.Tests.Movement;
 
@@ -174,5 +175,30 @@ public class GatherCommandTests
         Assert.Null(villager.GatherSource);
         Assert.Equal(load, villager.CarriedAmount);
         Assert.Equal(left, source.Amount);
+    }
+
+    [Fact]
+    public void A_Villager_sent_to_a_source_it_cannot_reach_stops_short_of_it_and_stands_idle()
+    {
+        // A map with a source fenced in by obstacles.
+        var match = TestMatches.TwoPlayerMatch(seed: 3);
+        var villager = Walk.MiddleVillager(match);
+        var reachable = MapProbe.ReachableFrom(match.State.Map, villager.Position.Cell);
+        var source = match.State.ResourceSources.First(source =>
+            !reachable.Any(cell => Gather.Touch(cell, source.Cell)));
+        var amount = source.Amount;
+        match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
+
+        Walk.UntilStopped(match, villager);
+
+        for (var tick = 0; tick < 200; tick++)
+        {
+            match.Tick();
+        }
+
+        Assert.False(villager.IsMoving);
+        Assert.Equal(GatherPhase.None, villager.GatherPhase);
+        Assert.Equal(0, villager.CarriedAmount);
+        Assert.Equal(amount, source.Amount);
     }
 }

@@ -41,7 +41,7 @@ internal sealed class GatherSystem : ISystem
             switch (unit.GatherPhase)
             {
                 case GatherPhase.ToSource when !unit.IsMoving:
-                    unit.GatherPhase = GatherPhase.Gathering;
+                    ReachSource(state, unit);
                     break;
                 case GatherPhase.Gathering:
                     TakeFromSource(context, state.FindResourceSource(unit.GatherSource!.Value)!, unit);
@@ -50,6 +50,25 @@ internal sealed class GatherSystem : ISystem
                     Deliver(state, unit);
                     break;
             }
+        }
+    }
+
+    /// <summary>
+    /// The Villager has walked as far as it can towards its source: beside it, it starts
+    /// gathering; short of it, the source cannot be reached and the Villager stands idle.
+    /// </summary>
+    private static void ReachSource(MatchState state, UnitState villager)
+    {
+        var source = state.FindResourceSource(villager.GatherSource!.Value)!;
+        var cell = villager.Position.Cell;
+
+        if (Math.Abs(cell.X - source.Cell.X) <= 1 && Math.Abs(cell.Y - source.Cell.Y) <= 1)
+        {
+            villager.GatherPhase = GatherPhase.Gathering;
+        }
+        else
+        {
+            StopGathering(state.Map, villager);
         }
     }
 
