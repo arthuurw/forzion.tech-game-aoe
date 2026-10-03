@@ -102,7 +102,7 @@ msgid "FACTION_PORTUGUESE_AGE_2"
 msgstr "Era dos Engenhos"
 
 msgid "FACTION_PORTUGUESE_VILLAGER"
-msgstr "Aldeão"
+msgstr "Colono"
 
 msgid "FACTION_PORTUGUESE_MELEE_SOLDIER"
 msgstr "Rodeleiro"

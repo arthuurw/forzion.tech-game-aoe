@@ -221,4 +221,5 @@ Infante armado de arcabuz, a arma de fogo portátil das expedições portuguesas
 **Cavaleiro** (`HeavySoldier`, `FACTION_PORTUGUESE_HEAVY_SOLDIER`):
 Combatente a cavalo. No Brasil quinhentista, os de cavalo do ouvidor-geral Martim Leitão combateram na conquista da Paraíba, em 1585.
 
-O Aldeão (`Villager`, `FACTION_PORTUGUESE_VILLAGER`) mantém o nome genérico.
+**Colono** (`Villager`, `FACTION_PORTUGUESE_VILLAGER`):
+O povoador livre, que as fontes de época chamam de morador. Na colônia, o trabalho nas lavouras e nos engenhos era feito sobretudo por indígenas e africanos escravizados.
