@@ -23,6 +23,9 @@ internal sealed class AiScript
     // already decided, which the match only charges once it applies them.
     private readonly int[] budget;
 
+    // What the Player saves up for its Age Advance, kept out of the budget for soldiers.
+    private Cost savings;
+
     // Villagers given a job this tick, which no later decision of the same tick takes from them.
     private readonly HashSet<EntityId> busy = [];
 
@@ -41,6 +44,7 @@ internal sealed class AiScript
         script.BuildHouse();
         script.BuildBarracks();
         script.TrainVillager();
+        script.AdvanceAge();
         script.TrainSoldier();
         script.SendIdleVillagersToGather();
 
@@ -178,6 +182,35 @@ internal sealed class AiScript
     }
 
     /// <summary>
+    /// Orders the Age Advance at the Town Center once the Player has a complete Barracks and an
+    /// army of <see cref="Balance.AiArmyBeforeAdvance"/>, and is in neither the last Age of its
+    /// Faction nor an Age Advance already. Until it can pay, it saves up: soldiers are trained
+    /// only from what lies beyond the cost.
+    /// </summary>
+    private void AdvanceAge()
+    {
+        if (player.Age >= player.Faction.Ages.Count
+            || TownCenter() is not { IsComplete: true, AgeAdvanceProgress: null } townCenter
+            || !OwnBuildings(BuildingKind.Barracks).Any(barracks => barracks.IsComplete)
+            || Army().Count() < Balance.AiArmyBeforeAdvance)
+        {
+            return;
+        }
+
+        // Ages are numbered from 1 and listed from index 0, so the next Age is at the current number.
+        var cost = player.Faction.Ages[player.Age].AdvanceCost;
+
+        if (Spend(cost))
+        {
+            commands.Add(new AgeAdvanceCommand(player.Id, townCenter.Id));
+        }
+        else
+        {
+            savings = cost;
+        }
+    }
+
+    /// <summary>
     /// Puts a soldier in training at a complete Barracks while it trains none: of a kind drawn
     /// from the match's generator among the soldiers unlocked by the latest Age, up to the
     /// Player's, that unlocks any, leaving out those this tick's budget does not cover.
@@ -195,7 +228,7 @@ internal sealed class AiScript
             .Reverse()
             .Select(age => player.Faction.Ages[age - 1].Units.Where(kind => Balance.Attack(kind) is not null).Order().ToList())
             .FirstOrDefault(soldiers => soldiers.Count > 0) ?? [];
-        var affordable = latest.Where(kind => CanSpend(Balance.UnitCost(kind))).ToList();
+        var affordable = latest.Where(kind => CanSpend(Balance.UnitCost(kind), savings)).ToList();
 
         // Drawn only when there is something to train, so a Player saving up does not use up draws.
         if (affordable.Count > 0)
@@ -218,8 +251,9 @@ internal sealed class AiScript
         commands.Add(new TrainCommand(player.Id, building.Id, kind));
     }
 
-    /// <summary>Whether this tick's budget covers the cost.</summary>
-    private bool CanSpend(Cost cost) => ResourceKinds.All(kind => budget[(int)kind] >= cost.AmountOf(kind));
+    /// <summary>Whether this tick's budget covers the cost and, on top of it, what is kept aside.</summary>
+    private bool CanSpend(Cost cost, Cost keptAside = default) =>
+        ResourceKinds.All(kind => budget[(int)kind] >= cost.AmountOf(kind) + keptAside.AmountOf(kind));
 
     /// <summary>Takes the cost from this tick's budget, when it covers it.</summary>
     private bool Spend(Cost cost)
@@ -322,6 +356,9 @@ internal sealed class AiScript
 
     private IEnumerable<BuildingState> OwnBuildings(BuildingKind kind) =>
         state.Buildings.Where(building => building.Owner == player.Id && building.Kind == kind);
+
+    /// <summary>The Player's units that are not Villagers.</summary>
+    private IEnumerable<UnitState> Army() => OwnUnits().Where(unit => unit.Kind != UnitKind.Villager);
 
     private IEnumerable<UnitState> OwnUnits() => state.Units.Where(unit => unit.Owner == player.Id);
 

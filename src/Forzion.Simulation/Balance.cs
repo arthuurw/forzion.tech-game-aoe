@@ -250,6 +250,12 @@ internal static class Balance
     /// <summary>How many Villagers the AI has before it places its Barracks.</summary>
     public const int AiVillagersBeforeBarracks = 6;
 
+    /// <summary>
+    /// How large an army the AI trains before it saves up for its Age Advance. Until the
+    /// advance is paid, it trains more soldiers only from what is left beyond its cost.
+    /// </summary>
+    public const int AiArmyBeforeAdvance = 3;
+
     /// <summary>How many Villagers the AI sends to build a building of the given kind when it places it.</summary>
     public static int AiBuilders(BuildingKind kind) => kind switch
     {
