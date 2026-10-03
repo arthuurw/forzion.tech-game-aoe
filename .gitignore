@@ -488,3 +488,15 @@ export_presets.cfg
 
 # Claude Code agent worktrees
 .claude/worktrees/
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Godot .NET
+.mono/
+data_*/
+*.tmp
+
+# Exported game builds
+/builds/
+/export/
