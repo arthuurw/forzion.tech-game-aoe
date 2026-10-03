@@ -1,3 +1,4 @@
+using Forzion.Simulation.Tests.Economy;
 using Forzion.Simulation.Tests.Maps;
 using Forzion.Simulation.Tests.Matches;
 
@@ -36,6 +37,34 @@ public class BuildingDestructionTests
 
         Assert.All(footprint, cell => Assert.Equal(CellKind.Free, match.State.Map[cell]));
         Assert.Equal(MapPosition.CentreOf(middle), soldier.Position);
+    }
+
+    [Fact]
+    public void A_gathering_Villager_left_without_a_drop_off_point_stands_idle_keeping_its_load()
+    {
+        var match = Battle.Siege();
+        var townCenter = Battle.TownCenter(match, Second);
+        var villager = Battle.MiddleVillager(match, Second);
+        var player = match.State.Players[1];
+        var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Food);
+        match.Enqueue(new GatherCommand(Second, [villager.Id], source.Id));
+        Battle.TickUntil(match, () => townCenter.HitPoints <= 0);
+
+        // The besiegers leave for home at once, before they turn on the Villagers.
+        match.Enqueue(new MoveCommand(
+            First, Battle.Besiegers(match).Select(soldier => soldier.Id).ToList(), TestArmies.BesideHome(match, First, 2, 0)));
+        var food = player.AmountOf(ResourceKind.Food);
+        Battle.TickUntil(match, () => villager.GatherPhase == GatherPhase.None);
+        var load = villager.Load;
+        Battle.Run(match, 200);
+
+        Assert.Equal(ResourceKind.Food, load.Resource);
+        Assert.True(load.Amount > 0);
+        Assert.Equal(load, villager.Load);
+        Assert.Null(villager.GatherSource);
+        Assert.False(villager.IsMoving);
+        Assert.Equal(food, player.AmountOf(ResourceKind.Food));
+        Assert.Same(villager, Battle.Unit(match, villager.Id));
     }
 
     [Fact]
