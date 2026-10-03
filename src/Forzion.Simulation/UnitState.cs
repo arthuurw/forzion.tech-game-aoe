@@ -10,6 +10,9 @@ public enum UnitKind
 
     /// <summary>Military unit that fights from a distance.</summary>
     RangedSoldier = 2,
+
+    /// <summary>Military unit that fights at close quarters, stronger than the melee soldier.</summary>
+    HeavySoldier = 3,
 }
 
 /// <summary>A unit. Units stand on free Cells and do not occupy them.</summary>

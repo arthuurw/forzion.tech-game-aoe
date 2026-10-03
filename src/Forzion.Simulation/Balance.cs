@@ -71,6 +71,7 @@ internal static class Balance
         UnitKind.Villager => Fix64.FromInt(2),
         UnitKind.MeleeSoldier => Fix64.FromInt(2),
         UnitKind.RangedSoldier => Fix64.FromInt(2),
+        UnitKind.HeavySoldier => Fix64.FromInt(2),
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
@@ -80,6 +81,7 @@ internal static class Balance
         UnitKind.Villager => 25,
         UnitKind.MeleeSoldier => 45,
         UnitKind.RangedSoldier => 30,
+        UnitKind.HeavySoldier => 80,
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
@@ -101,6 +103,8 @@ internal static class Balance
             Damage: 6, Range: Fix64.One, IntervalTicks: 20, PerceptionRadius: Fix64.FromInt(6)),
         UnitKind.RangedSoldier => new AttackStats(
             Damage: 4, Range: Fix64.FromInt(5), IntervalTicks: 30, PerceptionRadius: Fix64.FromInt(7)),
+        UnitKind.HeavySoldier => new AttackStats(
+            Damage: 10, Range: Fix64.One, IntervalTicks: 20, PerceptionRadius: Fix64.FromInt(6)),
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
@@ -176,6 +180,7 @@ internal static class Balance
         UnitKind.Villager => BuildingKind.TownCenter,
         UnitKind.MeleeSoldier => BuildingKind.Barracks,
         UnitKind.RangedSoldier => BuildingKind.Barracks,
+        UnitKind.HeavySoldier => BuildingKind.Barracks,
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
@@ -185,6 +190,7 @@ internal static class Balance
         UnitKind.Villager => new Cost(50, 0, 0),
         UnitKind.MeleeSoldier => new Cost(60, 0, 20),
         UnitKind.RangedSoldier => new Cost(0, 25, 45),
+        UnitKind.HeavySoldier => new Cost(70, 0, 30),
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
@@ -194,6 +200,7 @@ internal static class Balance
         UnitKind.Villager => 15 * Match.TicksPerSecond,
         UnitKind.MeleeSoldier => 20 * Match.TicksPerSecond,
         UnitKind.RangedSoldier => 18 * Match.TicksPerSecond,
+        UnitKind.HeavySoldier => 25 * Match.TicksPerSecond,
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 

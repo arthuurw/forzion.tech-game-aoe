@@ -33,6 +33,7 @@ public class TrainRejectionTests
     [Theory]
     [InlineData(BuildingKind.TownCenter, UnitKind.MeleeSoldier)]
     [InlineData(BuildingKind.TownCenter, UnitKind.RangedSoldier)]
+    [InlineData(BuildingKind.TownCenter, UnitKind.HeavySoldier)]
     [InlineData(BuildingKind.TownCenter, (UnitKind)99)]
     [InlineData(BuildingKind.Barracks, UnitKind.Villager)]
     [InlineData(BuildingKind.House, UnitKind.Villager)]

@@ -44,6 +44,37 @@ public class MilitaryTrainingTests
         Assert.NotEqual(first.StateHash, second.StateHash);
     }
 
+    [Fact]
+    public void A_Barracks_trains_a_heavy_soldier()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var barracks = Train.Complete(match, TestMatches.FirstPlayer, BuildingKind.Barracks);
+        match.Enqueue(new TrainCommand(TestMatches.FirstPlayer, barracks.Id, UnitKind.HeavySoldier));
+
+        var trained = Train.Run(match, Match.TrainTime(UnitKind.HeavySoldier)).Select(happened => happened.Event).OfType<UnitTrained>().Single();
+
+        var soldier = Battle.Unit(match, trained.Unit)!;
+        Assert.Equal(UnitKind.HeavySoldier, soldier.Kind);
+        Assert.Equal(TestMatches.FirstPlayer, soldier.Owner);
+    }
+
+    [Fact]
+    public void A_heavy_soldier_beats_a_melee_soldier_in_single_combat()
+    {
+        var match = Battle.Create(
+            first: plain => [new(UnitKind.HeavySoldier, TestArmies.BesideHome(plain, TestMatches.FirstPlayer, -2, 0))],
+            second: plain => [new(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, TestMatches.FirstPlayer, -2, 1))]);
+        var heavy = match.State.Units.Single(unit => unit.Kind == UnitKind.HeavySoldier);
+        var melee = match.State.Units.Single(unit => unit.Kind == UnitKind.MeleeSoldier);
+
+        Assert.True(heavy.MaxHitPoints > melee.MaxHitPoints);
+
+        Battle.TickUntil(match, () => Battle.Unit(match, melee.Id) is null || Battle.Unit(match, heavy.Id) is null);
+
+        Assert.Same(heavy, Battle.Unit(match, heavy.Id));
+        Assert.Null(Battle.Unit(match, melee.Id));
+    }
+
     /// <summary>The default match, in which the first Player has a complete Barracks.</summary>
     private static Match WithBarracks(out BuildingState barracks)
     {
