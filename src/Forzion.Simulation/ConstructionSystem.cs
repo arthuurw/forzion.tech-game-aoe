@@ -15,8 +15,16 @@ internal sealed class ConstructionSystem : ISystem
     {
         villager.StopGathering();
         villager.ConstructionSite = site.Id;
-        MovementSystem.WalkTo(map, villager, site.NearestCellTo(villager.Position.Cell));
+        WalkUpTo(map, villager, site);
     }
+
+    /// <summary>
+    /// Sends the Villager walking up to the site, to the Cell it can reach that is nearest in
+    /// a straight line to the Cell of the footprint nearest to where it stands, as
+    /// <see cref="Pathfinder.FindPath"/> picks it.
+    /// </summary>
+    public static void WalkUpTo(MapState map, UnitState villager, BuildingState site) =>
+        MovementSystem.WalkTo(map, villager, site.NearestCellTo(villager.Position.Cell));
 
     /// <summary>
     /// Releases the Villagers building a site that has left the match: they stop building and
