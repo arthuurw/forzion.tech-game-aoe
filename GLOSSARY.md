@@ -12,7 +12,11 @@ _Avoid_: Jogo, sessão, rodada
 
 **Tick** (`Tick`):
 Passo fixo em que a Partida avança, vinte por segundo de jogo. As ordens dadas pelos Jogadores valem a partir do Tick seguinte.
-_Avoid_: Quadro, frame, turno
+_Avoid_: Turno
+
+**Quadro** (`Frame`):
+Uma imagem da Partida desenhada na tela. Quadros não seguem o ritmo dos Ticks: entre dois Ticks podem ser desenhados vários Quadros ou nenhum.
+_Avoid_: Tick
 
 ## Modos de jogo
 
