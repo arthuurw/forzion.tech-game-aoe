@@ -4,6 +4,20 @@ Jogo de estratégia em tempo real ambientado na história do Brasil, com progres
 
 Cada termo traz entre parênteses o nome em inglês usado no código.
 
+## Partida
+
+**Partida** (`Match`):
+Disputa entre Jogadores num mapa, do início até a vitória de um deles. Partida livre e Cenário são modos de jogar uma Partida.
+_Avoid_: Jogo, sessão, rodada
+
+**Tick** (`Tick`):
+Passo fixo em que a Partida avança, vinte por segundo de jogo. As ordens dadas pelos Jogadores valem a partir do Tick seguinte.
+_Avoid_: Turno
+
+**Quadro** (`Frame`):
+Uma imagem da Partida desenhada na tela. Quadros não seguem o ritmo dos Ticks: entre dois Ticks podem ser desenhados vários Quadros ou nenhum.
+_Avoid_: Tick
+
 ## Modos de jogo
 
 **Partida livre** (`Skirmish`):
@@ -52,7 +66,37 @@ _Avoid_: Trabalhador, camponês, operário
 Construção onde Aldeões entregam os Recursos coletados.
 _Avoid_: Armazém, celeiro
 
+**Fonte de Recurso** (`Resource Source`):
+Lugar do mapa, de uma Célula, de onde se coleta um único Recurso. Guarda uma quantidade finita e sai do mapa ao se esgotar.
+_Avoid_: Nó, jazida, mina
+
+**Coleta** (`Gather`):
+Ciclo do Aldeão numa Fonte de Recurso: tirar Recurso até encher a Carga, entregá-la no Ponto de entrega mais próximo e voltar, sem nova ordem. Quando a Fonte se esgota, o Aldeão segue para outra Fonte próxima do mesmo Recurso ou fica Ocioso.
+_Avoid_: Colheita, extração, mineração
+
+**Carga** (`Load`):
+O Recurso que um Aldeão leva consigo, de um só tipo e até a capacidade de carga. Só passa ao Jogador quando é entregue.
+_Avoid_: Inventário, mochila
+
+**Ponto de entrega** (`Drop-off Point`):
+Construção onde o Aldeão entrega a Carga: o Centro e o Depósito.
+_Avoid_: Base, armazém
+
+**Ocioso** (`Idle`):
+Aldeão parado, sem ordem nem Coleta em andamento.
+_Avoid_: Livre, desocupado
+
+## Unidades
+
+**Unidade** (`Unit`):
+Peça móvel de um Jogador, civil como o Aldeão ou militar. Unidades andam pelas Células livres e não bloqueiam umas às outras.
+_Avoid_: Personagem, tropa, boneco
+
 ## Construções
+
+**Construção** (`Building`):
+Edificação de um Jogador, como o Centro ou a Casa. Ocupa um retângulo de Células inteiras e bloqueia a passagem.
+_Avoid_: Prédio, estrutura, edifício
 
 **Centro** (`Town Center`):
 Construção principal do Jogador: produz Aldeões, recebe Recursos e executa o Avanço de Era. Perder o Centro é perder a partida.
@@ -69,3 +113,10 @@ Construção que produz unidades militares.
 **Célula** (`Cell`):
 Menor unidade do mapa, um quadrado do grid. Obstáculos e construções ocupam Células inteiras.
 _Avoid_: Tile, casa, quadrado
+
+**Floresta** (`Forest`):
+Obstáculo que ocupa Células inteiras: Unidades não a atravessam e Construções não são erguidas sobre ela. Não é coletada; a Madeira vem das Fontes de Recurso.
+_Avoid_: Mata, bosque, árvores
+
+**Água** (`Water`):
+Obstáculo que ocupa Células inteiras: Unidades não a atravessam e Construções não são erguidas sobre ela.

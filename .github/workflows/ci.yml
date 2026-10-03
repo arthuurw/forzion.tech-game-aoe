@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'spec-*/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build and test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+    steps:
+      - uses: actions/checkout@v4
+
+      # SDK 10 builds the solution; the 8.0 install provides the net8.0 runtime the tests run on.
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Restore
+        run: dotnet restore Forzion.sln
+
+      - name: Build
+        run: dotnet build Forzion.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test Forzion.sln --configuration Release --no-build
