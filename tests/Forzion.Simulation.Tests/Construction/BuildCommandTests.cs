@@ -68,6 +68,26 @@ public class BuildCommandTests
             new BuildCommand(TestMatches.FirstPlayer, [villager.Id, Site.VillagersOf(match, TestMatches.SecondPlayer)[0].Id], house.Id));
     }
 
+    [Fact]
+    public void A_build_order_given_to_a_soldier_is_rejected_and_sends_none_of_its_units()
+    {
+        var plain = TestMatches.TwoPlayerMatch();
+        var match = Match.Create(TestArmies.Config(
+            first: [new StartingUnit(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, TestMatches.FirstPlayer, -2, 0))]));
+        var villager = Site.VillagersOf(match, TestMatches.FirstPlayer)[0];
+        var soldier = match.State.UnitsOf(TestMatches.FirstPlayer).Single(unit => unit.Kind == UnitKind.MeleeSoldier);
+        var house = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.House, []);
+        var command = new BuildCommand(TestMatches.FirstPlayer, [villager.Id, soldier.Id], house.Id);
+        match.Enqueue(command);
+
+        match.Tick();
+
+        Assert.Equal([new CommandRejected(command, RejectionReason.UnitCannotBuild)], match.Events);
+        Assert.Null(villager.ConstructionSite);
+        Assert.Null(soldier.ConstructionSite);
+        Assert.False(villager.IsMoving);
+    }
+
     /// <summary>
     /// Places a House of the first Player with no builder in two equal matches, sends the
     /// command <paramref name="build"/> makes from one of them, its House and its first Villager,

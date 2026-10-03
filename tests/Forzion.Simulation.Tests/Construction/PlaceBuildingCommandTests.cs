@@ -118,6 +118,25 @@ public class PlaceBuildingCommandTests
         Assert.Equal(without.StateHash, withRejection.StateHash);
     }
 
+    [Fact]
+    public void Placing_a_building_with_a_soldier_as_builder_is_rejected_and_changes_nothing()
+    {
+        var withRejection = Match.Create(WithSoldier());
+        var without = Match.Create(WithSoldier());
+        var soldier = withRejection.State.UnitsOf(TestMatches.FirstPlayer).Single(unit => unit.Kind == UnitKind.MeleeSoldier);
+        var command = AffordableHouseWith(withRejection, without, soldier.Id);
+
+        withRejection.Tick();
+        without.Tick();
+
+        Assert.Equal([new CommandRejected(command, RejectionReason.UnitCannotBuild)], withRejection.Events);
+        Assert.Equal(without.StateHash, withRejection.StateHash);
+    }
+
+    /// <summary>The default two-Player configuration, the first Player starting with a melee soldier beside its Town Center.</summary>
+    private static MatchConfig WithSoldier() => TestArmies.Config(
+        first: [new StartingUnit(UnitKind.MeleeSoldier, TestArmies.BesideHome(TestMatches.TwoPlayerMatch(), TestMatches.FirstPlayer, -2, 0))]);
+
     /// <summary>
     /// Gives the first Player of both matches the Wood for a House and enqueues, in
     /// <paramref name="withRejection"/> only, a valid placement whose builders are its first

@@ -56,3 +56,6 @@ msgstr "Ordem recusada: o local não está livre."
 
 msgid "ORDER_REJECTED_NOT_ENOUGH_RESOURCES"
 msgstr "Ordem recusada: faltam Recursos."
+
+msgid "ORDER_REJECTED_UNIT_CANNOT_BUILD"
+msgstr "Ordem recusada: só Aldeões constroem."
