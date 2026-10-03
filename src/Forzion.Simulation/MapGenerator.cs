@@ -5,7 +5,10 @@ namespace Forzion.Simulation;
 /// <param name="Sources">The resource sources, by row and then by column.</param>
 internal sealed record GeneratedMap(
     IReadOnlyList<CellPosition> Homes,
-    IReadOnlyList<(CellPosition Cell, ResourceKind Kind)> Sources);
+    IReadOnlyList<SourcePlacement> Sources);
+
+/// <summary>Where generation put a resource source and which Resource it holds.</summary>
+internal readonly record struct SourcePlacement(CellPosition Cell, ResourceKind Kind);
 
 /// <summary>
 /// Generates the map of a match from the match's random generator, so the same seed always
@@ -71,7 +74,7 @@ internal static class MapGenerator
         var home = new CellPosition(
             HomeMargin + random.NextInt(HomeJitter),
             HomeMargin + random.NextInt(HomeJitter));
-        var sources = new List<(CellPosition Cell, ResourceKind Kind)>();
+        var sources = new List<SourcePlacement>();
 
         PlaceHomeSources(map, random, home, sources);
 
@@ -104,7 +107,7 @@ internal static class MapGenerator
     }
 
     private static void PlaceHomeSources(
-        MapState map, MatchRandom random, CellPosition home, List<(CellPosition Cell, ResourceKind Kind)> sources)
+        MapState map, MatchRandom random, CellPosition home, List<SourcePlacement> sources)
     {
         var candidates = new List<CellPosition>();
 
@@ -138,7 +141,7 @@ internal static class MapGenerator
         MapState map,
         MatchRandom random,
         CellPosition home,
-        List<(CellPosition Cell, ResourceKind Kind)> sources,
+        List<SourcePlacement> sources,
         List<CellPosition> scattered)
     {
         var count = map.Width * map.Height / CellsPerFarSource;
@@ -245,7 +248,7 @@ internal static class MapGenerator
     /// a symmetric map that is symmetric as well: a source and its mirror go together.
     /// </summary>
     private static void DropWalledInSources(
-        MapState map, CellPosition home, List<(CellPosition Cell, ResourceKind Kind)> sources)
+        MapState map, CellPosition home, List<SourcePlacement> sources)
     {
         var reached = ReachableFrom(map, home);
         var walledIn = sources.Where(source => !SideNeighbours(source.Cell).Any(reached.Contains)).ToHashSet();
@@ -264,14 +267,14 @@ internal static class MapGenerator
     ];
 
     private static void PlaceSourcePair(
-        MapState map, CellPosition cell, ResourceKind kind, List<(CellPosition Cell, ResourceKind Kind)> sources)
+        MapState map, CellPosition cell, ResourceKind kind, List<SourcePlacement> sources)
     {
         var mirror = map.Mirror(cell);
 
         map[cell] = CellKind.ResourceSource;
         map[mirror] = CellKind.ResourceSource;
-        sources.Add((cell, kind));
-        sources.Add((mirror, kind));
+        sources.Add(new SourcePlacement(cell, kind));
+        sources.Add(new SourcePlacement(mirror, kind));
     }
 
     /// <summary>Distance in king's moves.</summary>
