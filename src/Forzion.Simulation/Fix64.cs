@@ -1,8 +1,20 @@
+using System.Globalization;
+using System.Text;
+
 namespace Forzion.Simulation;
 
 /// <summary>
-/// Deterministic signed fixed-point number in Q32.32 format (ADR 0002).
+/// Deterministic signed fixed-point number in Q32.32 format (ADR 0002): a 64-bit integer
+/// counting units of 2^-32, covering [-2^31, 2^31 - 2^-32].
 /// </summary>
+/// <remarks>
+/// All arithmetic is integer arithmetic, so results are bit-identical on every platform.
+/// Results outside the range saturate at <see cref="MinValue"/> or <see cref="MaxValue"/>
+/// instead of wrapping or throwing: a runaway value stays on the correct side of zero and a
+/// tick never aborts halfway. Multiplication and division round toward zero, so mirrored
+/// inputs give mirrored outputs. Floating point appears only in <see cref="ToDouble"/> and
+/// <see cref="ToFloat"/>, which exist for the presentation layer.
+/// </remarks>
 public readonly struct Fix64 : IEquatable<Fix64>, IComparable<Fix64>
 {
     private const int FractionalBits = 32;
@@ -78,6 +90,40 @@ public readonly struct Fix64 : IEquatable<Fix64>, IComparable<Fix64>
     /// only, like <see cref="ToDouble"/>.
     /// </summary>
     public float ToFloat() => (float)ToDouble();
+
+    /// <summary>
+    /// Exact decimal text of the value. Built with integer arithmetic, so it is identical on
+    /// every platform and culture.
+    /// </summary>
+    public override string ToString()
+    {
+        var magnitude = raw < 0 ? unchecked((ulong)-raw) : (ulong)raw;
+        var text = new StringBuilder();
+
+        if (raw < 0)
+        {
+            text.Append('-');
+        }
+
+        text.Append((magnitude >> FractionalBits).ToString(CultureInfo.InvariantCulture));
+
+        var fraction = magnitude & FractionMask;
+
+        if (fraction != 0)
+        {
+            text.Append('.');
+        }
+
+        // Each step shifts one decimal digit out of the binary fraction; it ends within 32 digits.
+        while (fraction != 0)
+        {
+            fraction *= 10;
+            text.Append((char)('0' + (int)(fraction >> FractionalBits)));
+            fraction &= FractionMask;
+        }
+
+        return text.ToString();
+    }
 
     public static bool operator ==(Fix64 left, Fix64 right) => left.raw == right.raw;
 

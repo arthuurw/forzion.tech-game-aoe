@@ -82,6 +82,19 @@ public class Fix64ConversionTests
         Assert.Equal(-2147483648f, Fix64.MinValue.ToFloat());
     }
 
+    // Exact decimal text, independent of culture and of floating point, for logs and test output.
+    [Theory]
+    [InlineData(0L, "0")]
+    [InlineData(42L << 32, "42")]
+    [InlineData(-7L << 32, "-7")]
+    [InlineData(3L << 31, "1.5")]
+    [InlineData(-1L << 30, "-0.25")]
+    [InlineData(1L, "0.00000000023283064365386962890625")]
+    [InlineData(long.MaxValue, "2147483647.99999999976716935634613037109375")]
+    [InlineData(long.MinValue, "-2147483648")]
+    public void Text_form_is_the_exact_decimal_value(long raw, string expected) =>
+        Assert.Equal(expected, Fix64.FromRaw(raw).ToString());
+
     private static Fix64 WholePlusFraction(int whole, uint fraction) =>
         Fix64.FromRaw(((long)whole << 32) + fraction);
 
