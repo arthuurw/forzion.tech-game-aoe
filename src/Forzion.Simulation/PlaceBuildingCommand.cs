@@ -3,7 +3,7 @@ namespace Forzion.Simulation;
 /// <summary>
 /// Places a construction site of the Player: a building of the given kind whose footprint
 /// starts on <paramref name="Origin"/>. Its cost is paid in full at once, and its Cells are
-/// blocked from then on. The builders walk up to the site and build it, stopping whatever
+/// blocked from then on: units on their way across them find another way. The builders walk up to the site and build it, stopping whatever
 /// gathering they were doing.
 /// </summary>
 /// <remarks>
@@ -53,6 +53,7 @@ public sealed record PlaceBuildingCommand(
 
         issuer.Pay(cost);
         var site = context.State.AddBuilding(issuer.Id, Kind, Origin, size, size);
+        MovementSystem.Reroute(context.State);
 
         foreach (var builder in builders)
         {
