@@ -23,6 +23,9 @@ internal sealed class AiScript
     // already decided, which the match only charges once it applies them.
     private readonly int[] budget;
 
+    // Villagers given a job this tick, which no later decision of the same tick takes from them.
+    private readonly HashSet<EntityId> busy = [];
+
     private AiScript(MatchState state, PlayerState player)
     {
         this.state = state;
@@ -35,10 +38,111 @@ internal sealed class AiScript
     {
         var script = new AiScript(state, player);
 
+        script.BuildHouse();
         script.TrainVillager();
         script.SendIdleVillagersToGather();
 
         return script.commands;
+    }
+
+    /// <summary>
+    /// Places a House once the population limit is within <see cref="Balance.AiPopulationHeadroom"/>
+    /// of the population, one House at a time.
+    /// </summary>
+    private void BuildHouse()
+    {
+        if (state.PopulationLimitOf(player.Id) - state.PopulationOf(player.Id) > Balance.AiPopulationHeadroom
+            || OwnBuildings(BuildingKind.House).Any(house => !house.IsComplete))
+        {
+            return;
+        }
+
+        Place(BuildingKind.House);
+    }
+
+    /// <summary>
+    /// Places a construction site of the given kind near the Town Center with the nearest
+    /// Villagers as builders, when what it costs is still in this tick's budget and there is a
+    /// place for it.
+    /// </summary>
+    private void Place(BuildingKind kind)
+    {
+        var builders = OwnUnits()
+            .Where(unit => unit.Kind == UnitKind.Villager && unit.ConstructionSite is null && !busy.Contains(unit.Id))
+            .ToList();
+
+        if (builders.Count == 0 || DrawOrigin(kind) is not { } origin || !Spend(Balance.BuildingCost(kind)))
+        {
+            return;
+        }
+
+        var nearest = builders
+            .OrderBy(unit => SquaredDistance(unit.Position.Cell, origin))
+            .ThenBy(unit => unit.Id.Value)
+            .Take(Balance.AiBuilders(kind))
+            .Select(unit => unit.Id)
+            .ToList();
+
+        busy.UnionWith(nearest);
+        commands.Add(new PlaceBuildingCommand(player.Id, kind, origin, nearest));
+    }
+
+    /// <summary>
+    /// The origin of a footprint of the given kind drawn from the match's generator among the
+    /// <see cref="Balance.AiPlacementChoices"/> nearest to the Town Center, within
+    /// <see cref="Balance.AiBuildingReach"/> Cells of it, or null when there is none. Only
+    /// footprints ringed by free Cells count, so what the AI builds never walls in a unit, a
+    /// source or another building. Between origins equally near, the one with the lowest
+    /// Cell index comes first.
+    /// </summary>
+    private CellPosition? DrawOrigin(BuildingKind kind)
+    {
+        var home = Home();
+        var size = Balance.BuildingSize(kind);
+        var reach = Balance.AiBuildingReach;
+        var origins = new List<(CellPosition Origin, int Distance)>();
+
+        // Row by row, from the lowest: ascending Cell index, which the stable sort below keeps among equals.
+        for (var y = home.Y - reach; y <= home.Y + reach; y++)
+        {
+            for (var x = home.X - reach; x <= home.X + reach; x++)
+            {
+                var origin = new CellPosition(x, y);
+
+                if (state.CanPlace(kind, origin) && IsRingedByFreeCells(origin, size))
+                {
+                    origins.Add((origin, SquaredDistance(new CellPosition(x + (size / 2), y + (size / 2)), home)));
+                }
+            }
+        }
+
+        if (origins.Count == 0)
+        {
+            return null;
+        }
+
+        var nearest = origins.OrderBy(each => each.Distance).Take(Balance.AiPlacementChoices).ToList();
+
+        return nearest[state.Random.NextInt(nearest.Count)].Origin;
+    }
+
+    /// <summary>Whether every Cell around the footprint, by a side or by a corner, is inside the map and free.</summary>
+    private bool IsRingedByFreeCells(CellPosition origin, int size)
+    {
+        for (var y = origin.Y - 1; y <= origin.Y + size; y++)
+        {
+            for (var x = origin.X - 1; x <= origin.X + size; x++)
+            {
+                var inside = x >= origin.X && x < origin.X + size && y >= origin.Y && y < origin.Y + size;
+
+                if (!inside && !state.Map.IsFree(new CellPosition(x, y)))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -103,7 +207,7 @@ internal sealed class AiScript
             }
         }
 
-        foreach (var villager in OwnUnits().Where(IsIdleVillager).ToList())
+        foreach (var villager in OwnUnits().Where(unit => IsIdleVillager(unit) && !busy.Contains(unit.Id)).ToList())
         {
             if (LeastGatheredKind(gatherers) is not { } kind)
             {
@@ -168,6 +272,9 @@ internal sealed class AiScript
 
     private BuildingState? TownCenter() =>
         state.Buildings.FirstOrDefault(building => building.Owner == player.Id && building.Kind == BuildingKind.TownCenter);
+
+    private IEnumerable<BuildingState> OwnBuildings(BuildingKind kind) =>
+        state.Buildings.Where(building => building.Owner == player.Id && building.Kind == kind);
 
     private IEnumerable<UnitState> OwnUnits() => state.Units.Where(unit => unit.Owner == player.Id);
 

@@ -240,6 +240,28 @@ internal static class Balance
 
     /// <summary>How many Villagers the AI trains, one at a time, before it stops.</summary>
     public const int AiVillagers = 12;
+
+    /// <summary>
+    /// How close the AI lets its population come to the population limit before it places a
+    /// House: once no more than this many units are left to train, it places one.
+    /// </summary>
+    public const int AiPopulationHeadroom = 2;
+
+    /// <summary>How many Villagers the AI sends to build a building of the given kind when it places it.</summary>
+    public static int AiBuilders(BuildingKind kind) => kind switch
+    {
+        BuildingKind.TownCenter => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Town Centers are not placed."),
+        BuildingKind.House => 1,
+        BuildingKind.Storehouse => 1,
+        BuildingKind.Barracks => 2,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
+    /// <summary>Farthest the AI places a building from the centre of its Town Center, in Cells along either axis.</summary>
+    public const int AiBuildingReach = 10;
+
+    /// <summary>Among how many of the places nearest its Town Center the AI draws the one a building goes to.</summary>
+    public const int AiPlacementChoices = 3;
 }
 
 /// <summary>How a unit fights.</summary>

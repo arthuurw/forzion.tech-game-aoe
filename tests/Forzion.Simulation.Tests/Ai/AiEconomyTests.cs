@@ -8,13 +8,14 @@ public class AiEconomyTests
     private static readonly PlayerId Ai = TestMatches.SecondPlayer;
 
     [Fact]
-    public void An_AI_Player_sends_its_idle_Villagers_to_gather_in_the_first_tick()
+    public void An_AI_Player_puts_every_idle_Villager_to_work_in_the_first_tick_gathering_those_it_does_not_send_to_build()
     {
         var match = Match.Create(AiMatches.Config(firstIsAi: false, secondIsAi: true));
 
         match.Tick();
 
-        Assert.All(match.State.UnitsOf(Ai), villager => Assert.NotNull(villager.GatherSource));
+        Assert.All(match.State.UnitsOf(Ai), villager => Assert.True(villager.GatherSource is null != villager.ConstructionSite is null));
+        Assert.Contains(match.State.UnitsOf(Ai), villager => villager.GatherSource is not null);
         Assert.All(match.State.UnitsOf(Human), villager => Assert.Null(villager.GatherSource));
     }
 

@@ -15,6 +15,31 @@ internal static class AiMatches
                 new PlayerConfig(TestMatches.FirstFaction, IsAi: secondIsAi),
             ]);
 
+    /// <summary>The Player's buildings of the given kind, construction sites included, in ascending ID order.</summary>
+    public static IEnumerable<BuildingState> Buildings(Match match, PlayerId player, BuildingKind kind) =>
+        match.State.Buildings.Where(building => building.Owner == player && building.Kind == kind);
+
+    /// <summary>
+    /// Ticks the match until the condition holds, and fails the test when it still does not
+    /// after <paramref name="limit"/> ticks. Returns the ticks it took.
+    /// </summary>
+    public static int TickUntil(Match match, Func<bool> condition, int limit)
+    {
+        for (var ticks = 1; ticks <= limit; ticks++)
+        {
+            match.Tick();
+
+            if (condition())
+            {
+                return ticks;
+            }
+        }
+
+        Assert.Fail($"The condition did not hold within {limit} ticks.");
+
+        return limit;
+    }
+
     /// <summary>The Player's Town Center.</summary>
     public static BuildingState TownCenter(Match match, PlayerId player) =>
         match.State.Buildings.Single(building => building.Owner == player && building.Kind == BuildingKind.TownCenter);
