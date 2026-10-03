@@ -75,7 +75,9 @@ public sealed class BuildingState
 
     /// <summary>
     /// The units the building is to train, in the order it trains them. Only the first is in
-    /// training; the others wait their turn. Each was paid for when it joined the queue.
+    /// training; the others wait their turn. Each was paid for when it joined the queue. A
+    /// building destroyed takes its queue with it: those units are never trained and their cost
+    /// is not given back, as the cost of a destroyed construction site is not.
     /// </summary>
     public IReadOnlyList<UnitKind> TrainingQueue => trainingQueue;
 
