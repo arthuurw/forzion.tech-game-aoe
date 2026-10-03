@@ -56,6 +56,14 @@ public sealed class UnitState
         path.AddRange(cells);
     }
 
+    /// <summary>Takes the Villager off gathering. It keeps whatever it carries.</summary>
+    internal void StopGathering()
+    {
+        GatherSource = null;
+        GatherPhase = GatherPhase.None;
+        GatherProgress = 0;
+    }
+
     /// <summary>Drops the next Cell of the path: the unit has reached its centre.</summary>
     internal void ReachWaypoint() => path.RemoveAt(0);
 

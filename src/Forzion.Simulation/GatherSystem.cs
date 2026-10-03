@@ -148,8 +148,7 @@ internal sealed class GatherSystem : ISystem
     /// </summary>
     private static void StopGathering(MapState map, UnitState villager)
     {
-        villager.GatherPhase = GatherPhase.None;
-        villager.GatherProgress = 0;
+        villager.StopGathering();
         MovementSystem.WalkTo(map, villager, villager.Position.Cell);
     }
 

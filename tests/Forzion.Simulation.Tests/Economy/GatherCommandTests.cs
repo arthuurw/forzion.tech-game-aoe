@@ -148,4 +148,31 @@ public class GatherCommandTests
 
         Assert.Equal(without.StateHash, withRejection.StateHash);
     }
+
+    [Fact]
+    public void A_gathering_Villager_ordered_to_move_stops_gathering_and_keeps_its_load()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var villager = Walk.MiddleVillager(match);
+        var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Food);
+        var destination = Walk.BehindTownCenter(match);
+        match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
+        Gather.Until(match, () => villager.CarriedAmount > 1);
+        var load = villager.CarriedAmount;
+        var left = source.Amount;
+
+        match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], destination));
+        Walk.UntilStopped(match, villager);
+
+        for (var tick = 0; tick < 200; tick++)
+        {
+            match.Tick();
+        }
+
+        Assert.Equal(MapPosition.CentreOf(destination), villager.Position);
+        Assert.Equal(GatherPhase.None, villager.GatherPhase);
+        Assert.Null(villager.GatherSource);
+        Assert.Equal(load, villager.CarriedAmount);
+        Assert.Equal(left, source.Amount);
+    }
 }
