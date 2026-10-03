@@ -5,7 +5,7 @@ namespace Forzion.Presentation;
 
 /// <summary>
 /// Which notices to show the person at the screen when the match refuses their orders. A
-/// notice is the key of a text in the game's translation table, so the words live outside the
+/// notice is the key of a text in the game's translations, so the words live outside the
 /// code and can be translated.
 /// </summary>
 public static class RejectionNotices
@@ -31,7 +31,7 @@ public static class RejectionNotices
     /// The key of the text explaining <paramref name="reason"/>: <c>ORDER_REJECTED_</c> followed
     /// by the reason's name in upper snake case, such as <c>ORDER_REJECTED_DESTINATION_OUTSIDE_MAP</c>.
     /// Derived from the name so a reason added to the simulation has a key at once; its text
-    /// still has to be added to the translation table.
+    /// still has to be added to the translations.
     /// </summary>
     public static string MessageKeyOf(RejectionReason reason)
     {

@@ -1,7 +1,0 @@
-keys,pt_BR
-ORDER_REJECTED_UNKNOWN_PLAYER,Ordem recusada: Jogador desconhecido.
-ORDER_REJECTED_DEFEATED_PLAYER,Ordem recusada: você já foi derrotado.
-ORDER_REJECTED_UNKNOWN_UNIT,Ordem recusada: a unidade não está mais no mapa.
-ORDER_REJECTED_UNIT_OF_ANOTHER_PLAYER,Ordem recusada: essa unidade é de outro Jogador.
-ORDER_REJECTED_DESTINATION_OUTSIDE_MAP,Ordem recusada: o destino fica fora do mapa.
-ORDER_REJECTED_UNKNOWN_RESOURCE_SOURCE,Ordem recusada: a Fonte de Recurso não está mais no mapa.

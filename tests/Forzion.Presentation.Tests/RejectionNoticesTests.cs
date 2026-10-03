@@ -36,7 +36,7 @@ public class RejectionNoticesTests
         Assert.Equal(reasons.Length, reasons.Select(RejectionNotices.MessageKeyOf).Distinct().Count());
     }
 
-    // The texts live in the game's translation table, outside the code. A reason added to the
+    // The texts live in the game's translations, outside the code. A reason added to the
     // simulation without a text there fails here instead of showing a bare key on screen.
     [Fact]
     public void Every_reason_has_a_Portuguese_text_in_the_game_translations()

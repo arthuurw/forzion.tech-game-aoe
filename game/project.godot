@@ -74,5 +74,5 @@ order={
 
 [internationalization]
 
-locale/translations=PackedStringArray("res://translations/texts.pt_BR.translation")
+locale/translations=PackedStringArray("res://translations/pt_BR.po")
 locale/fallback="pt_BR"

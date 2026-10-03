@@ -3,27 +3,57 @@ using System.Text;
 namespace Forzion.Presentation.Tests;
 
 /// <summary>
-/// Reads the game's translation table, <c>game/translations/texts.csv</c>: a CSV whose first
-/// row is <c>keys</c> followed by one locale per column, the format Godot imports.
+/// Reads one locale of the game's translations: the gettext file
+/// <c>game/translations/&lt;locale&gt;.po</c> that Godot loads, whose message IDs are the keys
+/// the code uses.
 /// </summary>
 internal static class TranslationTable
 {
-    /// <summary>The texts of one locale, by key.</summary>
+    /// <summary>The texts of the locale, by key. The header entry, with the empty key, is left out.</summary>
     public static Dictionary<string, string> Load(string locale)
     {
-        var rows = File.ReadAllLines(PathOfTable(), Encoding.UTF8)
-            .Where(line => line.Length > 0)
-            .Select(ParseRow)
-            .ToList();
+        var texts = new Dictionary<string, string>();
+        string? key = null;
+        StringBuilder? current = null;
+        var inText = false;
 
-        var column = rows[0].IndexOf(locale);
+        void Finish()
+        {
+            if (key is { Length: > 0 } && inText && current is not null)
+            {
+                texts[key] = current.ToString();
+            }
+        }
 
-        Assert.True(column > 0, $"The translation table has no {locale} column.");
+        foreach (var raw in File.ReadAllLines(PathOf(locale), Encoding.UTF8))
+        {
+            var line = raw.Trim();
 
-        return rows.Skip(1).ToDictionary(row => row[0], row => column < row.Count ? row[column] : "");
+            if (line.StartsWith("msgid ", StringComparison.Ordinal))
+            {
+                Finish();
+                current = new StringBuilder(Unquote(line["msgid ".Length..]));
+                inText = false;
+            }
+            else if (line.StartsWith("msgstr ", StringComparison.Ordinal))
+            {
+                key = current?.ToString();
+                current = new StringBuilder(Unquote(line["msgstr ".Length..]));
+                inText = true;
+            }
+            else if (line.StartsWith('"'))
+            {
+                // A string continued on the next line.
+                current?.Append(Unquote(line));
+            }
+        }
+
+        Finish();
+
+        return texts;
     }
 
-    private static string PathOfTable()
+    private static string PathOf(string locale)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
 
@@ -34,43 +64,9 @@ internal static class TranslationTable
 
         Assert.NotNull(directory);
 
-        return Path.Combine(directory.FullName, "game", "translations", "texts.csv");
+        return Path.Combine(directory.FullName, "game", "translations", $"{locale}.po");
     }
 
-    // Fields are separated by commas; a field in double quotes may hold commas, and a doubled
-    // quote inside it stands for one quote.
-    private static List<string> ParseRow(string line)
-    {
-        var fields = new List<string>();
-        var field = new StringBuilder();
-        var quoted = false;
-
-        for (var index = 0; index < line.Length; index++)
-        {
-            var character = line[index];
-
-            if (quoted && character == '"' && index + 1 < line.Length && line[index + 1] == '"')
-            {
-                field.Append('"');
-                index++;
-            }
-            else if (character == '"')
-            {
-                quoted = !quoted;
-            }
-            else if (character == ',' && !quoted)
-            {
-                fields.Add(field.ToString());
-                field.Clear();
-            }
-            else
-            {
-                field.Append(character);
-            }
-        }
-
-        fields.Add(field.ToString());
-
-        return fields;
-    }
+    private static string Unquote(string quoted) =>
+        quoted.Trim().Trim('"').Replace("\\\"", "\"", StringComparison.Ordinal).Replace("\\n", "\n", StringComparison.Ordinal);
 }
