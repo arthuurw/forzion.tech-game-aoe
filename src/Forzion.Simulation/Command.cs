@@ -52,31 +52,10 @@ public sealed record MoveCommand(PlayerId Player, IReadOnlyList<EntityId> Units,
             return;
         }
 
-        var units = new List<UnitState>(Units.Count);
+        var units = OrderedUnits.Find(context, this, issuer, Units);
 
-        foreach (var id in Units)
+        if (units is null)
         {
-            var unit = state.FindUnit(id);
-
-            if (unit is null)
-            {
-                continue;
-            }
-
-            if (unit.Owner != issuer.Id)
-            {
-                context.Reject(this, RejectionReason.UnitOfAnotherPlayer);
-
-                return;
-            }
-
-            units.Add(unit);
-        }
-
-        if (units.Count == 0)
-        {
-            context.Reject(this, RejectionReason.UnknownUnit);
-
             return;
         }
 

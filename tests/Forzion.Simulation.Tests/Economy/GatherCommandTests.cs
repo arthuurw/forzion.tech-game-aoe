@@ -103,19 +103,31 @@ public class GatherCommandTests
     }
 
     [Fact]
-    public void A_gather_by_a_unit_that_does_not_exist_is_rejected_and_sends_none_of_its_units()
+    public void A_unit_that_no_longer_exists_is_skipped_and_the_other_units_of_the_gather_set_out()
     {
         var match = TestMatches.TwoPlayerMatch();
         var villager = Walk.MiddleVillager(match);
         var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Wood);
-        var command = new GatherCommand(TestMatches.FirstPlayer, [villager.Id, new EntityId(100_000)], source.Id);
+        match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [new EntityId(100_000), villager.Id], source.Id));
+
+        match.Tick();
+
+        Assert.Empty(match.Events);
+        Assert.Equal(source.Id, villager.GatherSource);
+        Assert.Equal(GatherPhase.ToSource, villager.GatherPhase);
+    }
+
+    [Fact]
+    public void A_gather_by_units_none_of_which_exist_is_rejected()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var source = Gather.NearestSource(match.State, Walk.MiddleVillager(match).Position.Cell, ResourceKind.Wood);
+        var command = new GatherCommand(TestMatches.FirstPlayer, [new EntityId(100_000), new EntityId(100_001)], source.Id);
         match.Enqueue(command);
 
         match.Tick();
 
         Assert.Equal([new CommandRejected(command, RejectionReason.UnknownUnit)], match.Events);
-        Assert.Equal(GatherPhase.None, villager.GatherPhase);
-        Assert.False(villager.IsMoving);
     }
 
     [Fact]
@@ -141,8 +153,9 @@ public class GatherCommandTests
         var withRejection = TestMatches.TwoPlayerMatch();
         var without = TestMatches.TwoPlayerMatch();
         var villager = Walk.MiddleVillager(withRejection);
+        var foreign = withRejection.State.UnitsOf(TestMatches.SecondPlayer).First();
         var source = Gather.NearestSource(withRejection.State, villager.Position.Cell, ResourceKind.Gold);
-        withRejection.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id, new EntityId(100_000)], source.Id));
+        withRejection.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id, foreign.Id], source.Id));
 
         withRejection.Tick();
         without.Tick();
