@@ -72,9 +72,6 @@ public sealed record AgeAdvanceProgress(string AgeNameKey, double Progress)
         // Ages are numbered from 1 and listed from index 0, so the next Age is at the current number.
         var next = player.Faction.Ages[player.Age];
 
-        return new AgeAdvanceProgress(next.NameKey, Fraction(ticks, next.AdvanceTime));
+        return new AgeAdvanceProgress(next.NameKey, Fractions.Of(ticks, next.AdvanceTime));
     }
-
-    /// <summary>The share of <paramref name="total"/> that <paramref name="done"/> makes, from 0 to 1; 1 when there is nothing to do.</summary>
-    internal static double Fraction(int done, int total) => total <= 0 ? 1 : Math.Clamp((double)done / total, 0, 1);
 }

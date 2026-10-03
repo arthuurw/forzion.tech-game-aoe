@@ -52,6 +52,53 @@ internal static class HudMatches
         return new CellPosition(townCenter.Origin.X + (townCenter.Width / 2) - 2, townCenter.Origin.Y + (townCenter.Height / 2));
     }
 
+    /// <summary>
+    /// An origin near the first Player's Town Center, searched outward, where a building of
+    /// the given kind fits with a free Cell to spare all around it.
+    /// </summary>
+    public static CellPosition FreeOriginNearFirstHome(Match match, BuildingKind kind)
+    {
+        var home = TownCenterOf(match, FirstPlayer).Origin;
+        var size = Match.BuildingSize(kind);
+
+        for (var reach = 4; reach < 20; reach++)
+        {
+            for (var dy = -reach; dy <= reach; dy++)
+            {
+                for (var dx = -reach; dx <= reach; dx++)
+                {
+                    var origin = new CellPosition(home.X + dx, home.Y + dy);
+
+                    if (match.CanPlace(kind, origin) && IsClearAround(match, origin, size))
+                    {
+                        return origin;
+                    }
+                }
+            }
+        }
+
+        throw new InvalidOperationException("No free origin near the first Town Center.");
+    }
+
+    /// <summary>Whether the footprint and the ring of Cells around it are free: builders can walk all around.</summary>
+    private static bool IsClearAround(Match match, CellPosition origin, int size)
+    {
+        for (var y = origin.Y - 1; y <= origin.Y + size; y++)
+        {
+            for (var x = origin.X - 1; x <= origin.X + size; x++)
+            {
+                var cell = new CellPosition(x, y);
+
+                if (!match.State.Map.Contains(cell) || match.State.Map[cell] != CellKind.Free)
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     public static BuildingState TownCenterOf(Match match, PlayerId player) =>
         match.State.Buildings.First(building => building.Owner == player && building.Kind == BuildingKind.TownCenter);
 

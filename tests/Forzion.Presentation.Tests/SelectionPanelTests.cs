@@ -77,4 +77,138 @@ public class SelectionPanelTests
         Assert.Equal("FACTION_PORTUGUESE_MELEE_SOLDIER", Assert.Single(panel.Units).NameKey);
         Assert.Empty(panel.BuildingChoices);
     }
+
+    [Fact]
+    public void The_selected_Town_Center_is_shown_with_its_hit_points_the_units_it_trains_and_the_next_Age_Advance()
+    {
+        var match = Portuguese();
+        var townCenter = TownCenterOf(match, FirstPlayer);
+
+        var building = SelectionPanel.For(match.State, FirstPlayer, [townCenter.Id]).Building;
+
+        Assert.NotNull(building);
+        Assert.Equal((townCenter.Id, BuildingKind.TownCenter, "BUILDING_TOWN_CENTER"), (building.Id, building.Kind, building.NameKey));
+        Assert.Equal((townCenter.HitPoints, townCenter.MaxHitPoints), (building.HitPoints, building.MaxHitPoints));
+        Assert.Null(building.ConstructionProgress);
+        Assert.Empty(building.TrainingQueue);
+        var villager = Assert.Single(building.UnitChoices);
+        Assert.Equal(
+            new UnitChoice(UnitKind.Villager, "FACTION_PORTUGUESE_VILLAGER", Match.UnitCost(UnitKind.Villager), null),
+            villager);
+        Assert.Equal(
+            new AgeAdvanceChoice("FACTION_PORTUGUESE_AGE_2", Factions.Portuguese.Ages[1].AdvanceCost, null),
+            building.AgeAdvance);
+        Assert.Null(building.RallyPoint);
+    }
+
+    [Fact]
+    public void The_training_queue_is_shown_in_order_with_how_far_the_first_unit_has_trained()
+    {
+        var match = Portuguese();
+        var townCenter = TownCenterOf(match, FirstPlayer);
+        match.Enqueue(new TrainCommand(FirstPlayer, townCenter.Id, UnitKind.Villager));
+        match.Enqueue(new TrainCommand(FirstPlayer, townCenter.Id, UnitKind.Villager));
+        var quarter = Match.TrainTime(UnitKind.Villager) / 4;
+
+        Run(match, quarter);
+
+        var queue = SelectionPanel.For(match.State, FirstPlayer, [townCenter.Id]).Building!.TrainingQueue;
+        Assert.Equal([UnitKind.Villager, UnitKind.Villager], queue.Select(queued => queued.Kind));
+        Assert.All(queue, queued => Assert.Equal("FACTION_PORTUGUESE_VILLAGER", queued.NameKey));
+        Assert.Equal(0.25, queue[0].Progress, 2);
+        Assert.Equal(0, queue[1].Progress);
+    }
+
+    [Fact]
+    public void The_rally_point_of_the_selected_building_is_shown()
+    {
+        var match = Portuguese();
+        var townCenter = TownCenterOf(match, FirstPlayer);
+        match.Enqueue(new SetRallyPointCommand(FirstPlayer, townCenter.Id, new CellPosition(5, 6)));
+        match.Tick();
+
+        var building = SelectionPanel.For(match.State, FirstPlayer, [townCenter.Id]).Building;
+
+        Assert.Equal(new CellPosition(5, 6), building!.RallyPoint);
+    }
+
+    [Fact]
+    public void A_selected_construction_site_shows_how_far_its_construction_has_gone_and_takes_no_order()
+    {
+        var match = Portuguese();
+        var builder = UnitsOf(match, FirstPlayer)[0];
+        var site = PlaceNear(match, BuildingKind.Barracks, [builder.Id]);
+
+        while (site.BuildProgress < site.BuildTime / 4)
+        {
+            match.Tick();
+        }
+
+        var building = SelectionPanel.For(match.State, FirstPlayer, [site.Id]).Building;
+
+        Assert.Equal(0.25, building!.ConstructionProgress!.Value, 2);
+        Assert.Empty(building.UnitChoices);
+        Assert.Null(building.AgeAdvance);
+    }
+
+    [Fact]
+    public void During_an_Age_Advance_the_Town_Center_shows_how_far_it_has_gone()
+    {
+        var match = OfThreeAges();
+        var townCenter = TownCenterOf(match, FirstPlayer);
+        match.Enqueue(new AgeAdvanceCommand(FirstPlayer, townCenter.Id));
+
+        // The tick that applies the order is the first of the advance's 10.
+        Run(match, 4);
+
+        var advance = SelectionPanel.For(match.State, FirstPlayer, [townCenter.Id]).Building!.AgeAdvance;
+
+        Assert.Equal(new AgeAdvanceChoice("TEST_AGE_2", new Cost(0, 0, 0), 0.4), advance);
+    }
+
+    [Fact]
+    public void In_the_last_Age_of_its_Faction_the_Town_Center_offers_no_Age_Advance()
+    {
+        var match = OfThreeAges();
+        AdvanceAge(match, FirstPlayer);
+        AdvanceAge(match, FirstPlayer);
+
+        var building = SelectionPanel.For(match.State, FirstPlayer, [TownCenterOf(match, FirstPlayer).Id]).Building;
+
+        Assert.Null(building!.AgeAdvance);
+    }
+
+    [Fact]
+    public void The_Barracks_offers_the_military_units_locked_ones_naming_the_Age_that_unlocks_them()
+    {
+        var match = OfThreeAges();
+        AdvanceAge(match, FirstPlayer);
+        var barracks = PlaceNear(match, BuildingKind.Barracks, UnitsOf(match, FirstPlayer).Select(unit => unit.Id).ToList());
+
+        while (!barracks.IsComplete)
+        {
+            match.Tick();
+        }
+
+        var building = SelectionPanel.For(match.State, FirstPlayer, [barracks.Id]).Building;
+
+        Assert.Equal(
+            [
+                new UnitChoice(UnitKind.MeleeSoldier, "UNIT_MELEE_SOLDIER", Match.UnitCost(UnitKind.MeleeSoldier), null),
+                new UnitChoice(UnitKind.RangedSoldier, "UNIT_RANGED_SOLDIER", Match.UnitCost(UnitKind.RangedSoldier), null),
+                new UnitChoice(UnitKind.HeavySoldier, "UNIT_HEAVY_SOLDIER", Match.UnitCost(UnitKind.HeavySoldier), "TEST_AGE_3"),
+            ],
+            building!.UnitChoices);
+        Assert.Null(building.AgeAdvance);
+    }
+
+    /// <summary>Places a site of the first Player near its Town Center, with the given builders, and returns it.</summary>
+    private static BuildingState PlaceNear(Match match, BuildingKind kind, IReadOnlyList<EntityId> builders)
+    {
+        var origin = FreeOriginNearFirstHome(match, kind);
+        match.Enqueue(new PlaceBuildingCommand(FirstPlayer, kind, origin, builders));
+        match.Tick();
+
+        return match.State.Buildings.Single(building => building.Origin == origin);
+    }
 }

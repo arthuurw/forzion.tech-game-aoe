@@ -46,10 +46,62 @@ public sealed record SelectionPanel(
                 LockedUntil(faction, age => faction.Unlocks(kind, age), playerState.Age))).ToList()
             : [];
 
+        var building = state.Buildings.FirstOrDefault(each => each.Owner == player && selected.Contains(each.Id));
+
         return new SelectionPanel(
             units.Select(unit => new SelectedUnit(unit.Id, TextKeys.NameOf(faction, unit.Kind), unit.HitPoints, unit.MaxHitPoints)).ToList(),
-            null,
+            building is null ? null : Show(building, playerState),
             buildingChoices);
+    }
+
+    private static SelectedBuilding Show(BuildingState building, PlayerState player)
+    {
+        var faction = player.Faction;
+        var queue = building.TrainingQueue
+            .Select((kind, position) => new QueuedUnit(
+                kind,
+                TextKeys.NameOf(faction, kind),
+                position == 0 ? Fractions.Of(building.TrainingProgress, Match.TrainTime(kind)) : 0))
+            .ToList();
+
+        // A construction site takes no order but to be built, so it offers none.
+        var unitChoices = building.IsComplete
+            ? Enum.GetValues<UnitKind>()
+                .Where(kind => Match.TrainedAt(kind) == building.Kind && faction.Ages.Any(age => age.Units.Contains(kind)))
+                .Select(kind => new UnitChoice(
+                    kind,
+                    TextKeys.NameOf(faction, kind),
+                    Match.UnitCost(kind),
+                    LockedUntil(faction, age => faction.Unlocks(kind, age), player.Age)))
+                .ToList()
+            : [];
+
+        return new SelectedBuilding(
+            building.Id,
+            building.Kind,
+            TextKeys.NameOf(building.Kind),
+            building.HitPoints,
+            building.MaxHitPoints,
+            building.IsComplete ? null : Fractions.Of(building.BuildProgress, building.BuildTime),
+            queue,
+            unitChoices,
+            AgeAdvanceOf(building, player),
+            building.RallyPoint);
+    }
+
+    /// <summary>The Age Advance the building offers: the Town Center's to the next Age, while there is one.</summary>
+    private static AgeAdvanceChoice? AgeAdvanceOf(BuildingState building, PlayerState player)
+    {
+        // The Town Center makes the Age Advance (see the glossary); the match refuses it elsewhere.
+        if (building.Kind != BuildingKind.TownCenter || !building.IsComplete || player.Age >= player.Faction.Ages.Count)
+        {
+            return null;
+        }
+
+        // Ages are numbered from 1 and listed from index 0, so the next Age is at the current number.
+        var next = player.Faction.Ages[player.Age];
+
+        return new AgeAdvanceChoice(next.NameKey, next.AdvanceCost, AgeAdvanceProgress.Of(building, player)?.Progress);
     }
 
     /// <summary>Every kind of building some Age of the Faction unlocks, in ascending kind order.</summary>
@@ -105,4 +157,50 @@ public sealed record BuildingChoice(BuildingKind Kind, string NameKey, Cost Cost
 /// <param name="NameKey">Key of the text naming its kind.</param>
 /// <param name="HitPoints">Hit points it has left.</param>
 /// <param name="MaxHitPoints">Hit points it has when whole.</param>
-public sealed record SelectedBuilding(EntityId Id, BuildingKind Kind, string NameKey, int HitPoints, int MaxHitPoints);
+/// <param name="ConstructionProgress">
+/// How far its construction has gone, from 0 towards 1, while it is a construction site; null once complete.
+/// </param>
+/// <param name="TrainingQueue">The units it is to train, the one in training first.</param>
+/// <param name="UnitChoices">The kinds of unit it trains, in ascending kind order; empty for a construction site.</param>
+/// <param name="AgeAdvance">The Age Advance it offers, or null when it offers none.</param>
+/// <param name="RallyPoint">The Cell the units it trains walk to, or null when it has none.</param>
+public sealed record SelectedBuilding(
+    EntityId Id,
+    BuildingKind Kind,
+    string NameKey,
+    int HitPoints,
+    int MaxHitPoints,
+    double? ConstructionProgress,
+    IReadOnlyList<QueuedUnit> TrainingQueue,
+    IReadOnlyList<UnitChoice> UnitChoices,
+    AgeAdvanceChoice? AgeAdvance,
+    CellPosition? RallyPoint);
+
+/// <summary>A unit in a training queue.</summary>
+/// <param name="Kind">The kind of unit.</param>
+/// <param name="NameKey">Key of the text naming it in the Player's Faction.</param>
+/// <param name="Progress">How far it has trained, from 0 towards 1. Only the first unit of a queue trains; the others stay at 0.</param>
+public sealed record QueuedUnit(UnitKind Kind, string NameKey, double Progress);
+
+/// <summary>A kind of unit the selected building trains.</summary>
+/// <param name="Kind">The kind of unit.</param>
+/// <param name="NameKey">Key of the text naming it in the Player's Faction.</param>
+/// <param name="Cost">What training it costs.</param>
+/// <param name="LockedUntilAgeNameKey">
+/// Key of the name of the Age that unlocks it, while the Player's Age has not; null once unlocked.
+/// </param>
+public sealed record UnitChoice(UnitKind Kind, string NameKey, Cost Cost, string? LockedUntilAgeNameKey)
+{
+    /// <summary>Whether the Player's Age has not unlocked it yet: the match would refuse to train it.</summary>
+    public bool IsLocked => LockedUntilAgeNameKey is not null;
+}
+
+/// <summary>The Age Advance the selected Town Center offers.</summary>
+/// <param name="AgeNameKey">Key of the text naming the Age it leads to.</param>
+/// <param name="Cost">What it costs, paid in full when ordered.</param>
+/// <param name="Progress">How far it has gone, from 0 towards 1, while underway; null while not ordered.</param>
+public sealed record AgeAdvanceChoice(string AgeNameKey, Cost Cost, double? Progress)
+{
+    /// <summary>Whether the Age Advance has been ordered and is underway.</summary>
+    public bool IsUnderway => Progress is not null;
+}
