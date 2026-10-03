@@ -1,10 +1,11 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/MatchView.cs" id="1_match"]
 [ext_resource type="Script" path="res://scripts/RtsCamera.cs" id="2_camera"]
 [ext_resource type="Script" path="res://scripts/SelectionInput.cs" id="3_selection"]
 [ext_resource type="Script" path="res://scripts/SelectionMarkers.cs" id="4_markers"]
 [ext_resource type="Script" path="res://scripts/NoticeBoard.cs" id="5_notices"]
+[ext_resource type="Script" path="res://scripts/WorldBarsOverlay.cs" id="7_bars"]
 
 [sub_resource type="Environment" id="Environment_main"]
 background_mode = 1
@@ -42,6 +43,20 @@ Camera = NodePath("../CameraRig/Camera")
 script = ExtResource("4_markers")
 MatchView = NodePath("../MatchView")
 SelectionInput = NodePath("../SelectionInput")
+
+[node name="WorldBars" type="CanvasLayer" parent="."]
+
+[node name="Overlay" type="Control" parent="WorldBars" node_paths=PackedStringArray("MatchView", "Camera")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("7_bars")
+MatchView = NodePath("../../MatchView")
+Camera = NodePath("../../CameraRig/Camera")
 
 [node name="NoticeBoard" type="CanvasLayer" parent="." node_paths=PackedStringArray("MatchView")]
 script = ExtResource("5_notices")
