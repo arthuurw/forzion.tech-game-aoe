@@ -53,6 +53,7 @@ Câmera: WASD, setas ou mouse na borda da tela deslocam; roda do mouse ou Page U
 | `tests/Forzion.Presentation.Tests` | Testes da lógica de apresentação (xUnit) |
 | `docs/adr` | Decisões de arquitetura |
 | `GLOSSARY.md` | Glossário do domínio |
+| `CODING_STANDARDS.md` | Padrões de código |
 | `AGENTS.md` | Regras de trabalho para agentes de código |
 
 ### Plano
@@ -118,6 +119,7 @@ Camera: WASD, the arrow keys or the mouse at the screen edge pan; the mouse whee
 | `tests/Forzion.Presentation.Tests` | Presentation logic tests (xUnit) |
 | `docs/adr` | Architecture decision records |
 | `GLOSSARY.md` | Domain glossary |
+| `CODING_STANDARDS.md` | Coding standards (in Portuguese) |
 | `AGENTS.md` | Working rules for coding agents |
 
 ### Roadmap
