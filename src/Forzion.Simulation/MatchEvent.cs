@@ -11,7 +11,12 @@ public abstract record MatchEvent
     }
 }
 
-/// <summary>A Player was defeated and takes no further part in the match.</summary>
+/// <summary>
+/// A Player was defeated: it has no Town Center left. Its commands are rejected from then on
+/// with <see cref="RejectionReason.DefeatedPlayer"/>. Its remaining units and buildings stay
+/// on the map and act on their own: soldiers still attack enemies that come near, and
+/// Villagers go on with their gathering and building.
+/// </summary>
 public sealed record PlayerDefeated(PlayerId Player) : MatchEvent;
 
 /// <summary>A resource source was gathered to the end and left the map, freeing its Cell.</summary>
@@ -50,10 +55,10 @@ public enum RejectionReason
     /// <summary>The attack target belongs to the issuing Player.</summary>
     OwnTarget,
 
-    /// <summary>The command orders an attack from a unit that cannot attack.</summary>
+    /// <summary>The command orders an attack from units none of which can attack.</summary>
     UnitCannotAttack,
 
-    /// <summary>The command orders a gather from a unit that cannot gather: only Villagers gather.</summary>
+    /// <summary>The command orders a gather from units none of which can gather: only Villagers gather.</summary>
     UnitCannotGather,
 
     /// <summary>The command names a building that is not in the match, or no longer is.</summary>
@@ -80,7 +85,7 @@ public enum RejectionReason
     /// <summary>The Player has less of some Resource than the cost asks for.</summary>
     NotEnoughResources,
 
-    /// <summary>The command orders building from a unit that cannot build: only Villagers build.</summary>
+    /// <summary>The command orders building from units none of which can build: only Villagers build.</summary>
     UnitCannotBuild,
 
     /// <summary>The command names a construction site where only a complete building will do.</summary>

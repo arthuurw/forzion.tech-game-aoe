@@ -109,6 +109,37 @@ public class DestroyedBuildingTests
         Assert.True(Gather.Touches(townCenter, carrier.Path[^1]));
     }
 
+    // A carrier already beside its drop-off point stands still until the next tick hands the load over.
+    [Fact]
+    public void A_Villager_waiting_beside_a_Storehouse_destroyed_in_that_tick_carries_its_load_to_the_Town_Center_and_keeps_its_source()
+    {
+        // The match is deterministic: a first run tells how many ticks the raid takes to bring the Storehouse down.
+        var probe = StorehouseUnderRaid();
+        var ticksToDestroy = Battle.TickUntil(probe.Match, () => Battle.Building(probe.Match, probe.Storehouse.Id) is null);
+
+        var (match, storehouse, carrier, source) = StorehouseUnderRaid();
+        var townCenter = Battle.TownCenter(match, First);
+        var load = carrier.Load;
+        Assert.True(Gather.Touches(storehouse, carrier.Position.Cell));
+        Assert.False(Gather.Touches(townCenter, carrier.Position.Cell));
+
+        for (var tick = 1; tick < ticksToDestroy; tick++)
+        {
+            match.Tick();
+        }
+
+        // The order makes the carrier wait beside the Storehouse with an empty path, as a load filling there does.
+        match.Enqueue(new GatherCommand(First, [carrier.Id], source.Id));
+        match.Tick();
+
+        Assert.Null(Battle.Building(match, storehouse.Id));
+        Assert.Equal(GatherPhase.ToDropOffPoint, carrier.GatherPhase);
+        Assert.True(carrier.IsMoving);
+        Assert.True(Gather.Touches(townCenter, carrier.Path[^1]));
+        Assert.Equal(source.Id, carrier.GatherSource);
+        Assert.Equal(load, carrier.Load);
+    }
+
     [Fact]
     public void A_House_destroyed_in_combat_takes_back_what_it_added_to_the_population_limit()
     {
@@ -124,5 +155,40 @@ public class DestroyedBuildingTests
 
         Assert.True(withHouse > initial);
         Assert.Equal(initial, match.State.PopulationLimitOf(First));
+    }
+
+    /// <summary>
+    /// The raiders' match, in which the first Player's Storehouse stands halfway to a Wood source
+    /// away from home and the raiders have just been ordered to attack it, while a Villager with
+    /// a full load of Wood stands idle beside it.
+    /// </summary>
+    private static (Match Match, BuildingState Storehouse, UnitState Carrier, ResourceSourceState Source) StorehouseUnderRaid()
+    {
+        var match = Battle.Raiders();
+        var state = match.State;
+        var villagers = Site.VillagersOf(match, First);
+        var carrier = villagers[1];
+
+        var source = Gather.NearestSource(state, TestArmies.BesideHome(match, First, 12, 8), ResourceKind.Wood);
+        var home = TestArmies.BesideHome(match, First, 0, 0);
+        Site.Stockpile(match, First, Match.BuildingCost(BuildingKind.Storehouse).Wood);
+        var origin = Site.FreeOriginNear(
+            state, new CellPosition((source.Cell.X + home.X) / 2, (source.Cell.Y + home.Y) / 2), Match.BuildingSize(BuildingKind.Storehouse));
+        match.Enqueue(new PlaceBuildingCommand(First, BuildingKind.Storehouse, origin, villagers.Select(villager => villager.Id).ToList()));
+        match.Tick();
+        var storehouse = state.Buildings[^1];
+        Battle.TickUntil(match, () => storehouse.IsComplete);
+
+        match.Enqueue(new GatherCommand(First, [carrier.Id], source.Id));
+        Battle.TickUntil(match, () => carrier.GatherPhase == GatherPhase.ToDropOffPoint);
+        Site.Halt(match, [carrier]);
+
+        // The ring of Cells around a site placed by FreeOriginNear is free; on its side away from home it is not beside the Town Center.
+        var beside = new CellPosition(storehouse.Origin.X + storehouse.Width, storehouse.Origin.Y);
+        match.Enqueue(new MoveCommand(First, [carrier.Id], beside));
+        Battle.TickUntil(match, () => !carrier.IsMoving);
+        Battle.Raid(match, storehouse);
+
+        return (match, storehouse, carrier, source);
     }
 }

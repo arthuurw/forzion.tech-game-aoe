@@ -4,6 +4,10 @@ namespace Forzion.Simulation;
 /// Defeats every Player left without a Town Center and ends the match once at most one
 /// Player remains undefeated. A match of a single Player never ends this way.
 /// </summary>
+/// <remarks>
+/// Defeat only stops the Player's commands: its remaining units and buildings are left on the
+/// map and keep acting on their own.
+/// </remarks>
 internal sealed class DefeatSystem : ISystem
 {
     public void Run(TickContext context)
