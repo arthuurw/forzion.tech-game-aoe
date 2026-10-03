@@ -90,6 +90,14 @@ public sealed class MatchState
         .Where(building => building.Owner == player && building.IsComplete)
         .Sum(building => Balance.PopulationProvided(building.Kind));
 
+    /// <summary>
+    /// How many units the Player has, counting those in the training queues of its buildings:
+    /// a unit takes its place in the population when it joins a queue, not when it is trained.
+    /// </summary>
+    public int PopulationOf(PlayerId player) =>
+        units.Count(unit => unit.Owner == player)
+        + buildings.Where(building => building.Owner == player).Sum(building => building.TrainingQueue.Count);
+
     /// <summary>The Player with the given ID, or null when the match has no such Player.</summary>
     internal PlayerState? FindPlayer(PlayerId id) =>
         id.Value >= 1 && id.Value <= players.Count ? players[id.Value - 1] : null;

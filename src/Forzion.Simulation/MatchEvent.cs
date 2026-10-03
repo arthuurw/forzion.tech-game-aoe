@@ -94,4 +94,7 @@ public enum RejectionReason
 
     /// <summary>The building's training queue has no unit at the position the command names.</summary>
     NotInTrainingQueue,
+
+    /// <summary>Training the unit would take the Player's population past its population limit.</summary>
+    PopulationLimitReached,
 }
