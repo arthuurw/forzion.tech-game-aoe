@@ -50,7 +50,7 @@ public enum RejectionReason
     /// <summary>The attack target belongs to the issuing Player.</summary>
     OwnTarget,
 
-    /// <summary>The command orders an attack from a unit that cannot attack.</summary>
+    /// <summary>The command orders an attack from units none of which can attack.</summary>
     UnitCannotAttack,
 
     /// <summary>The command orders a gather from a unit that cannot gather: only Villagers gather.</summary>
