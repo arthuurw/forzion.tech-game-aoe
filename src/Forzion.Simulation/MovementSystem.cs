@@ -48,15 +48,15 @@ internal sealed class MovementSystem : ISystem
         while (unit.IsMoving)
         {
             var waypoint = MapPosition.CentreOf(unit.Path[0]);
-            var x = waypoint.X - position.X;
-            var y = waypoint.Y - position.Y;
-            var distance = Fix64.Hypot(x, y);
+            var deltaX = waypoint.X - position.X;
+            var deltaY = waypoint.Y - position.Y;
+            var distance = Fix64.Hypot(deltaX, deltaY);
 
             if (distance > remaining)
             {
                 position = new MapPosition(
-                    position.X + (x * remaining / distance),
-                    position.Y + (y * remaining / distance));
+                    position.X + (deltaX * remaining / distance),
+                    position.Y + (deltaY * remaining / distance));
 
                 break;
             }

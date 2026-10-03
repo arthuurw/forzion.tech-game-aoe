@@ -1,11 +1,14 @@
 namespace Forzion.Simulation;
 
-/// <summary>What generation decided beyond the Cells it filled in the map.</summary>
+/// <summary>What generation decided beyond the forest and water it laid on the map.</summary>
 /// <param name="Homes">The Cells the Players' Town Centers are centred on, the first Player's first.</param>
 /// <param name="Sources">The resource sources, by row and then by column.</param>
 internal sealed record GeneratedMap(
     IReadOnlyList<CellPosition> Homes,
-    IReadOnlyList<(CellPosition Cell, ResourceKind Kind)> Sources);
+    IReadOnlyList<SourcePlacement> Sources);
+
+/// <summary>Where generation put a resource source and which Resource it holds.</summary>
+internal readonly record struct SourcePlacement(CellPosition Cell, ResourceKind Kind);
 
 /// <summary>
 /// Generates the map of a match from the match's random generator, so the same seed always
@@ -27,6 +30,11 @@ internal sealed record GeneratedMap(
 /// cuts one home off from the other is thrown away and drawn again; after
 /// <see cref="ScatterAttempts"/> failures the map is left open, which always connects them.
 /// </para>
+/// <para>
+/// A scattered source can still end up walled in by forest or water. Such sources are
+/// dropped once the scattering is kept, so every source left has a free Cell beside it that
+/// both homes reach.
+/// </para>
 /// </remarks>
 internal static class MapGenerator
 {
@@ -38,76 +46,96 @@ internal static class MapGenerator
 
     // Distance, in Cells, from the map's first corner to the nearest Cell a home may be
     // centred on, and the number of Cells past it the seed may push the home on each axis.
+    // These and the clearing's radius stay here, not in Balance: MinimumSize is worked out
+    // from them, so they are the generator's geometry rather than tuning.
     private const int HomeMargin = 7;
     private const int HomeJitter = 3;
 
-    // Distances are counted in king's moves from the home Cell. The clearing reaches out to
-    // ClearingRadius; home sources lie in the ring between the two source distances, clear of
-    // the Town Center and of the Villagers beside it, and inside the clearing's outer ring.
+    // Distance, in king's moves from the home Cell, the clearing reaches out to. It must
+    // exceed Balance.FarthestHomeSource, so home sources never touch the clearing's edge.
     private const int ClearingRadius = 6;
-    private const int NearestHomeSource = 3;
-    private const int FarthestHomeSource = 5;
-
-    // What is scattered outside the clearings, in proportion to the map's area.
-    private const int CellsPerFarSource = 512;
-    private const int CellsPerObstacle = 128;
-
-    // An obstacle is a random walk that turns every Cell it steps on into forest or water.
-    private const int ShortestObstacleWalk = 16;
-    private const int ObstacleWalkSpread = 33;
 
     private const int ScatterAttempts = 8;
 
     private static readonly ResourceKind[] ResourceKinds = [ResourceKind.Food, ResourceKind.Wood, ResourceKind.Gold];
 
-    /// <summary>Fills <paramref name="map"/>, which must be all free, and returns what else was decided.</summary>
+    /// <summary>
+    /// Lays forest and water on <paramref name="map"/>, which must be all free, and returns
+    /// where the homes and the resource sources go.
+    /// </summary>
+    /// <remarks>
+    /// Generation works on a plan of its own, where source Cells are marked too so that
+    /// scattering and reach take them into account. Only the forest and water are copied to
+    /// <paramref name="map"/>: a source's Cell is marked by whoever creates the source, in the
+    /// same step (EST-8).
+    /// </remarks>
     public static GeneratedMap Generate(MapState map, MatchRandom random)
     {
+        var plan = new MapState(map.Width, map.Height);
         var home = new CellPosition(
             HomeMargin + random.NextInt(HomeJitter),
             HomeMargin + random.NextInt(HomeJitter));
-        var sources = new List<(CellPosition Cell, ResourceKind Kind)>();
+        var sources = new List<SourcePlacement>();
 
-        PlaceHomeSources(map, random, home, sources);
+        PlaceHomeSources(plan, random, home, sources);
 
         for (var attempt = 0; attempt < ScatterAttempts; attempt++)
         {
             var homeSources = sources.Count;
             var scattered = new List<CellPosition>();
 
-            ScatterFarSources(map, random, home, sources, scattered);
-            ScatterObstacles(map, random, home, scattered);
+            ScatterFarSources(plan, random, home, sources, scattered);
+            ScatterObstacles(plan, random, home, scattered);
 
-            if (HomesAreConnected(map, home))
+            if (ReachableFrom(plan, home).Contains(plan.Mirror(home)))
             {
                 break;
             }
 
             foreach (var cell in scattered)
             {
-                map[cell] = CellKind.Free;
+                plan[cell] = CellKind.Free;
             }
 
             sources.RemoveRange(homeSources, sources.Count - homeSources);
         }
 
+        DropWalledInSources(plan, home, sources);
+        CopyObstacles(plan, map);
+
         return new GeneratedMap(
-            [home, map.Mirror(home)],
+            [home, plan.Mirror(home)],
             sources.OrderBy(source => source.Cell.Y).ThenBy(source => source.Cell.X).ToList());
     }
 
-    private static void PlaceHomeSources(
-        MapState map, MatchRandom random, CellPosition home, List<(CellPosition Cell, ResourceKind Kind)> sources)
+    private static void CopyObstacles(MapState plan, MapState map)
     {
-        var candidates = new List<CellPosition>();
-
-        for (var y = home.Y - FarthestHomeSource; y <= home.Y + FarthestHomeSource; y++)
+        for (var y = 0; y < plan.Height; y++)
         {
-            for (var x = home.X - FarthestHomeSource; x <= home.X + FarthestHomeSource; x++)
+            for (var x = 0; x < plan.Width; x++)
             {
                 var cell = new CellPosition(x, y);
 
-                if (Distance(cell, home) >= NearestHomeSource)
+                if (plan[cell] is CellKind.Forest or CellKind.Water)
+                {
+                    map[cell] = plan[cell];
+                }
+            }
+        }
+    }
+
+    private static void PlaceHomeSources(
+        MapState map, MatchRandom random, CellPosition home, List<SourcePlacement> sources)
+    {
+        var candidates = new List<CellPosition>();
+
+        for (var y = home.Y - Balance.FarthestHomeSource; y <= home.Y + Balance.FarthestHomeSource; y++)
+        {
+            for (var x = home.X - Balance.FarthestHomeSource; x <= home.X + Balance.FarthestHomeSource; x++)
+            {
+                var cell = new CellPosition(x, y);
+
+                if (Distance(cell, home) >= Balance.NearestHomeSource)
                 {
                     candidates.Add(cell);
                 }
@@ -131,10 +159,10 @@ internal static class MapGenerator
         MapState map,
         MatchRandom random,
         CellPosition home,
-        List<(CellPosition Cell, ResourceKind Kind)> sources,
+        List<SourcePlacement> sources,
         List<CellPosition> scattered)
     {
-        var count = map.Width * map.Height / CellsPerFarSource;
+        var count = map.Width * map.Height / Balance.CellsPerFarSource;
 
         for (var i = 0; i < count; i++)
         {
@@ -152,14 +180,14 @@ internal static class MapGenerator
 
     private static void ScatterObstacles(MapState map, MatchRandom random, CellPosition home, List<CellPosition> scattered)
     {
-        var count = map.Width * map.Height / CellsPerObstacle;
+        var count = map.Width * map.Height / Balance.CellsPerObstacle;
 
         for (var i = 0; i < count; i++)
         {
             var kind = random.NextInt(2) == 0 ? CellKind.Forest : CellKind.Water;
             var x = random.NextInt(map.Width);
             var y = random.NextInt(map.Height);
-            var steps = ShortestObstacleWalk + random.NextInt(ObstacleWalkSpread);
+            var steps = Balance.ShortestObstacleWalk + random.NextInt(Balance.ObstacleWalkSpread);
 
             for (var step = 0; step < steps; step++)
             {
@@ -175,7 +203,9 @@ internal static class MapGenerator
                     scattered.Add(mirror);
                 }
 
-                // A step that would leave the map stays where it is.
+                // A step off the map is clamped rather than drawn again, so every step costs
+                // exactly one draw and the walk's length alone sets how far the random
+                // generator advances.
                 switch (random.NextInt(4))
                 {
                     case 0:
@@ -201,19 +231,18 @@ internal static class MapGenerator
     /// about the Cell answers for its mirror too.
     /// </summary>
     private static bool CanScatterOn(MapState map, CellPosition home, CellPosition cell) =>
-        map[cell] == CellKind.Free
+        map.IsFree(cell)
         && cell != map.Mirror(cell)
         && Distance(cell, home) > ClearingRadius
         && Distance(cell, map.Mirror(home)) > ClearingRadius;
 
     /// <summary>
-    /// Whether free Cells that share a side link the two homes. The Town Centers are not on
-    /// the map yet, so the home Cells themselves are free; each sits in its open clearing, so
-    /// reaching the home Cell is reaching the clearing.
+    /// The free Cells linked to the home by free Cells that share a side. The Town Centers are
+    /// not on the map yet, so the home Cells themselves are free; each sits in its open
+    /// clearing, so reaching the home Cell is reaching the clearing.
     /// </summary>
-    private static bool HomesAreConnected(MapState map, CellPosition home)
+    private static HashSet<CellPosition> ReachableFrom(MapState map, CellPosition home)
     {
-        var target = map.Mirror(home);
         var reached = new HashSet<CellPosition> { home };
         var frontier = new Queue<CellPosition>();
 
@@ -223,37 +252,50 @@ internal static class MapGenerator
         {
             var cell = frontier.Dequeue();
 
-            if (cell == target)
+            foreach (var step in CellStep.Sides)
             {
-                return true;
-            }
+                var next = step.From(cell);
 
-            CellPosition[] neighbours =
-            [
-                new(cell.X + 1, cell.Y), new(cell.X - 1, cell.Y), new(cell.X, cell.Y + 1), new(cell.X, cell.Y - 1),
-            ];
-
-            foreach (var next in neighbours)
-            {
-                if (map.Contains(next) && map[next] == CellKind.Free && reached.Add(next))
+                if (map.IsFree(next) && reached.Add(next))
                 {
                     frontier.Enqueue(next);
                 }
             }
         }
 
-        return false;
+        return reached;
+    }
+
+    /// <summary>
+    /// Frees the Cells of the sources no Cell reachable from the homes touches and forgets
+    /// those sources. The homes are linked, so what one reaches the other reaches too, and on
+    /// a symmetric map that is symmetric as well: a source and its mirror go together.
+    /// </summary>
+    private static void DropWalledInSources(
+        MapState map, CellPosition home, List<SourcePlacement> sources)
+    {
+        var reached = ReachableFrom(map, home);
+        var walledIn = sources
+            .Where(source => !CellStep.Sides.Any(step => reached.Contains(step.From(source.Cell))))
+            .ToHashSet();
+
+        foreach (var source in walledIn)
+        {
+            map[source.Cell] = CellKind.Free;
+        }
+
+        sources.RemoveAll(walledIn.Contains);
     }
 
     private static void PlaceSourcePair(
-        MapState map, CellPosition cell, ResourceKind kind, List<(CellPosition Cell, ResourceKind Kind)> sources)
+        MapState map, CellPosition cell, ResourceKind kind, List<SourcePlacement> sources)
     {
         var mirror = map.Mirror(cell);
 
         map[cell] = CellKind.ResourceSource;
         map[mirror] = CellKind.ResourceSource;
-        sources.Add((cell, kind));
-        sources.Add((mirror, kind));
+        sources.Add(new SourcePlacement(cell, kind));
+        sources.Add(new SourcePlacement(mirror, kind));
     }
 
     /// <summary>Distance in king's moves.</summary>

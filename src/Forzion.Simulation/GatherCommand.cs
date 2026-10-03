@@ -7,7 +7,9 @@ namespace Forzion.Simulation;
 /// </summary>
 /// <remarks>
 /// The command is rejected as a whole, sending none of its units, when the source is not in
-/// the match or any of the units does not exist or belongs to another Player.
+/// the match, when any of the units belongs to another Player, or when none of the units
+/// exists. A unit that does not exist, because it died after the order was given, is skipped
+/// and the others still set out.
 /// </remarks>
 /// <param name="Units">The Villagers to send.</param>
 /// <param name="Source">The resource source to gather from.</param>
@@ -26,27 +28,11 @@ public sealed record GatherCommand(PlayerId Player, IReadOnlyList<EntityId> Unit
             return;
         }
 
-        var units = new List<UnitState>(Units.Count);
+        var units = OrderedUnits.Find(context, this, issuer, Units);
 
-        foreach (var id in Units)
+        if (units is null)
         {
-            var unit = state.FindUnit(id);
-
-            if (unit is null)
-            {
-                context.Reject(this, RejectionReason.UnknownUnit);
-
-                return;
-            }
-
-            if (unit.Owner != issuer.Id)
-            {
-                context.Reject(this, RejectionReason.UnitOfAnotherPlayer);
-
-                return;
-            }
-
-            units.Add(unit);
+            return;
         }
 
         foreach (var unit in units)

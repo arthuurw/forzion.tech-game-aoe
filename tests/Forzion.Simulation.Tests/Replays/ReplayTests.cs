@@ -80,7 +80,12 @@ public class ReplayTests
     private const ulong ExpectedFinalHash = 15702937559874084281UL;
 
     // Seed 3 is one whose first scattering of obstacles cuts the Players apart and is drawn again.
-    private const ulong ExpectedInitialHashOfSeed3 = 6114057392898037786UL;
+    // When walled-in sources began to be dropped, the value was recomputed by the same model of
+    // the layout, which first reproduced the value recorded before from the state of the old
+    // generator; the two states differ only by one walled-in source pair, freed. With combat
+    // in the hash the value was recomputed again by the model, which reproduced that value
+    // with the layout before combat.
+    private const ulong ExpectedInitialHashOfSeed3 = 8351480309910215033UL;
 
     [Fact]
     public void A_recorded_replay_reaches_the_recorded_final_hash()

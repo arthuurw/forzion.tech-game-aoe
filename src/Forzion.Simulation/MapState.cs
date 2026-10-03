@@ -41,6 +41,9 @@ public sealed class MapState
     /// <summary>Height in Cells.</summary>
     public int Height { get; }
 
+    /// <summary>Number of Cells in the map, which is one more than the highest index.</summary>
+    internal int CellCount => cells.Length;
+
     /// <summary>What the given Cell holds.</summary>
     /// <exception cref="ArgumentOutOfRangeException">The Cell is outside the map.</exception>
     public CellKind this[CellPosition cell]
@@ -52,6 +55,9 @@ public sealed class MapState
     /// <summary>Whether the given Cell is inside the map.</summary>
     public bool Contains(CellPosition cell) =>
         cell.X >= 0 && cell.X < Width && cell.Y >= 0 && cell.Y < Height;
+
+    /// <summary>Whether the Cell is inside the map and free, so units can walk on it.</summary>
+    internal bool IsFree(CellPosition cell) => Contains(cell) && this[cell] == CellKind.Free;
 
     /// <summary>The Cell the map's symmetry takes <paramref name="cell"/> to.</summary>
     internal CellPosition Mirror(CellPosition cell) => new(Width - 1 - cell.X, Height - 1 - cell.Y);
@@ -67,7 +73,9 @@ public sealed class MapState
         }
     }
 
-    private int IndexOf(CellPosition cell)
+    /// <summary>The Cell's index: Cells are numbered row by row, from 0 at the map's first corner.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">The Cell is outside the map.</exception>
+    internal int IndexOf(CellPosition cell)
     {
         if (!Contains(cell))
         {
@@ -76,4 +84,7 @@ public sealed class MapState
 
         return (cell.Y * Width) + cell.X;
     }
+
+    /// <summary>The Cell with the given index (see <see cref="IndexOf"/>).</summary>
+    internal CellPosition CellAt(int index) => new(index % Width, index / Width);
 }

@@ -96,8 +96,8 @@ public sealed class MatchState
     internal ResourceSourceState? FindResourceSource(EntityId id) => resourceSources.Find(source => source.Id == id);
 
     /// <summary>
-    /// Adds a resource source and marks its Cell occupied. IDs only grow, so appending keeps
-    /// the collection in ID order.
+    /// Adds a resource source on a free Cell and marks the Cell occupied. IDs only grow, so
+    /// appending keeps the collection in ID order.
     /// </summary>
     internal ResourceSourceState AddResourceSource(ResourceKind kind, CellPosition cell, int amount)
     {
@@ -261,6 +261,7 @@ public sealed class MatchState
     }
 }
 
+/// <summary>A Player of the match, human or AI, as the state knows them.</summary>
 public sealed class PlayerState
 {
     // How much of each Resource the Player has, indexed by ResourceKind.
@@ -272,8 +273,10 @@ public sealed class PlayerState
         Faction = faction;
     }
 
+    /// <summary>The Player's ID, assigned from 1 upward in configuration order.</summary>
     public PlayerId Id { get; }
 
+    /// <summary>The Faction the Player controls, as configured. It never changes during the match.</summary>
     public FactionId Faction { get; }
 
     /// <summary>Whether the Player has been defeated. A defeated Player stays in the state.</summary>

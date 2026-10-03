@@ -52,7 +52,7 @@ public class EconomyHashTests
     {
         var first = TestMatches.TwoPlayerMatch();
         var second = TestMatches.TwoPlayerMatch();
-        var villagers = first.State.Units.Where(unit => unit.Owner == TestMatches.FirstPlayer).Select(unit => unit.Id).ToList();
+        var villagers = first.State.UnitsOf(TestMatches.FirstPlayer).Select(unit => unit.Id).ToList();
         var source = Gather.NearestSource(first.State, Walk.MiddleVillager(first).Position.Cell, ResourceKind.Food);
         first.Enqueue(new GatherCommand(TestMatches.FirstPlayer, villagers, source.Id));
         second.Enqueue(new GatherCommand(TestMatches.FirstPlayer, villagers, source.Id));

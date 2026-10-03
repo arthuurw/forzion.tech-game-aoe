@@ -22,11 +22,6 @@ internal static class Pathfinder
     private const int StraightCost = 10;
     private const int DiagonalCost = 14;
 
-    private static readonly (int X, int Y)[] Steps =
-    [
-        (1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1),
-    ];
-
     /// <summary>
     /// The Cells to walk through, in order, from <paramref name="start"/> (not included) to
     /// <paramref name="destination"/> (included). When the destination cannot be reached, the
@@ -35,10 +30,9 @@ internal static class Pathfinder
     /// </summary>
     public static List<CellPosition> FindPath(MapState map, CellPosition start, CellPosition destination)
     {
-        var width = map.Width;
-        var startIndex = (start.Y * width) + start.X;
-        var destinationIndex = (destination.Y * width) + destination.X;
-        var costs = new int[width * map.Height];
+        var startIndex = map.IndexOf(start);
+        var destinationIndex = map.IndexOf(destination);
+        var costs = new int[map.CellCount];
         var previous = new int[costs.Length];
         var closed = new bool[costs.Length];
 
@@ -65,22 +59,21 @@ internal static class Pathfinder
                 break;
             }
 
-            var cell = new CellPosition(index % width, index / width);
+            var cell = map.CellAt(index);
 
-            foreach (var (stepX, stepY) in Steps)
+            foreach (var step in CellStep.All)
             {
-                var next = new CellPosition(cell.X + stepX, cell.Y + stepY);
-                var diagonal = stepX != 0 && stepY != 0;
+                var next = step.From(cell);
 
-                if (!IsFree(map, next)
-                    || (diagonal
-                        && !(IsFree(map, new CellPosition(next.X, cell.Y)) && IsFree(map, new CellPosition(cell.X, next.Y)))))
+                if (!map.IsFree(next)
+                    || (step.IsDiagonal
+                        && !(map.IsFree(new CellPosition(next.X, cell.Y)) && map.IsFree(new CellPosition(cell.X, next.Y)))))
                 {
                     continue;
                 }
 
-                var nextIndex = (next.Y * width) + next.X;
-                var cost = costs[index] + (diagonal ? DiagonalCost : StraightCost);
+                var nextIndex = map.IndexOf(next);
+                var cost = costs[index] + (step.IsDiagonal ? DiagonalCost : StraightCost);
 
                 if (!closed[nextIndex] && cost < costs[nextIndex])
                 {
@@ -95,12 +88,12 @@ internal static class Pathfinder
 
         // The search ended either on the destination or with every Cell that can be reached
         // closed, and then the walk goes to the nearest of those.
-        var target = closed[destinationIndex] ? destinationIndex : NearestClosed(closed, costs, width, destination);
+        var target = closed[destinationIndex] ? destinationIndex : NearestClosed(map, closed, costs, destination);
         var path = new List<CellPosition>();
 
         for (var index = target; index != startIndex; index = previous[index])
         {
-            path.Add(new CellPosition(index % width, index / width));
+            path.Add(map.CellAt(index));
         }
 
         path.Reverse();
@@ -112,7 +105,7 @@ internal static class Pathfinder
     /// The closed Cell nearest to the destination in a straight line. Between Cells equally
     /// near, the one with the shortest way to it and then the one with the lowest index.
     /// </summary>
-    private static int NearestClosed(bool[] closed, int[] costs, int width, CellPosition destination)
+    private static int NearestClosed(MapState map, bool[] closed, int[] costs, CellPosition destination)
     {
         var nearest = -1;
         var nearestDistance = long.MaxValue;
@@ -124,9 +117,10 @@ internal static class Pathfinder
                 continue;
             }
 
-            long x = (index % width) - destination.X;
-            long y = (index / width) - destination.Y;
-            var distance = (x * x) + (y * y);
+            var cell = map.CellAt(index);
+            long deltaX = cell.X - destination.X;
+            long deltaY = cell.Y - destination.Y;
+            var distance = (deltaX * deltaX) + (deltaY * deltaY);
 
             if (distance < nearestDistance || (distance == nearestDistance && costs[index] < costs[nearest]))
             {
@@ -138,9 +132,6 @@ internal static class Pathfinder
         return nearest;
     }
 
-    private static bool IsFree(MapState map, CellPosition cell) =>
-        map.Contains(cell) && map[cell] == CellKind.Free;
-
     /// <summary>
     /// Cost of the way between the two Cells on an empty map: diagonal steps while both
     /// coordinates differ, straight ones after. It never overestimates and never drops by more
@@ -148,9 +139,9 @@ internal static class Pathfinder
     /// </summary>
     private static int Estimate(CellPosition from, CellPosition to)
     {
-        var x = Math.Abs(from.X - to.X);
-        var y = Math.Abs(from.Y - to.Y);
+        var deltaX = Math.Abs(from.X - to.X);
+        var deltaY = Math.Abs(from.Y - to.Y);
 
-        return (DiagonalCost * Math.Min(x, y)) + (StraightCost * Math.Abs(x - y));
+        return (DiagonalCost * Math.Min(deltaX, deltaY)) + (StraightCost * Math.Abs(deltaX - deltaY));
     }
 }

@@ -22,7 +22,9 @@ public abstract record Command(PlayerId Player)
 /// </summary>
 /// <remarks>
 /// The command is rejected as a whole, moving none of its units, when the destination is
-/// outside the map or any of the units does not exist or belongs to another Player.
+/// outside the map, when any of the units belongs to another Player, or when none of the
+/// units exists. A unit that does not exist, because it died after the order was given, is
+/// skipped and the others still walk.
 /// </remarks>
 /// <param name="Units">The units to move.</param>
 /// <param name="Destination">The Cell to walk to.</param>
@@ -40,27 +42,11 @@ public sealed record MoveCommand(PlayerId Player, IReadOnlyList<EntityId> Units,
             return;
         }
 
-        var units = new List<UnitState>(Units.Count);
+        var units = OrderedUnits.Find(context, this, issuer, Units);
 
-        foreach (var id in Units)
+        if (units is null)
         {
-            var unit = state.FindUnit(id);
-
-            if (unit is null)
-            {
-                context.Reject(this, RejectionReason.UnknownUnit);
-
-                return;
-            }
-
-            if (unit.Owner != issuer.Id)
-            {
-                context.Reject(this, RejectionReason.UnitOfAnotherPlayer);
-
-                return;
-            }
-
-            units.Add(unit);
+            return;
         }
 
         foreach (var unit in units)
