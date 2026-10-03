@@ -39,18 +39,25 @@ Participante de uma partida, humano ou IA, que controla uma Facção.
 _Avoid_: Time, lado
 
 **Facção** (`Faction`):
-Povo ou potência jogável, com unidades, construções e nomes de Era próprios. Povos indígenas e quilombolas são Facções com a mesma agência das europeias.
+Povo ou potência jogável, com unidades, construções e nomes de Era próprios. Povos indígenas e quilombolas são Facções com a mesma agência das europeias. As Eras de uma Facção, com o nome de cada uma e o que cada uma libera, são dados da Facção, e não regras.
 _Avoid_: Civilização, raça, nação, tribo
+
+**Portugueses** (`Portuguese`):
+Facção da Coroa portuguesa e dos colonos que ela mandou ao Brasil. O nome exibido fica sob a chave `FACTION_PORTUGUESE`; suas Eras e unidades estão em [Nomes dos Portugueses](#nomes-dos-portugueses).
 
 ## Progressão
 
 **Era** (`Age`):
-Estágio numerado (I a IV) que determina quais unidades, construções e tecnologias estão disponíveis. Cada Facção dá um nome próprio a cada estágio. Na Partida livre o jogador avança entre Eras; num Cenário a Era é fixa.
+Estágio numerado (I a IV) que determina quais unidades, construções e tecnologias estão disponíveis. Cada Facção dá um nome próprio a cada estágio. Na Partida livre o jogador avança entre Eras; num Cenário a Era é fixa. Todo Jogador começa a Partida livre na Era I. No código, o número da Era do Jogador é `Age` e os dados de uma Era dentro da Facção (nome, Custo e tempo do Avanço, o que libera) são `FactionAge`.
 _Avoid_: Idade, época, tier
 
 **Avanço de Era** (`Age Advance`):
-Ato de um Jogador pagar Recursos para passar à Era seguinte.
+Ato de um Jogador pagar Recursos para passar à Era seguinte. É feito no Centro: o Custo é pago por inteiro na hora da ordem, e o Jogador passa à Era seguinte quando termina o tempo do Avanço. O Custo e o tempo são os da Era de destino.
 _Avoid_: Evolução, upgrade de era
+
+**Liberar** (`Unlock`):
+O que uma Era faz com unidades e construções da Facção: o Jogador só treina uma unidade ou posiciona uma construção depois de chegar à Era que a libera. O que a Era atual do Jogador ainda não liberou está bloqueado (`Locked`), e a ordem para treiná-lo ou posicioná-lo é recusada.
+_Avoid_: Desbloquear, destravar, habilitar
 
 ## Economia
 
@@ -145,13 +152,13 @@ _Avoid_: Bandeira, ponto de encontro
 ## Combate
 
 **Soldado corpo a corpo** (`Melee Soldier`):
-Unidade militar que precisa encostar no alvo para atacar. Nome provisório até a escolha do nome histórico.
+Unidade militar que precisa encostar no alvo para atacar. É um tipo de unidade do motor: cada Facção lhe dá o seu nome (ver [Nomes dos Portugueses](#nomes-dos-portugueses)).
 
 **Soldado à distância** (`Ranged Soldier`):
-Unidade militar que ataca de longe, sem projétil simulado. Nome provisório até a escolha do nome histórico.
+Unidade militar que ataca de longe, sem projétil simulado. É um tipo de unidade do motor: cada Facção lhe dá o seu nome.
 
 **Soldado pesado** (`Heavy Soldier`):
-Unidade militar corpo a corpo mais forte, liberada pela Era II. Nome provisório até a escolha do nome histórico.
+Unidade militar corpo a corpo mais forte, liberada pela Era II. É um tipo de unidade do motor: cada Facção lhe dá o seu nome.
 
 **Pontos de vida** (`Hit Points`):
 Quanto dano uma unidade ou construção ainda aguenta. Ao chegar a zero, ela sai do mapa no mesmo tick.
@@ -185,3 +192,24 @@ _Avoid_: Mata, bosque, árvores
 
 **Água** (`Water`):
 Obstáculo que ocupa Células inteiras: Unidades não a atravessam e Construções não são erguidas sobre ela.
+
+## Nomes dos Portugueses
+
+Nomes que a Facção Portugueses dá às suas Eras e unidades, escolhidos na história do Brasil colonial dos séculos XVI e XVII. São textos do jogo: ficam em `game/translations/pt_BR.po`, sob as chaves entre parênteses, e os dados da Facção guardam só a chave. O código continua usando os nomes genéricos (`Age` 1, `MeleeSoldier` e assim por diante).
+
+**Era das Feitorias** (Era I, `FACTION_PORTUGUESE_AGE_1`):
+Os primeiros anos da colônia, até a década de 1530, quando a Coroa explorava o pau-brasil por meio de feitorias no litoral.
+
+**Era dos Engenhos** (Era II, `FACTION_PORTUGUESE_AGE_2`):
+A colônia do açúcar, da segunda metade do século XVI em diante, organizada em torno dos engenhos.
+
+**Rodeleiro** (`MeleeSoldier`, `FACTION_PORTUGUESE_MELEE_SOLDIER`):
+Infante de espada e rodela, o escudo redondo, das tropas portuguesas dos séculos XVI e XVII.
+
+**Arcabuzeiro** (`RangedSoldier`, `FACTION_PORTUGUESE_RANGED_SOLDIER`):
+Infante armado de arcabuz, a arma de fogo portátil das expedições portuguesas do século XVI.
+
+**Piqueiro** (`HeavySoldier`, `FACTION_PORTUGUESE_HEAVY_SOLDIER`):
+Infante de pique e corselete, o núcleo pesado dos terços que defenderam o Brasil no século XVII.
+
+O Aldeão (`Villager`, `FACTION_PORTUGUESE_VILLAGER`) mantém o nome genérico.
