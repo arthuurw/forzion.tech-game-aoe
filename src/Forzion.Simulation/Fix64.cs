@@ -91,6 +91,18 @@ public readonly struct Fix64 : IEquatable<Fix64>, IComparable<Fix64>
     public static Fix64 operator *(Fix64 left, Fix64 right) =>
         Saturate((Int128)left.raw * right.raw / RawOne);
 
+    /// <exception cref="DivideByZeroException">The divisor is zero.</exception>
+    public static Fix64 operator /(Fix64 left, Fix64 right)
+    {
+        // Int128 division does not reliably report a zero divisor as DivideByZeroException.
+        if (right.raw == 0)
+        {
+            throw new DivideByZeroException();
+        }
+
+        return Saturate((Int128)left.raw * RawOne / right.raw);
+    }
+
     private static Fix64 Saturate(Int128 wideRaw)
     {
         if (wideRaw > long.MaxValue)
