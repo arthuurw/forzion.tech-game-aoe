@@ -49,8 +49,8 @@ public sealed class Match
     /// Town Center, starting Villagers and starting Resources.
     /// </summary>
     /// <exception cref="ArgumentException">
-    /// The configuration has fewer than one or more than two Players, or a map less than 32
-    /// Cells wide or high.
+    /// The configuration has fewer than one or more than two Players, a map less than 32 Cells
+    /// wide or high, two Factions with the same ID, or a Player of a Faction it does not have.
     /// </exception>
     public static Match Create(MatchConfig config) => new(config);
 

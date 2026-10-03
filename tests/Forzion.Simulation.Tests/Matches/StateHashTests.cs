@@ -1,3 +1,5 @@
+using Forzion.Simulation.Tests.Ages;
+
 namespace Forzion.Simulation.Tests.Matches;
 
 public class StateHashTests
@@ -42,8 +44,9 @@ public class StateHashTests
     [Fact]
     public void Matches_with_different_Factions_have_different_hashes()
     {
-        var first = Match.Create(TestMatches.SinglePlayerConfig() with { Players = [new PlayerConfig(new FactionId(1))] });
-        var second = Match.Create(TestMatches.SinglePlayerConfig() with { Players = [new PlayerConfig(new FactionId(2))] });
+        Faction[] factions = [TestFactions.OneAge(1), TestFactions.OneAge(2)];
+        var first = Match.Create(TestMatches.SinglePlayerConfig() with { Players = [new PlayerConfig(new FactionId(1))], Factions = factions });
+        var second = Match.Create(TestMatches.SinglePlayerConfig() with { Players = [new PlayerConfig(new FactionId(2))], Factions = factions });
 
         Assert.NotEqual(first.StateHash, second.StateHash);
     }

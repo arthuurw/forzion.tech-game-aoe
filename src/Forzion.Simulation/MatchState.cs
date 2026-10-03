@@ -26,10 +26,22 @@ public sealed class MatchState
                 $"A map is at least {MapGenerator.MinimumSize} Cells wide and high.", nameof(config));
         }
 
+        var factions = config.Factions ?? Factions.All;
+
+        if (factions.Select(faction => faction.Id).Distinct().Count() != factions.Count)
+        {
+            throw new ArgumentException("No two Factions of a match have the same ID.", nameof(config));
+        }
+
         Random = new MatchRandom(config.Seed);
         Map = new MapState(config.Map.Width, config.Map.Height);
         players = config.Players
-            .Select((player, index) => new PlayerState(new PlayerId(index + 1), player.Faction))
+            .Select((player, index) => new PlayerState(
+                new PlayerId(index + 1),
+                factions.FirstOrDefault(faction => faction.Id == player.Faction)
+                    ?? throw new ArgumentException(
+                        $"Player {index + 1} controls Faction {player.Faction.Value}, which the match does not have.",
+                        nameof(config))))
             .ToList();
 
         var generated = MapGenerator.Generate(Map, Random);
@@ -312,7 +324,7 @@ public sealed class PlayerState
     // How much of each Resource the Player has, indexed by ResourceKind.
     private readonly int[] resources = new int[Enum.GetValues<ResourceKind>().Length];
 
-    internal PlayerState(PlayerId id, FactionId faction)
+    internal PlayerState(PlayerId id, Faction faction)
     {
         Id = id;
         Faction = faction;
@@ -327,7 +339,13 @@ public sealed class PlayerState
     public PlayerId Id { get; }
 
     /// <summary>The Faction the Player controls, as configured. It never changes during the match.</summary>
-    public FactionId Faction { get; }
+    public Faction Faction { get; }
+
+    /// <summary>
+    /// The number of the Age the Player is in: 1 for Age I, where every Player starts, up to
+    /// the number of Ages of its Faction. What the Age is called comes from <see cref="Faction"/>.
+    /// </summary>
+    public int Age { get; internal set; } = 1;
 
     /// <summary>Whether the Player has been defeated. A defeated Player stays in the state.</summary>
     public bool IsDefeated { get; internal set; }
@@ -362,7 +380,7 @@ public sealed class PlayerState
     internal void WriteTo(StateHasher hasher)
     {
         hasher.Write(Id.Value);
-        hasher.Write(Faction.Value);
+        hasher.Write(Faction.Id.Value);
         hasher.Write(IsDefeated);
 
         foreach (var amount in resources)

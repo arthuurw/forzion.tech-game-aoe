@@ -74,3 +74,26 @@ msgstr "Ordem recusada: a população chegou ao limite. Construa mais Casas."
 
 msgid "ORDER_REJECTED_BUILDING_CANNOT_TRAIN"
 msgstr "Ordem recusada: essa construção não treina unidades."
+
+# Nomes das Facções, das suas Eras e das suas unidades, sob as chaves que os dados de cada
+# Facção guardam.
+msgid "FACTION_PORTUGUESE"
+msgstr "Portugueses"
+
+msgid "FACTION_PORTUGUESE_AGE_1"
+msgstr "Era das Feitorias"
+
+msgid "FACTION_PORTUGUESE_AGE_2"
+msgstr "Era dos Engenhos"
+
+msgid "FACTION_PORTUGUESE_VILLAGER"
+msgstr "Aldeão"
+
+msgid "FACTION_PORTUGUESE_MELEE_SOLDIER"
+msgstr "Rodeleiro"
+
+msgid "FACTION_PORTUGUESE_RANGED_SOLDIER"
+msgstr "Arcabuzeiro"
+
+msgid "FACTION_PORTUGUESE_HEAVY_SOLDIER"
+msgstr "Piqueiro"
