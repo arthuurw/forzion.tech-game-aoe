@@ -112,3 +112,39 @@ msgstr "Arcabuzeiro"
 
 msgid "FACTION_PORTUGUESE_HEAVY_SOLDIER"
 msgstr "Piqueiro"
+
+# Nomes genéricos das unidades, para uma Facção que não dê nome próprio a uma delas.
+msgid "UNIT_VILLAGER"
+msgstr "Aldeão"
+
+msgid "UNIT_MELEE_SOLDIER"
+msgstr "Soldado corpo a corpo"
+
+msgid "UNIT_RANGED_SOLDIER"
+msgstr "Soldado à distância"
+
+msgid "UNIT_HEAVY_SOLDIER"
+msgstr "Soldado pesado"
+
+# Nomes das construções, iguais para todas as Facções.
+msgid "BUILDING_TOWN_CENTER"
+msgstr "Centro"
+
+msgid "BUILDING_HOUSE"
+msgstr "Casa"
+
+msgid "BUILDING_STOREHOUSE"
+msgstr "Depósito"
+
+msgid "BUILDING_BARRACKS"
+msgstr "Quartel"
+
+# Nomes dos Recursos.
+msgid "RESOURCE_FOOD"
+msgstr "Alimento"
+
+msgid "RESOURCE_WOOD"
+msgstr "Madeira"
+
+msgid "RESOURCE_GOLD"
+msgstr "Ouro"

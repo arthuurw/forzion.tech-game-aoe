@@ -41,6 +41,17 @@ internal static class HudMatches
         [new PlayerConfig(ThreeAges.Id), new PlayerConfig(ThreeAges.Id)],
         [ThreeAges]));
 
+    /// <summary>
+    /// The Cell two left of the centre of the first Player's Town Center: free, and away from
+    /// the Villagers' row.
+    /// </summary>
+    public static CellPosition BesideFirstHome()
+    {
+        var townCenter = TownCenterOf(Portuguese(), FirstPlayer);
+
+        return new CellPosition(townCenter.Origin.X + (townCenter.Width / 2) - 2, townCenter.Origin.Y + (townCenter.Height / 2));
+    }
+
     public static BuildingState TownCenterOf(Match match, PlayerId player) =>
         match.State.Buildings.First(building => building.Owner == player && building.Kind == BuildingKind.TownCenter);
 
