@@ -7,8 +7,8 @@ namespace Forzion.Simulation;
 /// gathering they were doing.
 /// </summary>
 /// <remarks>
-/// The command is rejected, placing nothing and paying nothing, when Players do not place
-/// that kind of building, when a Cell of the footprint
+/// The command is rejected, placing nothing and paying nothing, when a builder does not exist
+/// or belongs to another Player, when Players do not place that kind of building, when a Cell of the footprint
 /// is outside the map, is not free or has a unit standing on it, or when the Player cannot
 /// afford the cost.
 /// </remarks>
@@ -21,6 +21,11 @@ public sealed record PlaceBuildingCommand(
 {
     internal override void Execute(TickContext context, PlayerState issuer)
     {
+        if (OwnUnits.Find(context, this, issuer, Builders) is not { } builders)
+        {
+            return;
+        }
+
         // Each Player starts with its Town Center and never places another.
         if (Kind is not (BuildingKind.House or BuildingKind.Storehouse or BuildingKind.Barracks))
         {
@@ -49,9 +54,9 @@ public sealed record PlaceBuildingCommand(
         issuer.Pay(cost);
         var site = context.State.AddBuilding(issuer.Id, Kind, Origin, size, size);
 
-        foreach (var id in Builders)
+        foreach (var builder in builders)
         {
-            ConstructionSystem.Build(context.State.Map, context.State.FindUnit(id)!, site);
+            ConstructionSystem.Build(context.State.Map, builder, site);
         }
     }
 }

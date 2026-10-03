@@ -73,6 +73,52 @@ public class PlaceBuildingCommandTests
         Assert.Equal(without.StateHash, withRejection.StateHash);
     }
 
+    [Fact]
+    public void Placing_a_building_with_a_builder_that_does_not_exist_is_rejected_and_changes_nothing()
+    {
+        var withRejection = TestMatches.TwoPlayerMatch();
+        var without = TestMatches.TwoPlayerMatch();
+        var command = AffordableHouseWith(withRejection, without, _ => new EntityId(100_000));
+
+        withRejection.Tick();
+        without.Tick();
+
+        Assert.Equal([new CommandRejected(command, RejectionReason.UnknownUnit)], withRejection.Events);
+        Assert.Equal(without.StateHash, withRejection.StateHash);
+    }
+
+    [Fact]
+    public void Placing_a_building_with_another_Players_Villager_as_builder_is_rejected_and_changes_nothing()
+    {
+        var withRejection = TestMatches.TwoPlayerMatch();
+        var without = TestMatches.TwoPlayerMatch();
+        var command = AffordableHouseWith(
+            withRejection, without, _ => withRejection.State.Units.First(unit => unit.Owner == TestMatches.SecondPlayer).Id);
+
+        withRejection.Tick();
+        without.Tick();
+
+        Assert.Equal([new CommandRejected(command, RejectionReason.UnitOfAnotherPlayer)], withRejection.Events);
+        Assert.Equal(without.StateHash, withRejection.StateHash);
+    }
+
+    /// <summary>
+    /// Gives the first Player of both matches the Wood for a House and enqueues, in
+    /// <paramref name="withRejection"/> only, a valid placement whose builders are its first
+    /// Villager and the unit <paramref name="other"/> names.
+    /// </summary>
+    private static PlaceBuildingCommand AffordableHouseWith(Match withRejection, Match without, Func<UnitState, EntityId> other)
+    {
+        Site.Stockpile(withRejection, TestMatches.FirstPlayer, Match.BuildingCost(BuildingKind.House).Wood);
+        Site.Stockpile(without, TestMatches.FirstPlayer, Match.BuildingCost(BuildingKind.House).Wood);
+        var villager = Site.VillagersOf(withRejection, TestMatches.FirstPlayer)[0];
+        var origin = Site.FreeOriginNear(withRejection.State, withRejection.State.Buildings[0].Origin, Match.BuildingSize(BuildingKind.House));
+        var command = new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.House, origin, [villager.Id, other(villager)]);
+        withRejection.Enqueue(command);
+
+        return command;
+    }
+
     /// <summary>Where a House cannot go: the reason is in the name, the origin is found in the match.</summary>
     public static TheoryData<string> InvalidSpots() => new() { "past_the_edge_of_the_map", "over_the_Town_Center", "over_a_resource_source", "under_a_Villager" };
 
