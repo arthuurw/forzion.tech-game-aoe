@@ -68,4 +68,13 @@ public class TrainCommandTests
         Assert.Equal([Match.TrainTime(UnitKind.Villager), 2 * Match.TrainTime(UnitKind.Villager)], trained.Select(happened => happened.Tick));
         Assert.Empty(townCenter.TrainingQueue);
     }
+
+    [Fact]
+    public void The_Town_Center_trains_Villagers_and_the_Barracks_the_military_units()
+    {
+        Assert.Equal(BuildingKind.TownCenter, Match.TrainedAt(UnitKind.Villager));
+        Assert.Equal(BuildingKind.Barracks, Match.TrainedAt(UnitKind.MeleeSoldier));
+        Assert.Equal(BuildingKind.Barracks, Match.TrainedAt(UnitKind.RangedSoldier));
+        Assert.Equal(BuildingKind.Barracks, Match.TrainedAt(UnitKind.HeavySoldier));
+    }
 }
