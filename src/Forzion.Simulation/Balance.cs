@@ -204,6 +204,12 @@ internal static class Balance
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
+    /// <summary>What the Portuguese Age Advance to Age II costs.</summary>
+    public static readonly Cost SecondAgeAdvanceCost = new(300, 0, 100);
+
+    /// <summary>Ticks the Portuguese Age Advance to Age II takes.</summary>
+    public const int SecondAgeAdvanceTime = 40 * Match.TicksPerSecond;
+
     /// <summary>Ticks a Villager spends gathering one unit of the given Resource.</summary>
     public static int GatherTicksPerUnit(ResourceKind kind) => kind switch
     {

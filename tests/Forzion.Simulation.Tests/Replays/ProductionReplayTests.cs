@@ -16,9 +16,10 @@ public class ProductionReplayTests
     /// <summary>
     /// Production by both Players: Villagers trained at the Town Centers with rally points, one
     /// of them cancelled; a Barracks and a House built by the first Player, an order to train at
-    /// the Barracks while it is still a site, and melee, heavy and ranged soldiers trained there
-    /// with a rally point, the ranged one cancelled. Unit, building and source IDs and the
-    /// origins are read from a match of the same configuration.
+    /// the Barracks while it is still a site, and melee and ranged soldiers trained there with a
+    /// rally point, the ranged one cancelled, between them an order for a heavy soldier, which
+    /// Age I has not unlocked. Unit, building and source IDs and the origins are read from a
+    /// match of the same configuration.
     /// </summary>
     private static ScheduledCommand[] Commands()
     {
@@ -50,7 +51,7 @@ public class ProductionReplayTests
             new(700, new TrainCommand(first, barracksId, UnitKind.MeleeSoldier)),
             new(700, new TrainCommand(first, barracksId, UnitKind.HeavySoldier)),
             new(700, new TrainCommand(first, barracksId, UnitKind.RangedSoldier)),
-            new(710, new CancelTrainingCommand(first, barracksId, 2)),
+            new(710, new CancelTrainingCommand(first, barracksId, 1)),
         ];
     }
 
@@ -64,7 +65,7 @@ public class ProductionReplayTests
     }
 
     [Fact]
-    public void The_replay_trains_every_unit_not_cancelled_and_rejects_only_the_order_for_the_site()
+    public void The_replay_trains_every_unit_not_cancelled_and_rejects_only_the_orders_for_the_site_and_the_locked_unit()
     {
         var match = Match.Create(Config());
         var commands = Commands();
@@ -83,11 +84,14 @@ public class ProductionReplayTests
             trained.AddRange(match.Events.OfType<UnitTrained>().Select(done => match.State.Units.Single(unit => unit.Id == done.Unit).Kind));
         }
 
-        Assert.Equal([commands.Single(scheduled => scheduled.Tick == 20).Command], rejected.Select(rejection => rejection.Command));
-        Assert.Equal(RejectionReason.BuildingNotComplete, rejected[0].Reason);
+        var heavyOrder = commands.Single(scheduled => scheduled.Command is TrainCommand { Kind: UnitKind.HeavySoldier }).Command;
         Assert.Equal(
-            [UnitKind.Villager, UnitKind.Villager, UnitKind.MeleeSoldier, UnitKind.HeavySoldier],
-            trained.Order());
+            [
+                new CommandRejected(commands.Single(scheduled => scheduled.Tick == 20).Command, RejectionReason.BuildingNotComplete),
+                new CommandRejected(heavyOrder, RejectionReason.UnitLocked),
+            ],
+            rejected);
+        Assert.Equal([UnitKind.Villager, UnitKind.Villager, UnitKind.MeleeSoldier], trained.Order());
         Assert.All(match.State.Buildings, building => Assert.Empty(building.TrainingQueue));
         Assert.All(match.State.Units, unit => Assert.False(unit.IsMoving));
     }
@@ -110,8 +114,15 @@ public class ProductionReplayTests
     // the hash of the final state as the public interface shows it, and it matched the
     // match's own hash at every tick of this replay, while queues held units of several kinds
     // and buildings had rally points. CI runs this on Windows, Linux and macOS: every system
-    // must reach the same hash.
-    private const ulong ExpectedFinalHash = 10324659297031690069UL;
+    // must reach the same hash. When the heavy soldier was locked behind Age II, its order
+    // became a rejection and the cancel that followed it moved to the ranged soldier's new
+    // place in the queue; the layout stayed the same, and the model, which reproduced every
+    // value recorded in the other replays, gave this one and matched the match's own hash at
+    // every tick. When the Ages joined the hash (each Player's Age and its Faction's data, and
+    // each building's Age Advance underway), the model reproduced the value before from the
+    // same final state with the layout before, gave this one with the Ages added and matched
+    // the match's own hash at every tick.
+    private const ulong ExpectedFinalHash = 11357276573190627401UL;
 
     [Fact]
     public void A_recorded_replay_of_production_reaches_the_recorded_final_hash()

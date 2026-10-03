@@ -93,6 +93,13 @@ public sealed class BuildingState
     /// </summary>
     public CellPosition? RallyPoint { get; internal set; }
 
+    /// <summary>
+    /// Ticks spent on the Age Advance the building is making, counting the tick that applied
+    /// the order; null while it makes none. Only a Town Center makes one, for its Player, and the
+    /// Player reaches the next Age once this would reach that Age's advance time.
+    /// </summary>
+    public int? AgeAdvanceProgress { get; internal set; }
+
     /// <summary>Puts a unit of the given kind at the end of the training queue.</summary>
     internal void QueueTraining(UnitKind kind) => trainingQueue.Add(kind);
 
@@ -190,5 +197,9 @@ public sealed class BuildingState
         // A building without a rally point writes false and the Cell (0, 0).
         hasher.Write(RallyPoint is not null);
         hasher.Write(RallyPoint ?? new CellPosition(0, 0));
+
+        // Likewise a building making no Age Advance writes false and 0.
+        hasher.Write(AgeAdvanceProgress is not null);
+        hasher.Write(AgeAdvanceProgress ?? 0);
     }
 }
