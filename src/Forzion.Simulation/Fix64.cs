@@ -67,6 +67,18 @@ public readonly struct Fix64 : IEquatable<Fix64>, IComparable<Fix64>
         return rounded > int.MaxValue ? int.MaxValue : (int)rounded;
     }
 
+    /// <summary>
+    /// Nearest <see cref="double"/>. For the presentation layer only: the simulation core must
+    /// never feed a floating-point value back into its state (ADR 0002).
+    /// </summary>
+    public double ToDouble() => raw / (double)RawOne;
+
+    /// <summary>
+    /// Nearest <see cref="float"/>, the precision the engine renders with. Presentation layer
+    /// only, like <see cref="ToDouble"/>.
+    /// </summary>
+    public float ToFloat() => (float)ToDouble();
+
     public static bool operator ==(Fix64 left, Fix64 right) => left.raw == right.raw;
 
     public static bool operator !=(Fix64 left, Fix64 right) => left.raw != right.raw;
