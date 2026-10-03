@@ -82,6 +82,23 @@ public class DestroyedBuildingTests
         Assert.True(Gather.Touches(townCenter, carrier.Path[^1]));
     }
 
+    [Fact]
+    public void A_House_destroyed_in_combat_takes_back_what_it_added_to_the_population_limit()
+    {
+        var match = Raiders();
+        var initial = match.State.PopulationLimitOf(First);
+        var villagers = Site.VillagersOf(match, First).Select(villager => villager.Id).ToList();
+        var house = Site.Place(match, First, BuildingKind.House, villagers);
+        Battle.TickUntil(match, () => house.IsComplete);
+        var withHouse = match.State.PopulationLimitOf(First);
+
+        Raid(match, house);
+        Battle.TickUntil(match, () => Battle.Building(match, house.Id) is null);
+
+        Assert.True(withHouse > initial);
+        Assert.Equal(initial, match.State.PopulationLimitOf(First));
+    }
+
     /// <summary>
     /// The default match, with the second Player starting with melee soldiers beside its own
     /// Town Center, far from the first Player's.
