@@ -1,4 +1,5 @@
 using Forzion.Simulation.Tests.Economy;
+using Forzion.Simulation.Tests.Matches;
 using Forzion.Simulation.Tests.Movement;
 
 namespace Forzion.Simulation.Tests.Construction;
@@ -8,7 +9,7 @@ internal static class Site
 {
     /// <summary>The Player's Villagers, in ID order.</summary>
     public static List<UnitState> VillagersOf(Match match, PlayerId player) =>
-        match.State.Units.Where(unit => unit.Owner == player && unit.Kind == UnitKind.Villager).ToList();
+        match.State.UnitsOf(player).Where(unit => unit.Kind == UnitKind.Villager).ToList();
 
     /// <summary>
     /// Has every Villager of the Player gather Wood until the Player holds at least

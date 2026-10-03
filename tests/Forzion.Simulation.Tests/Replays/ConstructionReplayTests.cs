@@ -21,8 +21,8 @@ public class ConstructionReplayTests
     private static ScheduledCommand[] Commands()
     {
         var state = TestMatches.TwoPlayerMatch(Seed).State;
-        var first = state.Units.Where(unit => unit.Owner == TestMatches.FirstPlayer).Select(unit => unit.Id).ToList();
-        var second = state.Units.Where(unit => unit.Owner == TestMatches.SecondPlayer).ToList();
+        var first = state.UnitsOf(TestMatches.FirstPlayer).Select(unit => unit.Id).ToList();
+        var second = state.UnitsOf(TestMatches.SecondPlayer).ToList();
         var firstWood = Gather.NearestSource(state, state.Units[1].Position.Cell, ResourceKind.Wood);
         var secondWood = Gather.NearestSource(state, second[1].Position.Cell, ResourceKind.Wood);
         var house = Site.FreeOriginNear(state, state.Buildings[0].Origin, Match.BuildingSize(BuildingKind.House));

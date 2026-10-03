@@ -109,7 +109,7 @@ public class PlaceBuildingCommandTests
         var withRejection = TestMatches.TwoPlayerMatch();
         var without = TestMatches.TwoPlayerMatch();
         var command = AffordableHouseWith(
-            withRejection, without, withRejection.State.Units.First(unit => unit.Owner == TestMatches.SecondPlayer).Id);
+            withRejection, without, withRejection.State.UnitsOf(TestMatches.SecondPlayer).First().Id);
 
         withRejection.Tick();
         without.Tick();

@@ -66,8 +66,7 @@ internal sealed class MovementSystem : ISystem
 
     /// <summary>
     /// Whether every step of the path, from <paramref name="from"/> on, is one the
-    /// <see cref="Pathfinder"/> could still take: onto a free Cell and, when diagonal, between
-    /// two free Cells.
+    /// <see cref="Pathfinder"/> could still take.
     /// </summary>
     private static bool IsStillWalkable(MapState map, CellPosition from, IReadOnlyList<CellPosition> path)
     {
@@ -75,12 +74,8 @@ internal sealed class MovementSystem : ISystem
 
         foreach (var cell in path)
         {
-            var diagonal = cell.X != previous.X && cell.Y != previous.Y;
-
-            if (map[cell] != CellKind.Free
-                || (diagonal
-                    && (map[new CellPosition(cell.X, previous.Y)] != CellKind.Free
-                        || map[new CellPosition(previous.X, cell.Y)] != CellKind.Free)))
+            // A unit already past the border of its next Cell is in it: no step is left there.
+            if (cell != previous && !Pathfinder.CanStep(map, previous, new CellStep(cell.X - previous.X, cell.Y - previous.Y)))
             {
                 return false;
             }

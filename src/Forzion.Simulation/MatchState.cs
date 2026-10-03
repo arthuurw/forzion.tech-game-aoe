@@ -141,7 +141,7 @@ public sealed class MatchState
             {
                 var cell = new CellPosition(x, y);
 
-                if (!Map.Contains(cell) || Map[cell] != CellKind.Free)
+                if (!Map.IsFree(cell))
                 {
                     return false;
                 }
