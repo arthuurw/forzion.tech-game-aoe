@@ -33,6 +33,25 @@ public sealed class BuildingState
     /// <summary>Height of the footprint in Cells.</summary>
     public int Height { get; }
 
+    /// <summary>
+    /// Whether Villagers deliver the Resources they carry here. Every kind of drop-off point
+    /// takes every Resource.
+    /// </summary>
+    internal bool IsDropOff => Kind is BuildingKind.TownCenter;
+
+    /// <summary>The Cell of the footprint nearest to the given Cell.</summary>
+    internal CellPosition NearestCellTo(CellPosition cell) => new(
+        Math.Clamp(cell.X, Origin.X, Origin.X + Width - 1),
+        Math.Clamp(cell.Y, Origin.Y, Origin.Y + Height - 1));
+
+    /// <summary>Whether the given Cell lies beside the footprint, by a side or by a corner.</summary>
+    internal bool IsBeside(CellPosition cell)
+    {
+        var nearest = NearestCellTo(cell);
+
+        return cell != nearest && Math.Abs(cell.X - nearest.X) <= 1 && Math.Abs(cell.Y - nearest.Y) <= 1;
+    }
+
     internal void WriteTo(StateHasher hasher)
     {
         hasher.Write(Id.Value);

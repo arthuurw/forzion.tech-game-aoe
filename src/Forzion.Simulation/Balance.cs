@@ -31,6 +31,9 @@ internal static class Balance
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
+    /// <summary>The most a Villager carries at once.</summary>
+    public const int VillagerCarryCapacity = 10;
+
     /// <summary>Ticks a Villager spends gathering one unit of the given Resource.</summary>
     public static int GatherTicksPerUnit(ResourceKind kind) => kind switch
     {

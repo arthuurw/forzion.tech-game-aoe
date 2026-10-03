@@ -188,6 +188,9 @@ public sealed class MatchState
 
 public sealed class PlayerState
 {
+    // How much of each Resource the Player has, indexed by ResourceKind.
+    private readonly int[] resources = new int[Enum.GetValues<ResourceKind>().Length];
+
     internal PlayerState(PlayerId id, FactionId faction)
     {
         Id = id;
@@ -200,6 +203,11 @@ public sealed class PlayerState
 
     /// <summary>Whether the Player has been defeated. A defeated Player stays in the state.</summary>
     public bool IsDefeated { get; internal set; }
+
+    /// <summary>How much of the given Resource the Player has.</summary>
+    public int AmountOf(ResourceKind kind) => resources[(int)kind];
+
+    internal void Receive(ResourceKind kind, int amount) => resources[(int)kind] += amount;
 
     internal void WriteTo(StateHasher hasher)
     {
