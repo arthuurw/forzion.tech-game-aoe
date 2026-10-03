@@ -263,6 +263,25 @@ public class PlayerControlTests
     }
 
     [Fact]
+    public void Right_clicking_an_enemy_unit_with_Villagers_and_soldiers_selected_sends_the_soldiers_to_attack_it()
+    {
+        var control = NewControl(out var match, config: WithSoldier());
+        var units = UnitsOf(match, FirstPlayer);
+        var soldier = SoldierOf(match);
+        var (from, to) = BoxAround(units.Select(unit => unit.Position));
+        control.Select(from, to);
+        Assert.Equal(units.Select(unit => unit.Id), control.Selected);
+        var enemy = UnitsOf(match, SecondPlayer)[0];
+
+        control.OrderAt(Over(enemy.Position));
+        var events = Tick(match);
+
+        Assert.DoesNotContain(events, matchEvent => matchEvent is CommandRejected);
+        Assert.Equal(enemy.Id, soldier.Target);
+        Assert.All(units.Where(unit => unit.Kind == UnitKind.Villager), villager => Assert.Null(villager.Target));
+    }
+
+    [Fact]
     public void Right_clicking_an_enemy_building_sends_the_selected_soldiers_to_attack_it()
     {
         var control = NewControl(out var match, config: WithSoldier());
