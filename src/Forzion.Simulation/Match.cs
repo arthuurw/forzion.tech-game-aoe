@@ -70,6 +70,13 @@ public sealed class Match
     /// <exception cref="ArgumentOutOfRangeException">The kind is not a <see cref="UnitKind"/>.</exception>
     public static int TrainTime(UnitKind kind) => Balance.TrainTime(kind);
 
+    /// <summary>
+    /// The kind of building that trains units of the given kind. Whether the Player's Age has
+    /// unlocked them is for its Faction to say (<see cref="Faction.Unlocks(UnitKind, int)"/>).
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The kind is not a <see cref="UnitKind"/>.</exception>
+    public static BuildingKind TrainedAt(UnitKind kind) => Balance.TrainedAt(kind);
+
     /// <summary>Side of the square footprint of a building of the given kind, in Cells.</summary>
     /// <exception cref="ArgumentOutOfRangeException">The kind is not a <see cref="BuildingKind"/>.</exception>
     public static int BuildingSize(BuildingKind kind) => Balance.BuildingSize(kind);

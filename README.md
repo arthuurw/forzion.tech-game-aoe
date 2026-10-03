@@ -8,12 +8,12 @@ Jogo de estratégia em tempo real (RTS) em 3D sobre a história do Brasil. O jog
 
 É um projeto de portfólio de engenharia de software em C#. O foco está na arquitetura: toda a regra do jogo vive numa simulação determinística, escrita em C# puro e separada da engine.
 
-> **Estado:** em desenvolvimento. O jogo ainda não é jogável: ele abre o mapa inicial com formas simples no lugar da arte, e dá para selecionar os Aldeões e mandá-los andar e coletar. O primeiro marco jogável está descrito na [spec do vertical slice](https://github.com/arthuurw/forzion.tech-game-aoe/issues/1).
+> **Estado:** em desenvolvimento. O jogo ainda não é jogável do início à vitória: ele abre o mapa com formas simples no lugar da arte, e pela HUD dá para coletar, construir, treinar unidades e fazer o Avanço de Era, mas o adversário ainda não joga. O primeiro marco jogável está descrito na [spec do vertical slice](https://github.com/arthuurw/forzion.tech-game-aoe/issues/1).
 
 ### Arquitetura
 
 - **Núcleo de simulação** (`src/Forzion.Simulation`): biblioteca .NET sem nenhuma referência ao Godot. Contém economia, construção, produção, combate, IA e movimento.
-- **Apresentação** (`game/` e `src/Forzion.Presentation`): projeto Godot 4 .NET que mostra o estado em 3D e transforma o input do jogador em comandos. Avança a simulação a 20 ticks por segundo e interpola as posições entre os ticks. A parte que não depende da engine (relógio de ticks, interpolação, o que um clique ou um retângulo seleciona, que comando o botão direito dá conforme o alvo e que aviso mostrar para uma ordem recusada) fica numa biblioteca C# pura testada sem o Godot.
+- **Apresentação** (`game/` e `src/Forzion.Presentation`): projeto Godot 4 .NET que mostra o estado em 3D e transforma o input do jogador em comandos. Avança a simulação a 20 ticks por segundo e interpola as posições entre os ticks. A parte que não depende da engine (relógio de ticks, interpolação, o que um clique ou um retângulo seleciona, que comando o botão direito dá conforme o alvo, o que a HUD mostra e que aviso mostrar para uma ordem recusada) fica numa biblioteca C# pura testada sem o Godot.
 - **Determinismo**: ticks fixos, aritmética de ponto fixo e gerador aleatório com seed. A mesma seed com os mesmos comandos produz o mesmo estado em Windows, Linux e macOS.
 
 As decisões e os motivos estão em [`docs/adr/`](docs/adr/). O vocabulário do domínio está em [`GLOSSARY.md`](GLOSSARY.md).
@@ -44,6 +44,8 @@ Câmera: WASD, setas ou mouse na borda da tela deslocam; roda do mouse ou Page U
 
 Seleção e ordens: clique com o botão esquerdo seleciona uma unidade ou construção sua; arrastar com o botão esquerdo seleciona suas unidades dentro do retângulo; clique em terreno vazio limpa a seleção. O botão direito manda as unidades selecionadas coletar numa Fonte de Recurso, atacar uma unidade ou construção inimiga, construir uma Obra sua ou andar até o ponto clicado. Unidades mortas saem da seleção. Uma ordem recusada aparece como aviso no topo da tela.
 
+HUD: a barra do topo mostra Alimento, Madeira, Ouro, população sobre o limite e a Era atual com o nome que a Facção lhe dá, além do progresso de um Avanço de Era. O painel de baixo mostra a seleção. Com Aldeões selecionados, os botões de construção escolhem uma construção: a prévia segue o mouse, verde onde o local é válido e vermelha onde não é; o botão esquerdo posiciona a Obra com os Aldeões selecionados, e o botão direito ou Esc desiste. Com uma construção selecionada, o painel mostra os pontos de vida, o progresso da Obra, os botões de treino (o que a Era ainda não liberou fica desativado, com o nome da Era que libera), a Fila de treino com o progresso (clicar num item cancela e devolve o Custo) e, no Centro, o botão de Avanço de Era; o botão direito no mapa define o Ponto de reunião. Unidades e construções feridas mostram uma barra de vida, e as Obras uma barra de progresso.
+
 Os textos do jogo ficam em `game/translations/pt_BR.po` (gettext); outro idioma entra como outro arquivo `.po` com as mesmas chaves.
 
 ### Estrutura do repositório
@@ -51,7 +53,7 @@ Os textos do jogo ficam em `game/translations/pt_BR.po` (gettext); outro idioma 
 | Caminho | Conteúdo |
 |---|---|
 | `src/Forzion.Simulation` | Núcleo de simulação |
-| `src/Forzion.Presentation` | Lógica de apresentação sem engine: relógio de ticks, interpolação, seleção, ordens e avisos |
+| `src/Forzion.Presentation` | Lógica de apresentação sem engine: relógio de ticks, interpolação, seleção, ordens, conteúdo da HUD e avisos |
 | `game` | Projeto Godot: cenas, câmera, renderização, input e textos (`translations`) |
 | `tests/Forzion.Simulation.Tests` | Testes do núcleo (xUnit e FsCheck) |
 | `tests/Forzion.Presentation.Tests` | Testes da lógica de apresentação (xUnit) |
@@ -78,12 +80,12 @@ A 3D real-time strategy (RTS) game about the history of Brazil. The player gathe
 
 This is a software engineering portfolio project in C#. The focus is the architecture: every game rule lives in a deterministic simulation written in plain C#, separate from the engine.
 
-> **Status:** in development. The game is not playable yet: it opens the starting map with simple shapes in place of the art, and the Villagers can be selected and sent to walk and gather. The first playable milestone is described in the [vertical slice spec](https://github.com/arthuurw/forzion.tech-game-aoe/issues/1) (in Portuguese).
+> **Status:** in development. The game is not playable from start to victory yet: it opens the map with simple shapes in place of the art, and through the HUD you can gather, build, train units and make the Age Advance, but the opponent does not play yet. The first playable milestone is described in the [vertical slice spec](https://github.com/arthuurw/forzion.tech-game-aoe/issues/1) (in Portuguese).
 
 ### Architecture
 
 - **Simulation core** (`src/Forzion.Simulation`): a .NET library with no reference to Godot. It holds economy, construction, production, combat, AI and movement.
-- **Presentation** (`game/` and `src/Forzion.Presentation`): a Godot 4 .NET project that shows the state in 3D and turns player input into commands. It advances the simulation at 20 ticks per second and interpolates positions between ticks. The part that needs no engine (tick clock, interpolation, what a click or a box selects, which command a right-click gives on each target and which notice a refused order shows) lives in a plain C# library tested without Godot.
+- **Presentation** (`game/` and `src/Forzion.Presentation`): a Godot 4 .NET project that shows the state in 3D and turns player input into commands. It advances the simulation at 20 ticks per second and interpolates positions between ticks. The part that needs no engine (tick clock, interpolation, what a click or a box selects, which command a right-click gives on each target, what the HUD shows and which notice a refused order shows) lives in a plain C# library tested without Godot.
 - **Determinism**: fixed ticks, fixed-point arithmetic and a seeded random generator. The same seed with the same commands produces the same state on Windows, Linux and macOS.
 
 The decisions and their reasons are in [`docs/adr/`](docs/adr/). The domain vocabulary is in [`GLOSSARY.md`](GLOSSARY.md). Both are written in Portuguese; code, comments and commits are in English.
@@ -114,6 +116,8 @@ Camera: WASD, the arrow keys or the mouse at the screen edge pan; the mouse whee
 
 Selection and orders: a left click selects one of your units or buildings; dragging with the left button selects your units inside the box; clicking bare ground clears the selection. The right button sends the selected units to gather from a resource source, attack an enemy unit or building, build one of your construction sites or walk to the clicked point. Units that die leave the selection. A refused order shows as a notice at the top of the screen.
 
+HUD: the top bar shows Food, Wood, Gold, population against the limit and the current Age under its Faction name, plus the progress of an Age Advance. The bottom panel shows the selection. With Villagers selected, the building buttons choose a building: the preview follows the mouse, green where the spot is valid and red where it is not; the left button places the construction site with the selected Villagers, and the right button or Escape gives up. With a building selected, the panel shows its hit points, construction progress, the training buttons (what the Age has not unlocked yet is disabled, naming the Age that unlocks it), the training queue with progress (clicking an entry cancels it and refunds its cost) and, at the Town Center, the Age Advance button; a right click on the map sets the rally point. Wounded units and buildings show a health bar, and construction sites a progress bar.
+
 The game texts live in `game/translations/pt_BR.po` (gettext); another language comes in as another `.po` file with the same keys.
 
 ### Repository layout
@@ -121,7 +125,7 @@ The game texts live in `game/translations/pt_BR.po` (gettext); another language 
 | Path | Contents |
 |---|---|
 | `src/Forzion.Simulation` | Simulation core |
-| `src/Forzion.Presentation` | Engine-free presentation logic: tick clock, interpolation, selection, orders and notices |
+| `src/Forzion.Presentation` | Engine-free presentation logic: tick clock, interpolation, selection, orders, HUD content and notices |
 | `game` | Godot project: scenes, camera, rendering, input and texts (`translations`) |
 | `tests/Forzion.Simulation.Tests` | Core tests (xUnit and FsCheck) |
 | `tests/Forzion.Presentation.Tests` | Presentation logic tests (xUnit) |

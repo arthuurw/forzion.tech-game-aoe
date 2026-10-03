@@ -5,7 +5,7 @@ namespace Forzion.Game;
 
 /// <summary>
 /// Shows what is selected: a flat ring on the ground around each selected unit or building,
-/// following the unit as it walks.
+/// following the unit as it walks, and a flag on the rally point of a selected building.
 /// </summary>
 public partial class SelectionMarkers : Node3D
 {
@@ -18,6 +18,7 @@ public partial class SelectionMarkers : Node3D
     private readonly HashSet<EntityId> shown = [];
 
     private TorusMesh ringMesh = null!;
+    private Node3D rallyFlag = null!;
 
     /// <summary>The match whose entities are marked.</summary>
     [Export]
@@ -41,6 +42,9 @@ public partial class SelectionMarkers : Node3D
                 ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
             },
         };
+
+        rallyFlag = RallyFlag();
+        AddChild(rallyFlag);
     }
 
     public override void _Process(double delta)
@@ -63,6 +67,50 @@ public partial class SelectionMarkers : Node3D
             rings[id].QueueFree();
             rings.Remove(id);
         }
+
+        var rallyPoint = state.Buildings
+            .Where(building => shown.Contains(building.Id))
+            .Select(building => building.RallyPoint)
+            .FirstOrDefault(cell => cell is not null);
+
+        rallyFlag.Visible = rallyPoint is not null;
+
+        if (rallyPoint is { } cell)
+        {
+            rallyFlag.Position = WorldSpace.CentreOf(cell);
+        }
+    }
+
+    /// <summary>A pole with a pennant in the human Player's colour, standing on the ground.</summary>
+    private static Node3D RallyFlag()
+    {
+        var flag = new Node3D { Name = "RallyFlag", Visible = false };
+        var colour = Placeholders.ColourOf(MatchView.HumanPlayer);
+
+        flag.AddChild(new MeshInstance3D
+        {
+            Name = "Pole",
+            Mesh = new CylinderMesh
+            {
+                TopRadius = 0.03f,
+                BottomRadius = 0.03f,
+                Height = 1.4f,
+                Material = new StandardMaterial3D { AlbedoColor = new Color(0.9f, 0.9f, 0.9f) },
+            },
+            Position = new Vector3(0, 0.7f, 0),
+        });
+        flag.AddChild(new MeshInstance3D
+        {
+            Name = "Pennant",
+            Mesh = new BoxMesh
+            {
+                Size = new Vector3(0.45f, 0.3f, 0.03f),
+                Material = new StandardMaterial3D { AlbedoColor = colour, ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded },
+            },
+            Position = new Vector3(0.24f, 1.22f, 0),
+        });
+
+        return flag;
     }
 
     /// <summary>Puts the entity's ring around it; false when the entity is no longer in the match.</summary>

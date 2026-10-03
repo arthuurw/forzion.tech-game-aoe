@@ -11,12 +11,24 @@ Disputa entre Jogadores num mapa, do início até a vitória de um deles. Partid
 _Avoid_: Jogo, sessão, rodada
 
 **Tick** (`Tick`):
-Passo fixo em que a Partida avança, vinte por segundo de jogo. As ordens dadas pelos Jogadores valem a partir do Tick seguinte.
+Passo fixo em que a Partida avança, vinte por segundo de jogo. Os Comandos dos Jogadores valem a partir do Tick seguinte.
 _Avoid_: Turno
 
 **Quadro** (`Frame`):
 Uma imagem da Partida desenhada na tela. Quadros não seguem o ritmo dos Ticks: entre dois Ticks podem ser desenhados vários Quadros ou nenhum.
 _Avoid_: Tick
+
+**Ordem** (`Order`):
+O que o Jogador manda fazer pela interface: um clique, um botão. Cada Ordem vira um Comando enviado à Partida; é a Partida que decide se ele vale.
+_Avoid_: Comando, ação
+
+**Comando** (`Command`):
+Pedido que a Partida recebe de um Jogador, humano ou IA, e aplica no Tick seguinte ou recusa com um motivo. É a única forma de mudar a Partida de fora.
+_Avoid_: Ordem, instrução
+
+**Seleção** (`Selection`):
+As unidades ou a construção do Jogador que recebem as suas próximas Ordens.
+_Avoid_: Grupo
 
 ## Modos de jogo
 
@@ -172,6 +184,9 @@ _Avoid_: HP, saúde, energia
 As unidades militares de um Jogador. Aldeões não fazem parte dele.
 _Avoid_: Tropa, força
 
+**Dano** (`Damage`):
+Pontos de vida que um golpe tira do Alvo.
+
 **Alvo** (`Target`):
 A unidade ou construção inimiga que uma unidade militar está atacando.
 
@@ -186,7 +201,7 @@ Distância, em Células, em que uma unidade militar parada e sem alvo nota uma u
 _Avoid_: Visão, campo de visão
 
 **Derrota** (`Defeat`):
-Jogador sem Centro é derrotado e não dá mais ordens. Quando resta no máximo um Jogador não derrotado, a partida termina; esse Jogador, se houver, é o vencedor (`Winner`).
+Jogador sem Centro é derrotado e não dá mais Comandos; suas unidades e construções que restam ficam no mapa e agem sozinhas. Quando resta no máximo um Jogador não derrotado, a partida termina; esse Jogador, se houver, é o vencedor (`Winner`).
 
 ## Mapa
 

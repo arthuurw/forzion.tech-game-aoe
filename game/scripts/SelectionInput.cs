@@ -5,12 +5,15 @@ namespace Forzion.Game;
 
 /// <summary>
 /// The mouse of the person at the screen: the left button selects by click or by a dragged
-/// box, the right button orders the selected units. What a gesture selects and which command
-/// it sends is decided by <see cref="PlayerControl"/>, outside the engine; this node only
-/// feeds it the mouse and the camera's lines of sight, and draws the box being dragged.
+/// box, the right button orders the selected units or sets the selected building's rally
+/// point. While a building chosen in the HUD is being placed, the left button places it and
+/// the right button or Escape gives up. What a gesture selects and which command it sends is
+/// decided by <see cref="PlayerControl"/>, outside the engine; this node only feeds it the
+/// mouse and the camera's lines of sight, and draws the box being dragged.
 /// </summary>
 /// <remarks>
-/// Bindings live in the project's input map: the <c>select</c> and <c>order</c> actions.
+/// Bindings live in the project's input map: the <c>select</c> and <c>order</c> actions, and
+/// Godot's built-in <c>ui_cancel</c>. Clicks on the HUD never reach this node.
 /// </remarks>
 public partial class SelectionInput : CanvasLayer
 {
@@ -52,12 +55,36 @@ public partial class SelectionInput : CanvasLayer
 
     public override void _UnhandledInput(InputEvent @event)
     {
+        if (Control.PlacingBuilding is not null && @event.IsActionPressed("ui_cancel"))
+        {
+            Control.CancelPlacement();
+            GetViewport().SetInputAsHandled();
+
+            return;
+        }
+
         if (@event is not InputEventMouse mouse)
         {
             return;
         }
 
         var at = new ScreenPoint(mouse.Position.X, mouse.Position.Y);
+
+        // While a building is being placed, the left button places it and the right gives up;
+        // neither selects nor orders.
+        if (Control.PlacingBuilding is not null)
+        {
+            if (@event.IsActionPressed("select"))
+            {
+                Control.PlaceAt(at);
+            }
+            else if (@event.IsActionPressed("order"))
+            {
+                Control.CancelPlacement();
+            }
+
+            return;
+        }
 
         if (@event.IsActionPressed("select"))
         {
