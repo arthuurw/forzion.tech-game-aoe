@@ -4,7 +4,7 @@
 [ext_resource type="Script" path="res://scripts/RtsCamera.cs" id="2_camera"]
 [ext_resource type="Script" path="res://scripts/SelectionInput.cs" id="3_selection"]
 [ext_resource type="Script" path="res://scripts/SelectionMarkers.cs" id="4_markers"]
-[ext_resource type="Script" path="res://scripts/RejectionNoticeBoard.cs" id="5_notices"]
+[ext_resource type="Script" path="res://scripts/NoticeBoard.cs" id="5_notices"]
 
 [sub_resource type="Environment" id="Environment_main"]
 background_mode = 1
@@ -43,6 +43,6 @@ script = ExtResource("4_markers")
 MatchView = NodePath("../MatchView")
 SelectionInput = NodePath("../SelectionInput")
 
-[node name="RejectionNoticeBoard" type="CanvasLayer" parent="." node_paths=PackedStringArray("MatchView")]
+[node name="NoticeBoard" type="CanvasLayer" parent="." node_paths=PackedStringArray("MatchView")]
 script = ExtResource("5_notices")
 MatchView = NodePath("../MatchView")
