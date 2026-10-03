@@ -70,10 +70,10 @@ public class ReplayTests
     // reproduced the values recorded before. CI runs this on Windows, Linux and macOS: every
     // system must reach the same hash. A change that adds state to the hash changes these
     // values on purpose and must record the new ones.
-    private const ulong ExpectedFinalHash = 15167749425423853049UL;
+    private const ulong ExpectedFinalHash = 7949405867538644025UL;
 
     // Seed 3 is one whose first scattering of obstacles cuts the Players apart and is drawn again.
-    private const ulong ExpectedInitialHashOfSeed3 = 12821479755032103706UL;
+    private const ulong ExpectedInitialHashOfSeed3 = 2303080621154255258UL;
 
     [Fact]
     public void A_recorded_replay_reaches_the_recorded_final_hash()

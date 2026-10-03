@@ -20,6 +20,7 @@ public sealed class Match
     [
         new CombatSystem(),
         new MovementSystem(),
+        new DefeatSystem(),
     ];
 
     private readonly List<Command> pendingCommands = [];

@@ -68,7 +68,7 @@ public class MovementReplayTests
     // interface shows it, paths included. CI runs this on Windows, Linux and macOS: every
     // system must reach the same hash, which is what holds fixed-point movement and
     // pathfinding to the same result everywhere.
-    private const ulong ExpectedFinalHash = 15012455764101482481UL;
+    private const ulong ExpectedFinalHash = 17668691226880007217UL;
 
     [Fact]
     public void A_recorded_replay_of_moves_reaches_the_recorded_final_hash()

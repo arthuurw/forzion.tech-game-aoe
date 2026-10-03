@@ -70,6 +70,18 @@ public sealed class MatchState
     /// <summary>The units, ordered by ascending <see cref="UnitState.Id"/>.</summary>
     public IReadOnlyList<UnitState> Units => units;
 
+    /// <summary>Whether the match has ended: at most one of its Players remains undefeated.</summary>
+    public bool IsOver { get; private set; }
+
+    /// <summary>The Player who won the match, or null while it goes on or when it ended without a winner.</summary>
+    public PlayerId? Winner { get; private set; }
+
+    internal void End(PlayerId? winner)
+    {
+        IsOver = true;
+        Winner = winner;
+    }
+
     /// <summary>The Player with the given ID, or null when the match has no such Player.</summary>
     internal PlayerState? FindPlayer(PlayerId id) =>
         id.Value >= 1 && id.Value <= players.Count ? players[id.Value - 1] : null;
@@ -192,6 +204,9 @@ public sealed class MatchState
         {
             unit.WriteTo(hasher);
         }
+
+        hasher.Write(IsOver);
+        hasher.Write(Winner?.Value ?? 0);
     }
 
     private EntityId NextEntityId() => new(++lastEntityId);
