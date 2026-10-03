@@ -6,12 +6,15 @@ namespace Forzion.Simulation;
 public readonly struct Fix64 : IEquatable<Fix64>, IComparable<Fix64>
 {
     private const int FractionalBits = 32;
+    private const long RawOne = 1L << FractionalBits;
 
     private readonly long raw;
 
     private Fix64(long raw) => this.raw = raw;
 
     public static Fix64 Zero => default;
+
+    public static Fix64 One => new(RawOne);
 
     /// <summary>Largest representable value: 2^31 - 2^-32.</summary>
     public static Fix64 MaxValue => new(long.MaxValue);
@@ -84,6 +87,24 @@ public readonly struct Fix64 : IEquatable<Fix64>, IComparable<Fix64>
 
     public static Fix64 operator -(Fix64 value) =>
         value.raw == long.MinValue ? MaxValue : new(-value.raw);
+
+    public static Fix64 operator *(Fix64 left, Fix64 right) =>
+        Saturate((Int128)left.raw * right.raw / RawOne);
+
+    private static Fix64 Saturate(Int128 wideRaw)
+    {
+        if (wideRaw > long.MaxValue)
+        {
+            return MaxValue;
+        }
+
+        if (wideRaw < long.MinValue)
+        {
+            return MinValue;
+        }
+
+        return new((long)wideRaw);
+    }
 
     /// <summary>Magnitude of the value. The magnitude of <see cref="MinValue"/> saturates.</summary>
     public static Fix64 Abs(Fix64 value) => value.raw < 0 ? -value : value;
