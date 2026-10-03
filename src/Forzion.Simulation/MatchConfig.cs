@@ -11,4 +11,11 @@ public sealed record MatchConfig(ulong Seed, MapConfig Map, IReadOnlyList<Player
 public sealed record MapConfig(int Width, int Height);
 
 /// <param name="Faction">The Faction the Player controls.</param>
-public sealed record PlayerConfig(FactionId Faction);
+/// <param name="ExtraUnits">
+/// Units the Player starts with on top of what every Player starts with. Each must stand on a
+/// free Cell of the map.
+/// </param>
+public sealed record PlayerConfig(FactionId Faction, IReadOnlyList<StartingUnit>? ExtraUnits = null);
+
+/// <summary>A unit a Player starts the match with, standing on the centre of <paramref name="Cell"/>.</summary>
+public sealed record StartingUnit(UnitKind Kind, CellPosition Cell);

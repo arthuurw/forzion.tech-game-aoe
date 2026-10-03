@@ -40,4 +40,16 @@ public enum RejectionReason
 
     /// <summary>The command names a resource source that is not in the match, or no longer is.</summary>
     UnknownResourceSource,
+
+    /// <summary>The attack target is neither a unit nor a building of the match.</summary>
+    UnknownTarget,
+
+    /// <summary>The attack target belongs to the issuing Player.</summary>
+    OwnTarget,
+
+    /// <summary>The command orders an attack from a unit that cannot attack.</summary>
+    UnitCannotAttack,
+
+    /// <summary>The command orders a gather from a unit that cannot gather: only Villagers gather.</summary>
+    UnitCannotGather,
 }

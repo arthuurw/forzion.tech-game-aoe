@@ -14,21 +14,11 @@ public abstract record Command(PlayerId Player)
     internal abstract void Execute(TickContext context, PlayerState issuer);
 }
 
-/// <summary>The Player gives up the match and is defeated.</summary>
-public sealed record ResignCommand(PlayerId Player) : Command(Player)
-{
-    internal override void Execute(TickContext context, PlayerState issuer)
-    {
-        issuer.IsDefeated = true;
-        context.Emit(new PlayerDefeated(issuer.Id));
-    }
-}
-
 /// <summary>
 /// Sends units of the Player walking to a Cell. Each unit finds its own way around obstacles,
 /// resource sources and buildings and stops on the centre of the Cell, or of the nearest Cell
 /// it can reach when the destination itself cannot be reached. A Villager that was gathering
-/// stops gathering and keeps its load.
+/// stops gathering and keeps its load. Moving calls off any attack the units were making.
 /// </summary>
 /// <remarks>
 /// The command is rejected as a whole, moving none of its units, when the destination is
@@ -62,6 +52,7 @@ public sealed record MoveCommand(PlayerId Player, IReadOnlyList<EntityId> Units,
         foreach (var unit in units)
         {
             unit.StopGathering();
+            unit.StopAttacking();
             MovementSystem.WalkTo(state.Map, unit, Destination);
         }
     }

@@ -1,3 +1,5 @@
+using Forzion.Simulation.Tests.Movement;
+
 namespace Forzion.Simulation.Tests.Matches;
 
 public class CommandTests
@@ -6,11 +8,12 @@ public class CommandTests
     public void An_enqueued_command_changes_nothing_until_the_next_tick()
     {
         var match = TestMatches.TwoPlayerMatch();
+        var villager = Walk.MiddleVillager(match);
         var hashBefore = match.StateHash;
 
-        match.Enqueue(new ResignCommand(TestMatches.FirstPlayer));
+        match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], Walk.BehindTownCenter(match)));
 
-        Assert.False(match.State.Players[0].IsDefeated);
+        Assert.False(villager.IsMoving);
         Assert.Empty(match.Events);
         Assert.Equal(hashBefore, match.StateHash);
     }
@@ -19,20 +22,22 @@ public class CommandTests
     public void An_enqueued_command_is_applied_by_the_next_tick()
     {
         var match = TestMatches.TwoPlayerMatch();
-        match.Enqueue(new ResignCommand(TestMatches.FirstPlayer));
+        var villager = Walk.MiddleVillager(match);
+        var command = OutsideTheMap(match, TestMatches.FirstPlayer);
+        match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], Walk.BehindTownCenter(match)));
+        match.Enqueue(command);
 
         match.Tick();
 
-        Assert.True(match.State.Players[0].IsDefeated);
-        Assert.False(match.State.Players[1].IsDefeated);
-        Assert.Equal([new PlayerDefeated(TestMatches.FirstPlayer)], match.Events);
+        Assert.True(villager.IsMoving);
+        Assert.Equal([new CommandRejected(command, RejectionReason.DestinationOutsideMap)], match.Events);
     }
 
     [Fact]
     public void A_command_is_applied_only_once()
     {
         var match = TestMatches.TwoPlayerMatch();
-        match.Enqueue(new ResignCommand(TestMatches.FirstPlayer));
+        match.Enqueue(OutsideTheMap(match, TestMatches.FirstPlayer));
         match.Tick();
 
         match.Tick();
@@ -44,13 +49,14 @@ public class CommandTests
     public void Events_read_after_a_tick_are_not_changed_by_later_ticks()
     {
         var match = TestMatches.TwoPlayerMatch();
-        match.Enqueue(new ResignCommand(TestMatches.FirstPlayer));
+        var command = OutsideTheMap(match, TestMatches.FirstPlayer);
+        match.Enqueue(command);
         match.Tick();
         var events = match.Events;
 
         match.Tick();
 
-        Assert.Equal([new PlayerDefeated(TestMatches.FirstPlayer)], events);
+        Assert.Equal([new CommandRejected(command, RejectionReason.DestinationOutsideMap)], events);
     }
 
     [Fact]
@@ -58,7 +64,8 @@ public class CommandTests
     {
         var withCommand = TestMatches.TwoPlayerMatch();
         var without = TestMatches.TwoPlayerMatch();
-        withCommand.Enqueue(new ResignCommand(TestMatches.FirstPlayer));
+        withCommand.Enqueue(new MoveCommand(
+            TestMatches.FirstPlayer, [Walk.MiddleVillager(withCommand).Id], Walk.BehindTownCenter(withCommand)));
 
         withCommand.Tick();
         without.Tick();
@@ -70,26 +77,12 @@ public class CommandTests
     public void A_command_from_a_Player_that_is_not_in_the_match_is_rejected()
     {
         var match = TestMatches.TwoPlayerMatch();
-        var command = new ResignCommand(new PlayerId(3));
+        var command = new MoveCommand(new PlayerId(3), [Walk.MiddleVillager(match).Id], Walk.BehindTownCenter(match));
         match.Enqueue(command);
         match.Tick();
 
         Assert.Equal([new CommandRejected(command, RejectionReason.UnknownPlayer)], match.Events);
-        Assert.All(match.State.Players, player => Assert.False(player.IsDefeated));
-    }
-
-    [Fact]
-    public void A_command_from_a_defeated_Player_is_rejected()
-    {
-        var match = TestMatches.TwoPlayerMatch();
-        var command = new ResignCommand(TestMatches.FirstPlayer);
-        match.Enqueue(command);
-        match.Tick();
-
-        match.Enqueue(command);
-        match.Tick();
-
-        Assert.Equal([new CommandRejected(command, RejectionReason.DefeatedPlayer)], match.Events);
+        Assert.False(Walk.MiddleVillager(match).IsMoving);
     }
 
     [Fact]
@@ -97,7 +90,8 @@ public class CommandTests
     {
         var withRejection = TestMatches.TwoPlayerMatch();
         var without = TestMatches.TwoPlayerMatch();
-        withRejection.Enqueue(new ResignCommand(new PlayerId(3)));
+        withRejection.Enqueue(new MoveCommand(
+            new PlayerId(3), [Walk.MiddleVillager(withRejection).Id], Walk.BehindTownCenter(withRejection)));
 
         withRejection.Tick();
         without.Tick();
@@ -109,13 +103,22 @@ public class CommandTests
     public void Commands_of_one_tick_are_applied_in_Player_order_whatever_the_order_they_arrived_in()
     {
         var match = TestMatches.TwoPlayerMatch();
-        match.Enqueue(new ResignCommand(TestMatches.SecondPlayer));
-        match.Enqueue(new ResignCommand(TestMatches.FirstPlayer));
+        var second = OutsideTheMap(match, TestMatches.SecondPlayer);
+        var first = OutsideTheMap(match, TestMatches.FirstPlayer);
+        match.Enqueue(second);
+        match.Enqueue(first);
 
         match.Tick();
 
         Assert.Equal(
-            [new PlayerDefeated(TestMatches.FirstPlayer), new PlayerDefeated(TestMatches.SecondPlayer)],
+            [
+                new CommandRejected(first, RejectionReason.DestinationOutsideMap),
+                new CommandRejected(second, RejectionReason.DestinationOutsideMap),
+            ],
             match.Events);
     }
+
+    /// <summary>A move of one of the Player's Villagers to a Cell outside the map: always rejected, changing nothing.</summary>
+    private static MoveCommand OutsideTheMap(Match match, PlayerId player) =>
+        new(player, [match.State.Units.First(unit => unit.Owner == player).Id], new CellPosition(-1, -1));
 }

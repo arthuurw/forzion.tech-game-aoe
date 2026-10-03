@@ -16,7 +16,13 @@ public sealed class Match
 
     // The systems, in the fixed order they run each tick. Order is part of the rules: changing
     // it changes the outcome of a match.
-    private static readonly ISystem[] Systems = [new MovementSystem(), new GatherSystem()];
+    private static readonly ISystem[] Systems =
+    [
+        new CombatSystem(),
+        new MovementSystem(),
+        new GatherSystem(),
+        new DefeatSystem(),
+    ];
 
     private readonly List<Command> pendingCommands = [];
     private IReadOnlyList<MatchEvent> events = [];

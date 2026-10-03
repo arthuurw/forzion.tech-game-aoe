@@ -166,6 +166,26 @@ public class GatherCommandTests
     }
 
     [Fact]
+    public void A_gather_by_a_soldier_is_rejected_and_sends_none_of_its_units()
+    {
+        var plain = TestMatches.TwoPlayerMatch();
+        var match = Match.Create(TestArmies.Config(
+            first: [new StartingUnit(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, TestMatches.FirstPlayer, -2, 0))]));
+        var villager = Walk.MiddleVillager(match);
+        var soldier = match.State.UnitsOf(TestMatches.FirstPlayer).Single(unit => unit.Kind == UnitKind.MeleeSoldier);
+        var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Wood);
+        var command = new GatherCommand(TestMatches.FirstPlayer, [villager.Id, soldier.Id], source.Id);
+        match.Enqueue(command);
+
+        match.Tick();
+
+        Assert.Equal([new CommandRejected(command, RejectionReason.UnitCannotGather)], match.Events);
+        Assert.Equal(GatherPhase.None, villager.GatherPhase);
+        Assert.Equal(GatherPhase.None, soldier.GatherPhase);
+        Assert.False(soldier.IsMoving);
+    }
+
+    [Fact]
     public void A_rejected_gather_leaves_the_state_as_if_it_had_not_been_sent()
     {
         var withRejection = TestMatches.TwoPlayerMatch();

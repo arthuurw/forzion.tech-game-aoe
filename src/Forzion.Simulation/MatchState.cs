@@ -43,6 +43,12 @@ public sealed class MatchState
         {
             PlaceStartingEntities(player.Id, generated.Homes[player.Id.Value - 1]);
         }
+
+        // After every Player's usual start, so extra units never shift the IDs of the rest.
+        foreach (var player in players)
+        {
+            PlaceExtraUnits(player.Id, config.Players[player.Id.Value - 1].ExtraUnits ?? []);
+        }
     }
 
     /// <summary>Number of ticks simulated so far.</summary>
@@ -64,12 +70,27 @@ public sealed class MatchState
     /// <summary>The units, ordered by ascending <see cref="UnitState.Id"/>.</summary>
     public IReadOnlyList<UnitState> Units => units;
 
+    /// <summary>Whether the match has ended: at most one of its Players remains undefeated.</summary>
+    public bool IsOver { get; private set; }
+
+    /// <summary>The Player who won the match, or null while it goes on or when it ended without a winner.</summary>
+    public PlayerId? Winner { get; private set; }
+
+    internal void End(PlayerId? winner)
+    {
+        IsOver = true;
+        Winner = winner;
+    }
+
     /// <summary>The Player with the given ID, or null when the match has no such Player.</summary>
     internal PlayerState? FindPlayer(PlayerId id) =>
         id.Value >= 1 && id.Value <= players.Count ? players[id.Value - 1] : null;
 
     /// <summary>The unit with the given ID, or null when the match has no such unit.</summary>
     internal UnitState? FindUnit(EntityId id) => units.Find(unit => unit.Id == id);
+
+    /// <summary>The building with the given ID, or null when the match has no such building.</summary>
+    internal BuildingState? FindBuilding(EntityId id) => buildings.Find(building => building.Id == id);
 
     /// <summary>The resource source with the given ID, or null when the match has no such source.</summary>
     internal ResourceSourceState? FindResourceSource(EntityId id) => resourceSources.Find(source => source.Id == id);
@@ -127,6 +148,35 @@ public sealed class MatchState
     }
 
     /// <summary>
+    /// Removes every unit and building left without hit points, freeing the Cells the
+    /// buildings occupied, and returns their IDs in ascending order.
+    /// </summary>
+    internal List<EntityId> RemoveDestroyed()
+    {
+        var destroyedUnits = units.Where(unit => unit.HitPoints <= 0).ToList();
+        var destroyedBuildings = buildings.Where(building => building.HitPoints <= 0).ToList();
+
+        foreach (var building in destroyedBuildings)
+        {
+            for (var y = building.Origin.Y; y < building.Origin.Y + building.Height; y++)
+            {
+                for (var x = building.Origin.X; x < building.Origin.X + building.Width; x++)
+                {
+                    Map[new CellPosition(x, y)] = CellKind.Free;
+                }
+            }
+        }
+
+        units.RemoveAll(unit => unit.HitPoints <= 0);
+        buildings.RemoveAll(building => building.HitPoints <= 0);
+
+        return destroyedUnits.Select(unit => unit.Id)
+            .Concat(destroyedBuildings.Select(building => building.Id))
+            .OrderBy(id => id.Value)
+            .ToList();
+    }
+
+    /// <summary>
     /// Writes everything that influences future ticks. State added to the match must be added
     /// here too, or two diverged matches would report the same hash.
     /// </summary>
@@ -164,9 +214,27 @@ public sealed class MatchState
         {
             unit.WriteTo(hasher);
         }
+
+        hasher.Write(IsOver);
+        hasher.Write(Winner?.Value ?? 0);
     }
 
     private EntityId NextEntityId() => new(++lastEntityId);
+
+    private void PlaceExtraUnits(PlayerId player, IReadOnlyList<StartingUnit> extraUnits)
+    {
+        foreach (var extra in extraUnits)
+        {
+            if (!Map.Contains(extra.Cell) || Map[extra.Cell] != CellKind.Free)
+            {
+                throw new ArgumentException(
+                    $"Player {player.Value} has an extra unit on {extra.Cell}, which is not a free Cell of the map.",
+                    "config");
+            }
+
+            AddUnit(player, extra.Kind, MapPosition.CentreOf(extra.Cell));
+        }
+    }
 
     /// <summary>What a Player starts the match with, around the Cell the map gave as home.</summary>
     private void PlaceStartingEntities(PlayerId player, CellPosition home)

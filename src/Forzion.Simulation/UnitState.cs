@@ -4,6 +4,12 @@ namespace Forzion.Simulation;
 public enum UnitKind
 {
     Villager = 0,
+
+    /// <summary>Military unit that fights at close quarters.</summary>
+    MeleeSoldier = 1,
+
+    /// <summary>Military unit that fights from a distance.</summary>
+    RangedSoldier = 2,
 }
 
 /// <summary>A unit. Units stand on free Cells and do not occupy them.</summary>
@@ -17,6 +23,7 @@ public sealed class UnitState
         Owner = owner;
         Kind = kind;
         Position = position;
+        HitPoints = MaxHitPoints;
     }
 
     public EntityId Id { get; }
@@ -52,6 +59,29 @@ public sealed class UnitState
     /// </summary>
     public int GatherProgress { get; internal set; }
 
+    /// <summary>Hit points the unit has when whole.</summary>
+    public int MaxHitPoints => Balance.HitPoints(Kind);
+
+    /// <summary>Hit points left. The unit dies when they reach zero.</summary>
+    public int HitPoints { get; internal set; }
+
+    /// <summary>The unit or building this unit is attacking, or null when it is attacking nothing.</summary>
+    public EntityId? Target { get; private set; }
+
+    /// <summary>Ticks spent within range of the target since the last hit, or since the target was set.</summary>
+    internal int AttackProgress { get; set; }
+
+    /// <summary>
+    /// Makes the unit attack the given entity, dropping wherever it was walking and starting a
+    /// fresh attack interval.
+    /// </summary>
+    internal void Attack(EntityId target)
+    {
+        Target = target;
+        AttackProgress = 0;
+        path.Clear();
+    }
+
     internal void SetPath(IEnumerable<CellPosition> cells)
     {
         path.Clear();
@@ -65,6 +95,17 @@ public sealed class UnitState
         GatherPhase = GatherPhase.None;
         GatherProgress = 0;
     }
+
+    /// <summary>Drops the unit's target and stops it where it is.</summary>
+    internal void StopAttacking()
+    {
+        Target = null;
+        AttackProgress = 0;
+        path.Clear();
+    }
+
+    /// <summary>Stops the unit where it is, even between two Cell centres.</summary>
+    internal void Stop() => path.Clear();
 
     /// <summary>Drops the next Cell of the path: the unit has reached its centre.</summary>
     internal void ReachWaypoint() => path.RemoveAt(0);
@@ -89,5 +130,10 @@ public sealed class UnitState
         hasher.Write(GatherProgress);
         hasher.Write((int)Load.Resource);
         hasher.Write(Load.Amount);
+        hasher.Write(HitPoints);
+
+        // Likewise a unit without a target.
+        hasher.Write(Target?.Value ?? 0);
+        hasher.Write(AttackProgress);
     }
 }

@@ -73,8 +73,9 @@ public class MatchDriverTests
     public void A_frame_that_runs_no_tick_reports_no_event()
     {
         var driver = NewDriver();
-        driver.Match.Enqueue(new ResignCommand(FirstPlayer));
-        driver.Advance(OneTick);
+        var villager = FirstVillager(driver.Match);
+        driver.Match.Enqueue(new MoveCommand(FirstPlayer, [villager.Id], new CellPosition(-1, 0)));
+        Assert.NotEmpty(driver.Advance(OneTick));
 
         Assert.Empty(driver.Advance(OneTick / 2));
     }

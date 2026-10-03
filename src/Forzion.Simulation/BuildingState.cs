@@ -17,6 +17,7 @@ public sealed class BuildingState
         Origin = origin;
         Width = width;
         Height = height;
+        HitPoints = MaxHitPoints;
     }
 
     public EntityId Id { get; }
@@ -33,6 +34,12 @@ public sealed class BuildingState
 
     /// <summary>Height of the footprint in Cells.</summary>
     public int Height { get; }
+
+    /// <summary>Hit points the building has when whole.</summary>
+    public int MaxHitPoints => Balance.HitPoints(Kind);
+
+    /// <summary>Hit points left. The building is destroyed when they reach zero.</summary>
+    public int HitPoints { get; internal set; }
 
     /// <summary>
     /// Whether Villagers deliver their loads here. Every kind of drop-off point takes every
@@ -61,5 +68,6 @@ public sealed class BuildingState
         hasher.Write(Origin);
         hasher.Write(Width);
         hasher.Write(Height);
+        hasher.Write(HitPoints);
     }
 }
