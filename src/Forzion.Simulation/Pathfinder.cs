@@ -35,10 +35,9 @@ internal static class Pathfinder
     /// </summary>
     public static List<CellPosition> FindPath(MapState map, CellPosition start, CellPosition destination)
     {
-        var width = map.Width;
-        var startIndex = (start.Y * width) + start.X;
-        var destinationIndex = (destination.Y * width) + destination.X;
-        var costs = new int[width * map.Height];
+        var startIndex = map.IndexOf(start);
+        var destinationIndex = map.IndexOf(destination);
+        var costs = new int[map.CellCount];
         var previous = new int[costs.Length];
         var closed = new bool[costs.Length];
 
@@ -65,7 +64,7 @@ internal static class Pathfinder
                 break;
             }
 
-            var cell = new CellPosition(index % width, index / width);
+            var cell = map.CellAt(index);
 
             foreach (var (stepX, stepY) in Steps)
             {
@@ -79,7 +78,7 @@ internal static class Pathfinder
                     continue;
                 }
 
-                var nextIndex = (next.Y * width) + next.X;
+                var nextIndex = map.IndexOf(next);
                 var cost = costs[index] + (diagonal ? DiagonalCost : StraightCost);
 
                 if (!closed[nextIndex] && cost < costs[nextIndex])
@@ -95,12 +94,12 @@ internal static class Pathfinder
 
         // The search ended either on the destination or with every Cell that can be reached
         // closed, and then the walk goes to the nearest of those.
-        var target = closed[destinationIndex] ? destinationIndex : NearestClosed(closed, costs, width, destination);
+        var target = closed[destinationIndex] ? destinationIndex : NearestClosed(map, closed, costs, destination);
         var path = new List<CellPosition>();
 
         for (var index = target; index != startIndex; index = previous[index])
         {
-            path.Add(new CellPosition(index % width, index / width));
+            path.Add(map.CellAt(index));
         }
 
         path.Reverse();
@@ -112,7 +111,7 @@ internal static class Pathfinder
     /// The closed Cell nearest to the destination in a straight line. Between Cells equally
     /// near, the one with the shortest way to it and then the one with the lowest index.
     /// </summary>
-    private static int NearestClosed(bool[] closed, int[] costs, int width, CellPosition destination)
+    private static int NearestClosed(MapState map, bool[] closed, int[] costs, CellPosition destination)
     {
         var nearest = -1;
         var nearestDistance = long.MaxValue;
@@ -124,8 +123,9 @@ internal static class Pathfinder
                 continue;
             }
 
-            long x = (index % width) - destination.X;
-            long y = (index / width) - destination.Y;
+            var cell = map.CellAt(index);
+            long x = cell.X - destination.X;
+            long y = cell.Y - destination.Y;
             var distance = (x * x) + (y * y);
 
             if (distance < nearestDistance || (distance == nearestDistance && costs[index] < costs[nearest]))
