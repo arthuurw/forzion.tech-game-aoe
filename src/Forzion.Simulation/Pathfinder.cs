@@ -1,8 +1,9 @@
 namespace Forzion.Simulation;
 
 /// <summary>
-/// Finds the way a unit walks between two Cells: A* over the grid. Only free Cells can be
-/// walked on; units do not block one another.
+/// Finds the way a unit walks between two Cells, A* over the grid, or to the nearest of a set
+/// of Cells, Dijkstra over the grid. Only free Cells can be walked on; units do not block one
+/// another.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -12,7 +13,7 @@ namespace Forzion.Simulation;
 /// </para>
 /// <para>
 /// Everything is integer arithmetic and ties are broken by Cell index, so the same map and
-/// the same two Cells always give the same path (ADR 0002).
+/// the same Cells always give the same path (ADR 0002).
 /// </para>
 /// </remarks>
 internal static class Pathfinder
@@ -65,9 +66,7 @@ internal static class Pathfinder
             {
                 var next = step.From(cell);
 
-                if (!map.IsFree(next)
-                    || (step.IsDiagonal
-                        && !(map.IsFree(new CellPosition(next.X, cell.Y)) && map.IsFree(new CellPosition(cell.X, next.Y)))))
+                if (!CanStep(map, cell, step))
                 {
                     continue;
                 }
@@ -99,6 +98,96 @@ internal static class Pathfinder
         path.Reverse();
 
         return path;
+    }
+
+    /// <summary>
+    /// The Cells to walk through, in order, from <paramref name="start"/> (not included) to
+    /// the goal Cell with the shortest way to it (included): a goal is a Cell for which
+    /// <paramref name="isGoal"/> holds. Between goals equally far, the one with the lowest
+    /// Cell index. Empty when <paramref name="start"/> is itself a goal or when no goal can be
+    /// reached, so the unit stays where it is.
+    /// </summary>
+    public static List<CellPosition> FindPathToNearest(MapState map, CellPosition start, Func<CellPosition, bool> isGoal)
+    {
+        var startIndex = map.IndexOf(start);
+        var costs = new int[map.CellCount];
+        var previous = new int[costs.Length];
+        var closed = new bool[costs.Length];
+        var goal = -1;
+
+        // Ordered by cost so far, then by Cell index: a total order, so the goal taken first
+        // is the nearest one and never depends on how the queue settles ties. No estimate
+        // guides the search: the goals may lie anywhere.
+        var open = new PriorityQueue<int, (int Cost, int Index)>();
+
+        Array.Fill(costs, int.MaxValue);
+        costs[startIndex] = 0;
+        open.Enqueue(startIndex, (0, startIndex));
+
+        while (open.TryDequeue(out var index, out _))
+        {
+            if (closed[index])
+            {
+                continue;
+            }
+
+            closed[index] = true;
+            var cell = map.CellAt(index);
+
+            if (isGoal(cell))
+            {
+                goal = index;
+
+                break;
+            }
+
+            foreach (var step in CellStep.All)
+            {
+                if (!CanStep(map, cell, step))
+                {
+                    continue;
+                }
+
+                var nextIndex = map.IndexOf(step.From(cell));
+                var cost = costs[index] + (step.IsDiagonal ? DiagonalCost : StraightCost);
+
+                if (!closed[nextIndex] && cost < costs[nextIndex])
+                {
+                    costs[nextIndex] = cost;
+                    previous[nextIndex] = index;
+                    open.Enqueue(nextIndex, (cost, nextIndex));
+                }
+            }
+        }
+
+        var path = new List<CellPosition>();
+
+        if (goal == -1)
+        {
+            return path;
+        }
+
+        for (var index = goal; index != startIndex; index = previous[index])
+        {
+            path.Add(map.CellAt(index));
+        }
+
+        path.Reverse();
+
+        return path;
+    }
+
+    /// <summary>
+    /// Whether a unit on <paramref name="cell"/> can take the step: the Cell it leads to is
+    /// free and, for a diagonal step, so are the two Cells it passes between.
+    /// </summary>
+    private static bool CanStep(MapState map, CellPosition cell, CellStep step)
+    {
+        var next = step.From(cell);
+
+        return map.IsFree(next)
+            && (!step.IsDiagonal
+                || (map.IsFree(new CellPosition(next.X, cell.Y)) && map.IsFree(new CellPosition(cell.X, next.Y))));
     }
 
     /// <summary>

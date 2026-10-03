@@ -37,7 +37,7 @@ public sealed record GatherCommand(PlayerId Player, IReadOnlyList<EntityId> Unit
 
         foreach (var unit in units)
         {
-            GatherSystem.GatherFrom(state.Map, unit, source);
+            GatherSystem.GatherFrom(state, unit, source);
         }
     }
 }
