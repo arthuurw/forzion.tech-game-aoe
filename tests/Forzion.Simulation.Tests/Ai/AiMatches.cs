@@ -14,4 +14,8 @@ internal static class AiMatches
                 new PlayerConfig(TestMatches.FirstFaction, IsAi: firstIsAi),
                 new PlayerConfig(TestMatches.FirstFaction, IsAi: secondIsAi),
             ]);
+
+    /// <summary>The Player's Town Center.</summary>
+    public static BuildingState TownCenter(Match match, PlayerId player) =>
+        match.State.Buildings.Single(building => building.Owner == player && building.Kind == BuildingKind.TownCenter);
 }

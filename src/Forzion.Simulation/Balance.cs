@@ -237,6 +237,9 @@ internal static class Balance
     /// being sent back to it every time.
     /// </summary>
     public const int AiSourceChoices = 3;
+
+    /// <summary>How many Villagers the AI trains, one at a time, before it stops.</summary>
+    public const int AiVillagers = 12;
 }
 
 /// <summary>How a unit fights.</summary>

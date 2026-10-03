@@ -19,10 +19,15 @@ internal sealed class AiScript
     private readonly PlayerState player;
     private readonly List<Command> commands = [];
 
+    // What the Player has left to spend this tick: its Resources less the cost of the commands
+    // already decided, which the match only charges once it applies them.
+    private readonly int[] budget;
+
     private AiScript(MatchState state, PlayerState player)
     {
         this.state = state;
         this.player = player;
+        budget = ResourceKinds.Select(player.AmountOf).ToArray();
     }
 
     /// <summary>The commands the AI Player gives this tick, in the order it gives them.</summary>
@@ -30,9 +35,55 @@ internal sealed class AiScript
     {
         var script = new AiScript(state, player);
 
+        script.TrainVillager();
         script.SendIdleVillagersToGather();
 
         return script.commands;
+    }
+
+    /// <summary>
+    /// Puts a Villager in training at the Town Center while it trains none and the Player has
+    /// fewer than <see cref="Balance.AiVillagers"/>, room in its population and the Food.
+    /// </summary>
+    private void TrainVillager()
+    {
+        if (TownCenter() is not { IsComplete: true, TrainingQueue.Count: 0 } townCenter
+            || OwnUnits().Count(unit => unit.Kind == UnitKind.Villager) >= Balance.AiVillagers)
+        {
+            return;
+        }
+
+        Train(townCenter, UnitKind.Villager);
+    }
+
+    /// <summary>
+    /// Puts a unit in the building's training queue, when the Player has room in its
+    /// population and what it costs is still in this tick's budget.
+    /// </summary>
+    private void Train(BuildingState building, UnitKind kind)
+    {
+        if (state.PopulationOf(player.Id) >= state.PopulationLimitOf(player.Id) || !Spend(Balance.UnitCost(kind)))
+        {
+            return;
+        }
+
+        commands.Add(new TrainCommand(player.Id, building.Id, kind));
+    }
+
+    /// <summary>Takes the cost from this tick's budget, when it covers it.</summary>
+    private bool Spend(Cost cost)
+    {
+        if (ResourceKinds.Any(kind => budget[(int)kind] < cost.AmountOf(kind)))
+        {
+            return false;
+        }
+
+        foreach (var kind in ResourceKinds)
+        {
+            budget[(int)kind] -= cost.AmountOf(kind);
+        }
+
+        return true;
     }
 
     /// <summary>
