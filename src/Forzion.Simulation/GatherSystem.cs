@@ -46,6 +46,23 @@ internal sealed class GatherSystem : ISystem
         MovementSystem.WalkTo(state.Map, villager, source.Cell);
     }
 
+    /// <summary>
+    /// Sends every Villager carrying its load to a drop-off point that has left the match to
+    /// the nearest one its Player still has, or leaves it idle with its load when there is none.
+    /// </summary>
+    public static void RedirectCarriers(MatchState state)
+    {
+        foreach (var unit in state.Units)
+        {
+            if (unit.GatherPhase == GatherPhase.ToDropOffPoint
+                && unit.IsMoving
+                && !DropOffPointsOf(state, unit.Owner).Any(building => building.IsBeside(unit.Path[^1])))
+            {
+                CarryToDropOffPoint(state, unit);
+            }
+        }
+    }
+
     public void Run(TickContext context)
     {
         var state = context.State;
