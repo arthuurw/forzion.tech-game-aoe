@@ -29,6 +29,7 @@ MatchView = NodePath("../MatchView")
 
 [node name="Camera" type="Camera3D" parent="CameraRig"]
 current = true
+fov = 40.0
 
 [node name="DemoOrders" type="Node" parent="." node_paths=PackedStringArray("MatchView")]
 script = ExtResource("3_demo")

@@ -34,10 +34,10 @@ public partial class RtsCamera : Node3D
 
     /// <summary>Farthest the camera gets from the ground point, in world units.</summary>
     [Export]
-    public float MaxDistance { get; set; } = 50;
+    public float MaxDistance { get; set; } = 60;
 
     [Export]
-    public float StartDistance { get; set; } = 22;
+    public float StartDistance { get; set; } = 24;
 
     /// <summary>Factor one zoom step multiplies or divides the distance by.</summary>
     [Export]
