@@ -1,5 +1,7 @@
 using Forzion.Simulation.Tests.Economy;
+using Forzion.Simulation.Tests.Maps;
 using Forzion.Simulation.Tests.Matches;
+using Forzion.Simulation.Tests.Movement;
 
 namespace Forzion.Simulation.Tests.Construction;
 
@@ -62,6 +64,34 @@ public class BuildTests
         Assert.Equal(villagers.Count, mostAtOnce);
         Assert.True(ticks < house.BuildTime / 2);
         Assert.All(villagers, villager => Assert.Null(villager.ConstructionSite));
+    }
+
+    [Fact]
+    public void A_Villager_sent_to_a_site_it_cannot_reach_stops_short_of_it_and_stands_idle()
+    {
+        // A map with free Cells fenced in by obstacles.
+        var match = TestMatches.TwoPlayerMatch(seed: 1);
+        var villager = Site.VillagersOf(match, TestMatches.FirstPlayer)[1];
+        Site.Stockpile(match, TestMatches.FirstPlayer, Match.BuildingCost(BuildingKind.House).Wood);
+        var reachable = MapProbe.ReachableFrom(match.State.Map, villager.Position.Cell);
+        var size = Match.BuildingSize(BuildingKind.House);
+        var origin = MapProbe.AllCells(match.State.Map).First(cell =>
+            match.CanPlace(BuildingKind.House, cell)
+            && !Site.Square(new CellPosition(cell.X - 1, cell.Y - 1), size + 2).Any(reachable.Contains));
+        match.Enqueue(new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.House, origin, [villager.Id]));
+        match.Tick();
+        var house = match.State.Buildings[^1];
+
+        Walk.UntilStopped(match, villager);
+
+        for (var tick = 0; tick < 200; tick++)
+        {
+            match.Tick();
+        }
+
+        Assert.Null(villager.ConstructionSite);
+        Assert.False(villager.IsMoving);
+        Assert.Equal(0, house.BuildProgress);
     }
 
     [Fact]
