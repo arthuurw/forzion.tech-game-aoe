@@ -6,5 +6,5 @@ namespace Forzion.Presentation;
 /// </summary>
 /// <param name="UnitRadius">How far from a unit's position the mouse still picks it, across the map.</param>
 /// <param name="UnitHeight">How tall a unit stands.</param>
-/// <param name="StructureHeight">How tall buildings and resource sources stand over their Cells.</param>
-public sealed record PickSizes(double UnitRadius, double UnitHeight, double StructureHeight);
+/// <param name="BuildingAndSourceHeight">How tall buildings and resource sources stand over their Cells.</param>
+public sealed record PickSizes(double UnitRadius, double UnitHeight, double BuildingAndSourceHeight);

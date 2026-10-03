@@ -14,7 +14,7 @@ internal sealed class Picker(MatchDriver driver, PickSizes sizes)
     /// a <see cref="ResourceSourceState"/> or null for bare ground. Units come first, since
     /// they are small and stand in front of what they are next to.
     /// </summary>
-    public object? At(SightLine sight) => (object?)UnitAt(sight) ?? StructureAt(sight);
+    public object? At(SightLine sight) => (object?)UnitAt(sight) ?? BuildingOrSourceAt(sight);
 
     /// <summary>
     /// The units seen inside the area that four lines of sight, through the corners of a box
@@ -56,20 +56,20 @@ internal sealed class Picker(MatchDriver driver, PickSizes sizes)
     /// The building or resource source the line meets first coming down from the camera.
     /// Footprints never overlap, so on a tie the first in the state's order is as good as any.
     /// </summary>
-    private object? StructureAt(SightLine sight)
+    private object? BuildingOrSourceAt(SightLine sight)
     {
-        var top = sight.At(sizes.StructureHeight);
+        var top = sight.At(sizes.BuildingAndSourceHeight);
         var bottom = sight.At(0);
         object? first = null;
         var firstEntry = double.PositiveInfinity;
 
-        void Consider(object structure, CellPosition origin, int width, int height)
+        void Consider(object entity, CellPosition origin, int width, int height)
         {
             var entry = EntryAlong(top, bottom, origin.X, origin.Y, origin.X + width, origin.Y + height);
 
             if (entry < firstEntry)
             {
-                first = structure;
+                first = entity;
                 firstEntry = entry;
             }
         }

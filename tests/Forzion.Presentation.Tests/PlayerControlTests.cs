@@ -8,7 +8,7 @@ public class PlayerControlTests
     private static readonly PlayerId SecondPlayer = new(2);
 
     // Units 0.4 Cell across and 1 tall, buildings and resource sources 1.2 tall.
-    private static readonly PickSizes Sizes = new(UnitRadius: 0.4, UnitHeight: 1, StructureHeight: 1.2);
+    private static readonly PickSizes Sizes = new(UnitRadius: 0.4, UnitHeight: 1, BuildingAndSourceHeight: 1.2);
 
     private MatchDriver driver = null!;
 

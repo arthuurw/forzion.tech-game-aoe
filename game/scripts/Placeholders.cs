@@ -49,7 +49,11 @@ public sealed class Placeholders
     /// The shapes as the mouse picks them. A unit is picked a little beyond its drawn radius:
     /// at a distance the capsules are only a few pixels wide.
     /// </summary>
-    public static PickSizes PickSizes => new(UnitRadius: UnitRadius + 0.15, UnitHeight: UnitHeight, StructureHeight: BuildingHeight);
+    /// <remarks>Buildings are the tallest of the shapes over Cells, as tall as the Wood trunk.</remarks>
+    public static PickSizes PickSizes => new(
+        UnitRadius: UnitRadius + 0.15,
+        UnitHeight: UnitHeight,
+        BuildingAndSourceHeight: BuildingHeight);
 
     /// <summary>The colour that marks what a Player owns.</summary>
     public static Color ColourOf(PlayerId player) =>
