@@ -38,15 +38,36 @@ internal sealed class MovementSystem : ISystem
     }
 
     /// <summary>
-    /// Sends every walking unit whose path crosses a Cell that is no longer free on a new way
-    /// to the last Cell of its path. A path is found once, when a walk starts, so without this
-    /// a unit would walk through a building placed on its way after it set out.
+    /// Sends every walking unit whose path crosses a Cell that is no longer free on a new way.
+    /// A Villager walking up to its source, carrying its load or walking up to a construction
+    /// site chooses again where it walks, as it did when it set out; any other unit walks to
+    /// the last Cell of its path. A path is found once, when a walk starts, so without this a
+    /// unit would walk through a building placed on its way after it set out.
     /// </summary>
     public static void Reroute(MatchState state)
     {
         foreach (var unit in state.Units)
         {
-            if (unit.IsMoving && !IsStillWalkable(state.Map, unit.Position.Cell, unit.Path))
+            if (!unit.IsMoving || IsStillWalkable(state.Map, unit.Position.Cell, unit.Path))
+            {
+                continue;
+            }
+
+            // The Cell nearest the old destination need not be beside the source, a drop-off
+            // point or the site, and a Villager that stops away from them stands idle.
+            if (unit.GatherPhase == GatherPhase.ToSource)
+            {
+                GatherSystem.WalkUpToSource(state, unit);
+            }
+            else if (unit.GatherPhase == GatherPhase.ToDropOffPoint)
+            {
+                GatherSystem.CarryToDropOffPoint(state, unit);
+            }
+            else if (unit.ConstructionSite is { } site)
+            {
+                ConstructionSystem.WalkUpTo(state.Map, unit, state.FindBuilding(site)!);
+            }
+            else
             {
                 WalkTo(state.Map, unit, unit.Path[^1]);
             }
