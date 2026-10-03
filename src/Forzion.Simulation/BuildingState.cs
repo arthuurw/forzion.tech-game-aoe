@@ -1,5 +1,6 @@
 namespace Forzion.Simulation;
 
+/// <summary>What a building is. Its kind decides what the building does.</summary>
 public enum BuildingKind
 {
     TownCenter = 0,
@@ -81,8 +82,7 @@ public sealed class BuildingState
         hasher.Write(Id.Value);
         hasher.Write(Owner.Value);
         hasher.Write((int)Kind);
-        hasher.Write(Origin.X);
-        hasher.Write(Origin.Y);
+        hasher.Write(Origin);
         hasher.Write(Width);
         hasher.Write(Height);
         hasher.Write(BuildProgress);

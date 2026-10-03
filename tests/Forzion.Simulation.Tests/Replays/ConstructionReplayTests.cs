@@ -43,7 +43,7 @@ public class ConstructionReplayTests
             new(700, new PlaceBuildingCommand(TestMatches.SecondPlayer, BuildingKind.Storehouse, storehouse, [second[0].Id])),
             new(900, new BuildCommand(TestMatches.FirstPlayer, [first[2]], storehouseId)),
             new(1000, new GatherCommand(TestMatches.FirstPlayer, first, firstWood.Id)),
-            new(1700, new GatherCommand(TestMatches.SecondPlayer, [second[0].Id], secondWood.Id)),
+            new(1500, new GatherCommand(TestMatches.SecondPlayer, [second[0].Id], secondWood.Id)),
         ];
     }
 
@@ -70,10 +70,11 @@ public class ConstructionReplayTests
 
     // The construction itself comes from this implementation; what an independent model of
     // the hash layout confirmed is that this is the hash of the final state as the public
-    // interface shows it, with a complete House and Storehouse, the Barracks refused and the
-    // builders gathering again. CI runs this on Windows, Linux and macOS: every system must
-    // reach the same hash.
-    private const ulong ExpectedFinalHash = 12969440912747513016UL;
+    // interface shows it, with a complete House and Storehouse, the Barracks refused, the
+    // second Player's Villagers gathering again and the first Player's idle once the Wood
+    // near them ran out. CI runs this on Windows, Linux and macOS: every system must reach
+    // the same hash.
+    private const ulong ExpectedFinalHash = 17667954027039520017UL;
 
     [Fact]
     public void A_recorded_replay_of_construction_reaches_the_recorded_final_hash()

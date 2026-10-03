@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Presentation logic that needs no engine: turning frame time into fixed ticks and
+    interpolating between them. The Godot project uses it and the tests cover it without
+    Godot installed. Never add a Godot reference here.
+  -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\Forzion.Simulation\Forzion.Simulation.csproj" />
+  </ItemGroup>
+
+</Project>

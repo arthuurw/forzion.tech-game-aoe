@@ -23,6 +23,14 @@ public sealed class Match
 
     private Match(MatchConfig config) => State = new MatchState(config);
 
+    /// <summary>
+    /// Creates a match at tick zero: generates its map from the seed and gives each Player a
+    /// Town Center and starting Villagers.
+    /// </summary>
+    /// <exception cref="ArgumentException">
+    /// The configuration has fewer than one or more than two Players, or a map less than 32
+    /// Cells wide or high.
+    /// </exception>
     public static Match Create(MatchConfig config) => new(config);
 
     /// <summary>What placing a building of the given kind costs, paid in full when it is placed.</summary>
@@ -42,6 +50,11 @@ public sealed class Match
     /// <exception cref="ArgumentOutOfRangeException">The kind is not a <see cref="BuildingKind"/>.</exception>
     public bool CanPlace(BuildingKind kind, CellPosition origin) => State.CanPlace(kind, origin);
 
+    /// <summary>
+    /// The state of the match, read-only from outside. It is the same object for the whole
+    /// match and changes in place as ticks pass, so a reference kept from an earlier tick shows
+    /// the current one.
+    /// </summary>
     public MatchState State { get; }
 
     /// <summary>

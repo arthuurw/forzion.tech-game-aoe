@@ -16,8 +16,8 @@ public class MovementReplayTests
     private static ScheduledCommand[] Commands()
     {
         var state = TestMatches.TwoPlayerMatch(Seed).State;
-        var first = state.Units.Where(unit => unit.Owner == TestMatches.FirstPlayer).Select(unit => unit.Id).ToList();
-        var second = state.Units.Where(unit => unit.Owner == TestMatches.SecondPlayer).Select(unit => unit.Id).ToList();
+        var first = state.UnitsOf(TestMatches.FirstPlayer).Select(unit => unit.Id).ToList();
+        var second = state.UnitsOf(TestMatches.SecondPlayer).Select(unit => unit.Id).ToList();
         var firstTownCenter = state.Buildings[0].Origin;
         var secondTownCenter = state.Buildings[1].Origin;
         var nearby = state.Units.First(unit => unit.Id == second[2]).Position.Cell;

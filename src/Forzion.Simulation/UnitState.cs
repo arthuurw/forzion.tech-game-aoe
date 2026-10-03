@@ -1,5 +1,6 @@
 namespace Forzion.Simulation;
 
+/// <summary>What a unit is. Its kind decides what the unit can do and how fast it walks.</summary>
 public enum UnitKind
 {
     Villager = 0,
@@ -50,8 +51,12 @@ public sealed class UnitState
     /// </summary>
     public EntityId? ConstructionSite { get; internal set; }
 
-    /// <summary>Ticks spent gathering towards the next unit of Resource.</summary>
-    internal int GatherProgress { get; set; }
+    /// <summary>
+    /// Ticks the Villager has spent beside its source towards the next unit of Resource. It
+    /// goes back to zero when that unit is taken and whenever the Villager is given a new
+    /// gather order or stops gathering.
+    /// </summary>
+    public int GatherProgress { get; internal set; }
 
     internal void SetPath(IEnumerable<CellPosition> cells)
     {
@@ -84,8 +89,7 @@ public sealed class UnitState
 
         foreach (var cell in path)
         {
-            hasher.Write(cell.X);
-            hasher.Write(cell.Y);
+            hasher.Write(cell);
         }
 
         // A unit without a source writes 0, which no entity ID takes.

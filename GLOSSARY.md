@@ -4,6 +4,20 @@ Jogo de estratégia em tempo real ambientado na história do Brasil, com progres
 
 Cada termo traz entre parênteses o nome em inglês usado no código.
 
+## Partida
+
+**Partida** (`Match`):
+Disputa entre Jogadores num mapa, do início até a vitória de um deles. Partida livre e Cenário são modos de jogar uma Partida.
+_Avoid_: Jogo, sessão, rodada
+
+**Tick** (`Tick`):
+Passo fixo em que a Partida avança, vinte por segundo de jogo. As ordens dadas pelos Jogadores valem a partir do Tick seguinte.
+_Avoid_: Turno
+
+**Quadro** (`Frame`):
+Uma imagem da Partida desenhada na tela. Quadros não seguem o ritmo dos Ticks: entre dois Ticks podem ser desenhados vários Quadros ou nenhum.
+_Avoid_: Tick
+
 ## Modos de jogo
 
 **Partida livre** (`Skirmish`):
@@ -72,11 +86,17 @@ _Avoid_: Base, armazém
 Aldeão parado, sem ordem nem Coleta em andamento.
 _Avoid_: Livre, desocupado
 
+## Unidades
+
+**Unidade** (`Unit`):
+Peça móvel de um Jogador, civil como o Aldeão ou militar. Unidades andam pelas Células livres e não bloqueiam umas às outras.
+_Avoid_: Personagem, tropa, boneco
+
 ## Construções
 
 **Construção** (`Building`):
-Estrutura de um Jogador que ocupa um retângulo de Células inteiras e bloqueia o caminho desde que é posicionada.
-_Avoid_: Edifício, prédio, estrutura
+Edificação de um Jogador, como o Centro ou a Casa. Ocupa um retângulo de Células inteiras e bloqueia a passagem desde que é posicionada.
+_Avoid_: Prédio, estrutura, edifício
 
 **Obra** (`Construction Site`):
 Construção já posicionada e paga que ainda não está pronta. Só avança enquanto Aldeões a constroem; o trabalho de vários Aldeões soma.
@@ -109,3 +129,10 @@ Construção que produz unidades militares.
 **Célula** (`Cell`):
 Menor unidade do mapa, um quadrado do grid. Obstáculos e construções ocupam Células inteiras.
 _Avoid_: Tile, casa, quadrado
+
+**Floresta** (`Forest`):
+Obstáculo que ocupa Células inteiras: Unidades não a atravessam e Construções não são erguidas sobre ela. Não é coletada; a Madeira vem das Fontes de Recurso.
+_Avoid_: Mata, bosque, árvores
+
+**Água** (`Water`):
+Obstáculo que ocupa Células inteiras: Unidades não a atravessam e Construções não são erguidas sobre ela.

@@ -62,12 +62,16 @@ public class ReplayTests
     // same was done again: a model that reproduced the previous values with the previous
     // layout gave these with the new one. When construction joined it (each building's build
     // progress; each unit's construction site), it was done once more. CI runs this on
-    // Windows, Linux and macOS: every system must reach the same hash. A change that adds state to the hash changes these
-    // values on purpose and must record the new ones.
+    // Windows, Linux and macOS: every system must reach the same hash. A change that adds
+    // state to the hash changes these values on purpose and must record the new ones.
     private const ulong ExpectedFinalHash = 11762399086086313462UL;
 
     // Seed 3 is one whose first scattering of obstacles cuts the Players apart and is drawn again.
-    private const ulong ExpectedInitialHashOfSeed3 = 17451013187757272374UL;
+    // When walled-in sources began to be dropped, the value was recomputed by the same model of
+    // the layout, which first reproduced the value recorded before from the state of the old
+    // generator; the two states differ only by one walled-in source pair, freed. When
+    // construction joined the hash, the model was run once more as for the value above.
+    private const ulong ExpectedInitialHashOfSeed3 = 9075244238330428725UL;
 
     [Fact]
     public void A_recorded_replay_reaches_the_recorded_final_hash()

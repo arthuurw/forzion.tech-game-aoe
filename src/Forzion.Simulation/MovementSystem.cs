@@ -12,10 +12,20 @@ internal sealed class MovementSystem : ISystem
     /// any rule makes a unit walk; the unit then moves a little every tick until
     /// <see cref="UnitState.IsMoving"/> turns false.
     /// </summary>
-    public static void WalkTo(MapState map, UnitState unit, CellPosition destination)
+    public static void WalkTo(MapState map, UnitState unit, CellPosition destination) =>
+        Follow(unit, Pathfinder.FindPath(map, unit.Position.Cell, destination));
+
+    /// <summary>
+    /// Sends the unit walking to the Cell with the shortest way to it among those for which
+    /// <paramref name="isGoal"/> holds, as <see cref="Pathfinder.FindPathToNearest"/> picks it.
+    /// When none can be reached, the unit stays where it is.
+    /// </summary>
+    public static void WalkToNearest(MapState map, UnitState unit, Func<CellPosition, bool> isGoal) =>
+        Follow(unit, Pathfinder.FindPathToNearest(map, unit.Position.Cell, isGoal));
+
+    private static void Follow(UnitState unit, List<CellPosition> path)
     {
         var start = unit.Position.Cell;
-        var path = Pathfinder.FindPath(map, start, destination);
 
         // A unit caught between two Cell centres and with nowhere to go settles on the centre
         // of the Cell it is in.
@@ -91,15 +101,15 @@ internal sealed class MovementSystem : ISystem
         while (unit.IsMoving)
         {
             var waypoint = MapPosition.CentreOf(unit.Path[0]);
-            var x = waypoint.X - position.X;
-            var y = waypoint.Y - position.Y;
-            var distance = Fix64.Hypot(x, y);
+            var deltaX = waypoint.X - position.X;
+            var deltaY = waypoint.Y - position.Y;
+            var distance = Fix64.Hypot(deltaX, deltaY);
 
             if (distance > remaining)
             {
                 position = new MapPosition(
-                    position.X + (x * remaining / distance),
-                    position.Y + (y * remaining / distance));
+                    position.X + (deltaX * remaining / distance),
+                    position.Y + (deltaY * remaining / distance));
 
                 break;
             }

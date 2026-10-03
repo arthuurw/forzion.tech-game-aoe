@@ -32,8 +32,7 @@ public sealed class ResourceSourceState
     {
         hasher.Write(Id.Value);
         hasher.Write((int)Kind);
-        hasher.Write(Cell.X);
-        hasher.Write(Cell.Y);
+        hasher.Write(Cell);
         hasher.Write(Amount);
     }
 }

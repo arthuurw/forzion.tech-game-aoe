@@ -18,8 +18,8 @@ public class EconomyReplayTests
     private static ScheduledCommand[] Commands()
     {
         var state = TestMatches.TwoPlayerMatch(Seed).State;
-        var first = state.Units.Where(unit => unit.Owner == TestMatches.FirstPlayer).ToList();
-        var second = state.Units.Where(unit => unit.Owner == TestMatches.SecondPlayer).ToList();
+        var first = state.UnitsOf(TestMatches.FirstPlayer).ToList();
+        var second = state.UnitsOf(TestMatches.SecondPlayer).ToList();
 
         EntityId Nearest(UnitState unit, ResourceKind kind) => Gather.NearestSource(state, unit.Position.Cell, kind).Id;
 
@@ -56,11 +56,18 @@ public class EconomyReplayTests
     }
 
     // The gathering itself comes from this implementation; what an independent model of the
-    // hash layout confirmed is that this is the hash of the final state as the public
-    // interface shows it, with the Players' Resources, one source depleted and its Villagers
-    // gathering from the next. CI runs this on Windows, Linux and macOS: every system must
-    // reach the same hash.
-    private const ulong ExpectedFinalHash = 1362008067269163044UL;
+    // hash layout confirmed is that the value first recorded here was the hash of the final
+    // state as the public interface shows it, with the Players' Resources, one source
+    // depleted and its Villagers gathering from the next. When Villagers began to walk to the
+    // free Cell beside a drop-off point with the shortest way to it, the layout stayed the
+    // same and the value was recorded again from this implementation, after comparing the
+    // final state with the one before: every load still handed over beside the Town Center,
+    // every Resource taken from a source found in a Player's stock or a load, and the shorter
+    // trips letting the first Player run out of its second Food source and stand idle. CI
+    // runs this on Windows, Linux and macOS: every system must reach the same hash. When
+    // construction joined the hash, the independent model, having first reproduced that
+    // value with the layout before, gave this one with the new layout.
+    private const ulong ExpectedFinalHash = 2366367650974240600UL;
 
     [Fact]
     public void A_recorded_replay_of_gathering_reaches_the_recorded_final_hash()
