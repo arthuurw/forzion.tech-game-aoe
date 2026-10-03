@@ -197,5 +197,9 @@ public sealed class BuildingState
         // A building without a rally point writes false and the Cell (0, 0).
         hasher.Write(RallyPoint is not null);
         hasher.Write(RallyPoint ?? new CellPosition(0, 0));
+
+        // Likewise a building making no Age Advance writes false and 0.
+        hasher.Write(AgeAdvanceProgress is not null);
+        hasher.Write(AgeAdvanceProgress ?? 0);
     }
 }

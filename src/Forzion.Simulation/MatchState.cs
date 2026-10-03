@@ -387,5 +387,11 @@ public sealed class PlayerState
         {
             hasher.Write(amount);
         }
+
+        hasher.Write(Age);
+
+        // The Faction's data decides what the Player may train and place and what advancing
+        // costs, so matches configured with different data for the same Faction ID diverge.
+        Faction.WriteTo(hasher);
     }
 }

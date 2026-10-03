@@ -94,8 +94,9 @@ public class CombatReplayTests
     // with them taken out of each Player's stock, and this one with them in.
     // When training joined the hash, the model reproduced the value before from the same final
     // state with the layout before, and gave this one with training state added.
-    // Likewise when the rally point joined it.
-    private const ulong ExpectedFinalHash = 9075458833084043669UL;
+    // Likewise when the rally point joined it, and when the Ages joined it: each Player's Age
+    // and its Faction's data, and each building's Age Advance underway.
+    private const ulong ExpectedFinalHash = 7484931998104362877UL;
 
     [Fact]
     public void A_recorded_replay_of_combat_reaches_the_recorded_final_hash()

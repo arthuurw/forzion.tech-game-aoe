@@ -118,8 +118,11 @@ public class ProductionReplayTests
     // became a rejection and the cancel that followed it moved to the ranged soldier's new
     // place in the queue; the layout stayed the same, and the model, which reproduced every
     // value recorded in the other replays, gave this one and matched the match's own hash at
-    // every tick.
-    private const ulong ExpectedFinalHash = 14858561287611791845UL;
+    // every tick. When the Ages joined the hash (each Player's Age and its Faction's data, and
+    // each building's Age Advance underway), the model reproduced the value before from the
+    // same final state with the layout before, gave this one with the Ages added and matched
+    // the match's own hash at every tick.
+    private const ulong ExpectedFinalHash = 11357276573190627401UL;
 
     [Fact]
     public void A_recorded_replay_of_production_reaches_the_recorded_final_hash()

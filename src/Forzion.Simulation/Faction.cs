@@ -70,6 +70,38 @@ public sealed class Faction
     /// <param name="age">The number of the Age: 1 for Age I.</param>
     public bool Unlocks(BuildingKind kind, int age) => AgesUpTo(age).Any(each => each.Buildings.Contains(kind));
 
+    /// <summary>
+    /// Writes what the Faction changes in a match: the cost and time of each Age and what it
+    /// unlocks. The text keys change nothing in a match and are left out. What an Age unlocks
+    /// is written in ascending kind order, so lists alike but for their order hash alike, as
+    /// they play alike.
+    /// </summary>
+    internal void WriteTo(StateHasher hasher)
+    {
+        hasher.Write(Ages.Count);
+
+        foreach (var age in Ages)
+        {
+            hasher.Write(age.AdvanceCost.Food);
+            hasher.Write(age.AdvanceCost.Wood);
+            hasher.Write(age.AdvanceCost.Gold);
+            hasher.Write(age.AdvanceTime);
+            hasher.Write(age.Units.Count);
+
+            foreach (var kind in age.Units.Order())
+            {
+                hasher.Write((int)kind);
+            }
+
+            hasher.Write(age.Buildings.Count);
+
+            foreach (var kind in age.Buildings.Order())
+            {
+                hasher.Write((int)kind);
+            }
+        }
+    }
+
     private IEnumerable<FactionAge> AgesUpTo(int age) => Ages.Take(Math.Max(age, 0));
 }
 
