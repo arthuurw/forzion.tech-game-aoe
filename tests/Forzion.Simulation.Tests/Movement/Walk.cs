@@ -50,4 +50,8 @@ internal static class Walk
 
         throw new InvalidOperationException($"The unit was still walking after {TickLimit} ticks.");
     }
+
+    /// <summary>Square of the straight-line distance between the centres of the two Cells, in Cells.</summary>
+    public static int SquaredDistance(CellPosition a, CellPosition b) =>
+        ((a.X - b.X) * (a.X - b.X)) + ((a.Y - b.Y) * (a.Y - b.Y));
 }

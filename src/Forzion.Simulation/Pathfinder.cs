@@ -29,8 +29,9 @@ internal static class Pathfinder
 
     /// <summary>
     /// The Cells to walk through, in order, from <paramref name="start"/> (not included) to
-    /// <paramref name="destination"/> (included). Empty when the destination is the start or
-    /// cannot be reached. Both Cells must be inside the map.
+    /// <paramref name="destination"/> (included). When the destination cannot be reached, the
+    /// path ends on the reachable Cell nearest to it instead. Empty when that leaves the unit
+    /// where it is. Both Cells must be inside the map.
     /// </summary>
     public static List<CellPosition> FindPath(MapState map, CellPosition start, CellPosition destination)
     {
@@ -92,19 +93,49 @@ internal static class Pathfinder
             }
         }
 
+        // The search ended either on the destination or with every Cell that can be reached
+        // closed, and then the walk goes to the nearest of those.
+        var target = closed[destinationIndex] ? destinationIndex : NearestClosed(closed, costs, width, destination);
         var path = new List<CellPosition>();
 
-        if (closed[destinationIndex])
+        for (var index = target; index != startIndex; index = previous[index])
         {
-            for (var index = destinationIndex; index != startIndex; index = previous[index])
-            {
-                path.Add(new CellPosition(index % width, index / width));
-            }
-
-            path.Reverse();
+            path.Add(new CellPosition(index % width, index / width));
         }
 
+        path.Reverse();
+
         return path;
+    }
+
+    /// <summary>
+    /// The closed Cell nearest to the destination in a straight line. Between Cells equally
+    /// near, the one with the shortest way to it and then the one with the lowest index.
+    /// </summary>
+    private static int NearestClosed(bool[] closed, int[] costs, int width, CellPosition destination)
+    {
+        var nearest = -1;
+        var nearestDistance = long.MaxValue;
+
+        for (var index = 0; index < closed.Length; index++)
+        {
+            if (!closed[index])
+            {
+                continue;
+            }
+
+            long x = (index % width) - destination.X;
+            long y = (index / width) - destination.Y;
+            var distance = (x * x) + (y * y);
+
+            if (distance < nearestDistance || (distance == nearestDistance && costs[index] < costs[nearest]))
+            {
+                nearest = index;
+                nearestDistance = distance;
+            }
+        }
+
+        return nearest;
     }
 
     private static bool IsFree(MapState map, CellPosition cell) =>
