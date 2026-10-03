@@ -65,4 +65,43 @@ public class CommandTests
 
         Assert.NotEqual(without.StateHash, withCommand.StateHash);
     }
+
+    [Fact]
+    public void A_command_from_a_Player_that_is_not_in_the_match_is_rejected()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var command = new ResignCommand(new PlayerId(3));
+        match.Enqueue(command);
+        match.Tick();
+
+        Assert.Equal([new CommandRejected(command, RejectionReason.UnknownPlayer)], match.Events);
+        Assert.All(match.State.Players, player => Assert.False(player.IsDefeated));
+    }
+
+    [Fact]
+    public void A_command_from_a_defeated_Player_is_rejected()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var command = new ResignCommand(TestMatches.FirstPlayer);
+        match.Enqueue(command);
+        match.Tick();
+
+        match.Enqueue(command);
+        match.Tick();
+
+        Assert.Equal([new CommandRejected(command, RejectionReason.DefeatedPlayer)], match.Events);
+    }
+
+    [Fact]
+    public void A_rejected_command_leaves_the_state_as_if_it_had_not_been_sent()
+    {
+        var withRejection = TestMatches.TwoPlayerMatch();
+        var without = TestMatches.TwoPlayerMatch();
+        withRejection.Enqueue(new ResignCommand(new PlayerId(3)));
+
+        withRejection.Tick();
+        without.Tick();
+
+        Assert.Equal(without.StateHash, withRejection.StateHash);
+    }
 }

@@ -12,4 +12,7 @@ internal sealed class TickContext
     public IReadOnlyList<MatchEvent> Events => events;
 
     public void Emit(MatchEvent matchEvent) => events.Add(matchEvent);
+
+    public void Reject(Command command, RejectionReason reason) =>
+        Emit(new CommandRejected(command, reason));
 }

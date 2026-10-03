@@ -67,7 +67,17 @@ public sealed class Match
     {
         foreach (var command in pendingCommands)
         {
-            if (State.FindPlayer(command.Player) is { } issuer)
+            var issuer = State.FindPlayer(command.Player);
+
+            if (issuer is null)
+            {
+                context.Reject(command, RejectionReason.UnknownPlayer);
+            }
+            else if (issuer.IsDefeated)
+            {
+                context.Reject(command, RejectionReason.DefeatedPlayer);
+            }
+            else
             {
                 command.Execute(context, issuer);
             }
