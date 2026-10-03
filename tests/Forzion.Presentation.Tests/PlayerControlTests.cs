@@ -276,6 +276,64 @@ public class PlayerControlTests
         Assert.Equal(townCenter.Id, soldier.Target);
     }
 
+    [Fact]
+    public void Right_clicking_an_unfinished_building_of_the_Player_sends_the_selected_Villagers_to_build_it()
+    {
+        var control = NewControl(out var match);
+        var site = PlaceHouse(match);
+        var villager = UnitsOf(match, FirstPlayer)[0];
+        control.Select(Over(villager.Position), Over(villager.Position));
+
+        control.OrderAt(new ScreenPoint(site.Origin.X + (site.Width / 2.0), site.Origin.Y + (site.Height / 2.0)));
+        Tick(match);
+
+        Assert.Equal(site.Id, villager.ConstructionSite);
+    }
+
+    /// <summary>
+    /// Has the first Player's Villagers gather the Wood for a House, stops them, and places the
+    /// House with no builder on the free spot nearest its Town Center. Returns the unfinished House.
+    /// </summary>
+    private BuildingState PlaceHouse(Match match)
+    {
+        var state = match.State;
+        var villagers = UnitsOf(match, FirstPlayer);
+        var townCenter = state.Buildings.First(building => building.Owner == FirstPlayer);
+        var wood = state.ResourceSources
+            .Where(source => source.Kind == ResourceKind.Wood)
+            .OrderBy(source => Math.Abs(source.Cell.X - townCenter.Origin.X) + Math.Abs(source.Cell.Y - townCenter.Origin.Y))
+            .First();
+        match.Enqueue(new GatherCommand(FirstPlayer, villagers.Select(unit => unit.Id).ToList(), wood.Id));
+
+        while (state.Players[0].AmountOf(ResourceKind.Wood) < Match.BuildingCost(BuildingKind.House).Wood)
+        {
+            Tick(match);
+        }
+
+        match.Enqueue(new MoveCommand(FirstPlayer, villagers.Select(unit => unit.Id).ToList(), villagers[0].Position.Cell));
+
+        while (villagers.Any(unit => unit.IsMoving))
+        {
+            Tick(match);
+        }
+
+        var origin = Enumerable.Range(0, state.Map.Height)
+            .SelectMany(y => Enumerable.Range(0, state.Map.Width).Select(x => new CellPosition(x, y)))
+            .Where(cell => match.CanPlace(BuildingKind.House, cell))
+            .OrderBy(cell => Math.Abs(cell.X - townCenter.Origin.X) + Math.Abs(cell.Y - townCenter.Origin.Y))
+            .ThenBy(cell => cell.Y)
+            .ThenBy(cell => cell.X)
+            .First();
+        match.Enqueue(new PlaceBuildingCommand(FirstPlayer, BuildingKind.House, origin, []));
+        Tick(match);
+
+        var house = state.Buildings[^1];
+        Assert.Equal(BuildingKind.House, house.Kind);
+        Assert.False(house.IsComplete);
+
+        return house;
+    }
+
     private PlayerControl NewControl(out Match match, Func<ScreenPoint, SightLine?>? camera = null, MatchConfig? config = null)
     {
         driver = new MatchDriver(Match.Create(config ?? PlainConfig()), new TickClock(Match.TicksPerSecond));
