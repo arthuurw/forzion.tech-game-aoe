@@ -82,4 +82,114 @@ public class MoveCommandTests
         Assert.Equal(nearest, Walk.SquaredDistance(villager.Position.Cell, destination));
         Assert.All(visited, cell => Assert.Equal(CellKind.Free, map[cell]));
     }
+
+    [Fact]
+    public void Several_units_moved_by_one_command_all_reach_the_destination()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var villagers = match.State.Units.Where(unit => unit.Owner == TestMatches.FirstPlayer).ToList();
+        var destination = Walk.BehindTownCenter(match);
+        match.Enqueue(new MoveCommand(
+            TestMatches.FirstPlayer, villagers.Select(villager => villager.Id).ToList(), destination));
+
+        foreach (var villager in villagers)
+        {
+            Walk.UntilStopped(match, villager);
+        }
+
+        Assert.Equal(3, villagers.Count);
+        Assert.All(villagers, villager => Assert.Equal(MapPosition.CentreOf(destination), villager.Position));
+    }
+
+    [Fact]
+    public void A_unit_that_was_not_ordered_to_move_stays_where_it_is()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var bystander = match.State.Units[0];
+        var before = bystander.Position;
+        match.Enqueue(new MoveCommand(
+            TestMatches.FirstPlayer, [Walk.MiddleVillager(match).Id], Walk.BehindTownCenter(match)));
+
+        Walk.UntilStopped(match, Walk.MiddleVillager(match));
+
+        Assert.Equal(before, bystander.Position);
+    }
+
+    [Theory]
+    [InlineData(-1, 5)]
+    [InlineData(5, -1)]
+    [InlineData(64, 5)]
+    [InlineData(5, 48)]
+    public void A_move_to_a_Cell_outside_the_map_is_rejected(int x, int y)
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var villager = Walk.MiddleVillager(match);
+        var command = new MoveCommand(TestMatches.FirstPlayer, [villager.Id], new CellPosition(x, y));
+        match.Enqueue(command);
+
+        match.Tick();
+
+        Assert.Equal([new CommandRejected(command, RejectionReason.DestinationOutsideMap)], match.Events);
+        Assert.False(villager.IsMoving);
+    }
+
+    [Fact]
+    public void A_move_of_a_unit_that_does_not_exist_is_rejected_and_moves_none_of_its_units()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var villager = Walk.MiddleVillager(match);
+        var command = new MoveCommand(
+            TestMatches.FirstPlayer, [villager.Id, new EntityId(100_000)], Walk.BehindTownCenter(match));
+        match.Enqueue(command);
+
+        match.Tick();
+
+        Assert.Equal([new CommandRejected(command, RejectionReason.UnknownUnit)], match.Events);
+        Assert.False(villager.IsMoving);
+    }
+
+    [Fact]
+    public void A_move_of_a_building_is_rejected()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var command = new MoveCommand(
+            TestMatches.FirstPlayer, [match.State.Buildings[0].Id], Walk.BehindTownCenter(match));
+        match.Enqueue(command);
+
+        match.Tick();
+
+        Assert.Equal([new CommandRejected(command, RejectionReason.UnknownUnit)], match.Events);
+    }
+
+    [Fact]
+    public void A_move_of_another_Players_unit_is_rejected_and_moves_none_of_its_units()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var own = Walk.MiddleVillager(match);
+        var foreign = match.State.Units.First(unit => unit.Owner == TestMatches.SecondPlayer);
+        var command = new MoveCommand(TestMatches.FirstPlayer, [own.Id, foreign.Id], Walk.BehindTownCenter(match));
+        match.Enqueue(command);
+
+        match.Tick();
+
+        Assert.Equal([new CommandRejected(command, RejectionReason.UnitOfAnotherPlayer)], match.Events);
+        Assert.False(own.IsMoving);
+        Assert.False(foreign.IsMoving);
+    }
+
+    [Fact]
+    public void A_rejected_move_leaves_the_state_as_if_it_had_not_been_sent()
+    {
+        var withRejection = TestMatches.TwoPlayerMatch();
+        var without = TestMatches.TwoPlayerMatch();
+        withRejection.Enqueue(new MoveCommand(
+            TestMatches.FirstPlayer,
+            [Walk.MiddleVillager(withRejection).Id, new EntityId(100_000)],
+            Walk.BehindTownCenter(withRejection)));
+
+        withRejection.Tick();
+        without.Tick();
+
+        Assert.Equal(without.StateHash, withRejection.StateHash);
+    }
 }
