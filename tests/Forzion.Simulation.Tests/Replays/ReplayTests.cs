@@ -67,7 +67,11 @@ public class ReplayTests
     // the resource sources, buildings and units in ID order, each unit followed by the number
     // of Cells in its path and those Cells, each value as eight little-endian bytes. When
     // paths joined the hash, the values were recomputed by a model of this layout that first
-    // reproduced the values recorded before. CI runs this on Windows, Linux and macOS: every
+    // reproduced the values recorded before. Combat added each building's hit points, each
+    // unit's hit points, target (0 for none) and attack progress, and then whether the match
+    // is over and its winner (0 for none); the values were recomputed the same way, by a model
+    // that reproduced the earlier values with the earlier layout and matched the match's own
+    // hash at every tick of the replays. CI runs this on Windows, Linux and macOS: every
     // system must reach the same hash. A change that adds state to the hash changes these
     // values on purpose and must record the new ones.
     private const ulong ExpectedFinalHash = 7949405867538644025UL;
