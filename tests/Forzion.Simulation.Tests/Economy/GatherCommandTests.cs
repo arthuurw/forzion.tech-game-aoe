@@ -87,6 +87,25 @@ public class GatherCommandTests
     }
 
     [Fact]
+    public void Gather_progress_counts_the_ticks_spent_towards_the_next_unit_and_restarts_when_one_is_taken()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var villager = Walk.MiddleVillager(match);
+        var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Food);
+        match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
+        Gather.Until(match, () => villager.GatherPhase == GatherPhase.Gathering);
+
+        Assert.Equal(0, villager.GatherProgress);
+
+        for (var progress = 1; villager.Load.Amount == 0; progress++)
+        {
+            match.Tick();
+
+            Assert.Equal(villager.Load.Amount == 0 ? progress : 0, villager.GatherProgress);
+        }
+    }
+
+    [Fact]
     public void A_gather_from_a_source_that_does_not_exist_is_rejected()
     {
         var match = TestMatches.TwoPlayerMatch();

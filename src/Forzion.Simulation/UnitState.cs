@@ -45,8 +45,12 @@ public sealed class UnitState
     /// <summary>What the Villager carries.</summary>
     public Load Load { get; internal set; }
 
-    /// <summary>Ticks spent gathering towards the next unit of Resource.</summary>
-    internal int GatherProgress { get; set; }
+    /// <summary>
+    /// Ticks the Villager has spent beside its source towards the next unit of Resource. It
+    /// goes back to zero when that unit is taken and whenever the Villager is given a new
+    /// gather order or stops gathering.
+    /// </summary>
+    public int GatherProgress { get; internal set; }
 
     internal void SetPath(IEnumerable<CellPosition> cells)
     {
