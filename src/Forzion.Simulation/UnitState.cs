@@ -55,8 +55,7 @@ public sealed class UnitState
 
         foreach (var cell in path)
         {
-            hasher.Write(cell.X);
-            hasher.Write(cell.Y);
+            hasher.Write(cell);
         }
     }
 }

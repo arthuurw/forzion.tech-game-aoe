@@ -38,8 +38,7 @@ public sealed class BuildingState
         hasher.Write(Id.Value);
         hasher.Write(Owner.Value);
         hasher.Write((int)Kind);
-        hasher.Write(Origin.X);
-        hasher.Write(Origin.Y);
+        hasher.Write(Origin);
         hasher.Write(Width);
         hasher.Write(Height);
     }
