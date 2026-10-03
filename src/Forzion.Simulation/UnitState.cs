@@ -54,11 +54,15 @@ public sealed class UnitState
     /// <summary>Ticks spent within range of the target since the last hit, or since the target was set.</summary>
     internal int AttackProgress { get; set; }
 
-    /// <summary>Makes the unit attack the given entity, starting a fresh attack interval.</summary>
+    /// <summary>
+    /// Makes the unit attack the given entity, dropping wherever it was walking and starting a
+    /// fresh attack interval.
+    /// </summary>
     internal void Attack(EntityId target)
     {
         Target = target;
         AttackProgress = 0;
+        path.Clear();
     }
 
     internal void SetPath(IEnumerable<CellPosition> cells)
@@ -66,6 +70,9 @@ public sealed class UnitState
         path.Clear();
         path.AddRange(cells);
     }
+
+    /// <summary>Stops the unit where it is, even between two Cell centres.</summary>
+    internal void Stop() => path.Clear();
 
     /// <summary>Drops the next Cell of the path: the unit has reached its centre.</summary>
     internal void ReachWaypoint() => path.RemoveAt(0);

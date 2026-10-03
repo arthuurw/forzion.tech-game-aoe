@@ -26,7 +26,24 @@ internal sealed class CombatSystem : ISystem
 
             if (distance > attack.Range)
             {
+                unit.AttackProgress = 0;
+
+                if (targetUnit is not null)
+                {
+                    Chase(state.Map, unit, targetUnit.Position.Cell);
+                }
+                else if (!unit.IsMoving)
+                {
+                    // A building stays put, so the way to it is only searched again when the unit stopped short.
+                    MovementSystem.WalkTo(state.Map, unit, NearestCellOf(targetBuilding!, unit.Position.Cell));
+                }
+
                 continue;
+            }
+
+            if (unit.IsMoving)
+            {
+                unit.Stop();
             }
 
             unit.AttackProgress++;
@@ -48,6 +65,25 @@ internal sealed class CombatSystem : ISystem
             }
         }
     }
+
+    /// <summary>
+    /// Keeps the unit walking towards the Cell its target unit stands on. A path already
+    /// heading there is kept, so the way is only searched again when the target has moved to
+    /// another Cell or the unit has stopped short of it.
+    /// </summary>
+    private static void Chase(MapState map, UnitState unit, CellPosition destination)
+    {
+        if (!unit.IsMoving || unit.Path[^1] != destination)
+        {
+            MovementSystem.WalkTo(map, unit, destination);
+        }
+    }
+
+    /// <summary>The Cell of the building's footprint nearest to <paramref name="cell"/>.</summary>
+    private static CellPosition NearestCellOf(BuildingState building, CellPosition cell) =>
+        new(
+            Math.Clamp(cell.X, building.Origin.X, building.Origin.X + building.Width - 1),
+            Math.Clamp(cell.Y, building.Origin.Y, building.Origin.Y + building.Height - 1));
 
     private static Fix64 Distance(MapPosition from, MapPosition to) => Fix64.Hypot(to.X - from.X, to.Y - from.Y);
 
