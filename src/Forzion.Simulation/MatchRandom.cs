@@ -25,5 +25,11 @@ internal sealed class MatchRandom
         }
     }
 
+    /// <summary>
+    /// A number from 0 up to, but not including, <paramref name="exclusiveMax"/>. Plain
+    /// remainder: the bias it carries is far below anything a match can notice.
+    /// </summary>
+    public int NextInt(int exclusiveMax) => (int)(NextUInt64() % (ulong)exclusiveMax);
+
     public void WriteTo(StateHasher hasher) => hasher.Write(state);
 }

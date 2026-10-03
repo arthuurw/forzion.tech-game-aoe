@@ -43,6 +43,26 @@ public class MatchCreationTests
         Assert.Equal(48, match.State.Map.Height);
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(3)]
+    public void A_match_has_one_or_two_Players(int playerCount)
+    {
+        var players = Enumerable.Repeat(new PlayerConfig(TestMatches.FirstFaction), playerCount).ToList();
+
+        Assert.Throws<ArgumentException>(() => Match.Create(new MatchConfig(1, new MapConfig(64, 48), players)));
+    }
+
+    [Theory]
+    [InlineData(31, 64)]
+    [InlineData(64, 31)]
+    public void A_map_too_small_to_keep_the_Players_apart_is_refused(int width, int height)
+    {
+        var players = new[] { new PlayerConfig(TestMatches.FirstFaction), new PlayerConfig(TestMatches.FirstFaction) };
+
+        Assert.Throws<ArgumentException>(() => Match.Create(new MatchConfig(1, new MapConfig(width, height), players)));
+    }
+
     [Fact]
     public void A_new_match_has_no_events()
     {

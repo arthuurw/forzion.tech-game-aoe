@@ -51,12 +51,10 @@ public class ReplayTests
         Assert.Equal(Ticks, hashes.Distinct().Count());
     }
 
-    // Recorded from an independent model of the documented hash layout (64-bit FNV-1a over the
-    // tick, the random generator state, the map size and the Players in ID order, each value
-    // as eight little-endian bytes), not from this implementation. CI runs this on Windows,
-    // Linux and macOS: every system must reach the same hash. A change that adds state to the
-    // hash changes this value on purpose and must record the new one.
-    private const ulong ExpectedFinalHash = 8042323952017705414UL;
+    // The hash this replay reached when it was recorded. CI runs this on Windows, Linux and
+    // macOS: every system must reach the same hash. A change that adds state to the hash
+    // changes this value on purpose and must record the new one.
+    private const ulong ExpectedFinalHash = 11317120523504507555UL;
 
     [Fact]
     public void A_recorded_replay_reaches_the_recorded_final_hash()

@@ -55,10 +55,10 @@ public class StateHashTests
     {
         var map = new MapConfig(64, 48);
         var player = new PlayerConfig(TestMatches.FirstFaction);
+        var solo = Match.Create(new MatchConfig(1, map, [player]));
         var duel = Match.Create(new MatchConfig(1, map, [player, player]));
-        var trio = Match.Create(new MatchConfig(1, map, [player, player, player]));
 
-        Assert.NotEqual(duel.StateHash, trio.StateHash);
+        Assert.NotEqual(solo.StateHash, duel.StateHash);
     }
 
     [Fact]
