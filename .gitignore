@@ -485,3 +485,6 @@ $RECYCLE.BIN/
 .godot/
 *.translation
 export_presets.cfg
+
+# Claude Code agent worktrees
+.claude/worktrees/
