@@ -26,8 +26,15 @@ internal sealed class AiScript
     // What the Player saves up for its Age Advance, kept out of the budget for soldiers.
     private Cost savings;
 
+    // Whether a soldier was put in training this tick.
+    private bool armyGrows;
+
     // Villagers given a job this tick, which no later decision of the same tick takes from them.
     private readonly HashSet<EntityId> busy = [];
+
+    // Construction sites placed this tick, which the match only adds once it applies the
+    // placements: a later placement of the same tick keeps clear of their footprints.
+    private readonly List<(BuildingKind Kind, CellPosition Origin, int Size)> placed = [];
 
     private AiScript(MatchState state, PlayerState player)
     {
@@ -47,6 +54,7 @@ internal sealed class AiScript
         script.AdvanceAge();
         script.TrainSoldier();
         script.SendIdleVillagersToGather();
+        script.Attack();
 
         return script.commands;
     }
@@ -63,7 +71,7 @@ internal sealed class AiScript
             return;
         }
 
-        Place(BuildingKind.House);
+        PlaceNearHome(BuildingKind.House);
     }
 
     /// <summary>
@@ -78,61 +86,76 @@ internal sealed class AiScript
             return;
         }
 
-        Place(BuildingKind.Barracks);
+        PlaceNearHome(BuildingKind.Barracks);
     }
 
     /// <summary>
-    /// Places a construction site of the given kind near the Town Center with the nearest
-    /// Villagers as builders, when what it costs is still in this tick's budget and there is a
-    /// place for it.
+    /// Places a construction site of the given kind within <see cref="Balance.AiBuildingReach"/>
+    /// of the Town Center, with the Villagers nearest to it that build nothing as builders.
     /// </summary>
-    private void Place(BuildingKind kind)
+    private void PlaceNearHome(BuildingKind kind)
     {
         var builders = OwnUnits()
             .Where(unit => unit.Kind == UnitKind.Villager && unit.ConstructionSite is null && !busy.Contains(unit.Id))
             .ToList();
 
-        if (builders.Count == 0 || DrawOrigin(kind) is not { } origin || !Spend(Balance.BuildingCost(kind)))
+        Place(kind, Home(), Balance.AiBuildingReach, builders);
+    }
+
+    /// <summary>
+    /// Places a construction site of the given kind within <paramref name="reach"/> of
+    /// <paramref name="centre"/>, with the candidates nearest to it as builders, when there is a
+    /// candidate, what it costs is still in this tick's budget and there is a place for it.
+    /// Returns whether it did.
+    /// </summary>
+    private bool Place(BuildingKind kind, CellPosition centre, int reach, IReadOnlyList<UnitState> candidates)
+    {
+        var cost = Balance.BuildingCost(kind);
+
+        // Checked before the place is drawn, so a Player saving up does not use up draws.
+        if (candidates.Count == 0 || !CanSpend(cost) || DrawOrigin(kind, centre, reach) is not { } origin)
         {
-            return;
+            return false;
         }
 
-        var nearest = builders
+        var builders = candidates
             .OrderBy(unit => SquaredDistance(unit.Position.Cell, origin))
             .ThenBy(unit => unit.Id.Value)
             .Take(Balance.AiBuilders(kind))
             .Select(unit => unit.Id)
             .ToList();
 
-        busy.UnionWith(nearest);
-        commands.Add(new PlaceBuildingCommand(player.Id, kind, origin, nearest));
+        Spend(cost);
+        busy.UnionWith(builders);
+        placed.Add((kind, origin, Balance.BuildingSize(kind)));
+        commands.Add(new PlaceBuildingCommand(player.Id, kind, origin, builders));
+
+        return true;
     }
 
     /// <summary>
     /// The origin of a footprint of the given kind drawn from the match's generator among the
-    /// <see cref="Balance.AiPlacementChoices"/> nearest to the Town Center, within
-    /// <see cref="Balance.AiBuildingReach"/> Cells of it, or null when there is none. Only
+    /// <see cref="Balance.AiPlacementChoices"/> nearest to <paramref name="centre"/>, within
+    /// <paramref name="reach"/> Cells of it along either axis, or null when there is none. Only
     /// footprints ringed by free Cells count, so what the AI builds never walls in a unit, a
     /// source or another building. Between origins equally near, the one with the lowest
     /// Cell index comes first.
     /// </summary>
-    private CellPosition? DrawOrigin(BuildingKind kind)
+    private CellPosition? DrawOrigin(BuildingKind kind, CellPosition centre, int reach)
     {
-        var home = Home();
         var size = Balance.BuildingSize(kind);
-        var reach = Balance.AiBuildingReach;
         var origins = new List<(CellPosition Origin, int Distance)>();
 
         // Row by row, from the lowest: ascending Cell index, which the stable sort below keeps among equals.
-        for (var y = home.Y - reach; y <= home.Y + reach; y++)
+        for (var y = centre.Y - reach; y <= centre.Y + reach; y++)
         {
-            for (var x = home.X - reach; x <= home.X + reach; x++)
+            for (var x = centre.X - reach; x <= centre.X + reach; x++)
             {
                 var origin = new CellPosition(x, y);
 
-                if (state.CanPlace(kind, origin) && IsRingedByFreeCells(origin, size))
+                if (state.CanPlace(kind, origin) && IsRingedByFreeCells(origin, size) && !IsNearPlaced(origin, size))
                 {
-                    origins.Add((origin, SquaredDistance(new CellPosition(x + (size / 2), y + (size / 2)), home)));
+                    origins.Add((origin, SquaredDistance(new CellPosition(x + (size / 2), y + (size / 2)), centre)));
                 }
             }
         }
@@ -146,6 +169,14 @@ internal sealed class AiScript
 
         return nearest[state.Random.NextInt(nearest.Count)].Origin;
     }
+
+    /// <summary>
+    /// Whether the footprint, or a Cell around it, overlaps a footprint placed this tick: the
+    /// two would touch or overlap once both are applied.
+    /// </summary>
+    private bool IsNearPlaced(CellPosition origin, int size) => placed.Any(other =>
+        origin.X - 1 < other.Origin.X + other.Size && other.Origin.X < origin.X + size + 1
+        && origin.Y - 1 < other.Origin.Y + other.Size && other.Origin.Y < origin.Y + size + 1);
 
     /// <summary>Whether every Cell around the footprint, by a side or by a corner, is inside the map and free.</summary>
     private bool IsRingedByFreeCells(CellPosition origin, int size)
@@ -184,8 +215,9 @@ internal sealed class AiScript
     /// <summary>
     /// Orders the Age Advance at the Town Center once the Player has a complete Barracks and an
     /// army of <see cref="Balance.AiArmyBeforeAdvance"/>, and is in neither the last Age of its
-    /// Faction nor an Age Advance already. Until it can pay, it saves up: soldiers are trained
-    /// only from what lies beyond the cost.
+    /// Faction nor an Age Advance already. Until it can pay, it saves up: a soldier is trained
+    /// only when it leaves what the advance takes of each Resource the soldier costs. It saves
+    /// up only while every Resource it is short of can still be gathered somewhere on the map.
     /// </summary>
     private void AdvanceAge()
     {
@@ -204,7 +236,8 @@ internal sealed class AiScript
         {
             commands.Add(new AgeAdvanceCommand(player.Id, townCenter.Id));
         }
-        else
+        else if (ResourceKinds.All(kind =>
+                     budget[(int)kind] >= cost.AmountOf(kind) || state.ResourceSources.Any(source => source.Kind == kind)))
         {
             savings = cost;
         }
@@ -212,8 +245,9 @@ internal sealed class AiScript
 
     /// <summary>
     /// Puts a soldier in training at a complete Barracks while it trains none: of a kind drawn
-    /// from the match's generator among the soldiers unlocked by the latest Age, up to the
-    /// Player's, that unlocks any, leaving out those this tick's budget does not cover.
+    /// from the match's generator among the soldiers this tick's budget covers, those unlocked
+    /// by the latest Age only. A Player short of what the strongest soldiers take trains the
+    /// others rather than nothing, so what is left once a Resource runs dry still arms it.
     /// </summary>
     private void TrainSoldier()
     {
@@ -224,16 +258,51 @@ internal sealed class AiScript
             return;
         }
 
-        var latest = Enumerable.Range(1, player.Age)
-            .Reverse()
-            .Select(age => player.Faction.Ages[age - 1].Units.Where(kind => Balance.Attack(kind) is not null).Order().ToList())
-            .FirstOrDefault(soldiers => soldiers.Count > 0) ?? [];
-        var affordable = latest.Where(kind => CanSpend(Balance.UnitCost(kind), savings)).ToList();
+        var affordable = AffordableSoldiersOfTheLatestAge();
 
         // Drawn only when there is something to train, so a Player saving up does not use up draws.
         if (affordable.Count > 0)
         {
             Train(barracks, affordable[state.Random.NextInt(affordable.Count)]);
+            armyGrows = true;
+        }
+    }
+
+    /// <summary>
+    /// The kinds of soldier this tick's budget covers, beyond the savings, among those unlocked by
+    /// the latest Age, up to the Player's, that unlocks any it covers; in ascending kind order.
+    /// </summary>
+    private List<UnitKind> AffordableSoldiersOfTheLatestAge() => Enumerable.Range(1, player.Age)
+        .Reverse()
+        .Select(age => player.Faction.Ages[age - 1].Units
+            .Where(kind => Balance.Attack(kind) is not null && CanSpend(Balance.UnitCost(kind), savings))
+            .Order()
+            .ToList())
+        .FirstOrDefault(soldiers => soldiers.Count > 0) ?? [];
+
+    /// <summary>
+    /// Sends every soldier attacking nothing against the nearest enemy Town Center once there are
+    /// <see cref="Balance.AiAttackArmySize"/> of them, or once the army has stopped growing: no
+    /// Villager gathers and no Barracks trains, now or this tick, so nothing will change until
+    /// the soldiers move. Between Town Centers equally near, the one with the lowest ID.
+    /// Soldiers already fighting are left to it.
+    /// </summary>
+    private void Attack()
+    {
+        var waiting = Army().Where(unit => unit.Target is null).Select(unit => unit.Id).ToList();
+        var home = Home();
+        var target = state.Buildings
+            .Where(building => building.Owner != player.Id && building.Kind == BuildingKind.TownCenter)
+            .OrderBy(townCenter => SquaredDistance(townCenter.Origin, home))
+            .ThenBy(townCenter => townCenter.Id.Value)
+            .FirstOrDefault();
+        var stopped = !armyGrows
+            && !OwnUnits().Any(unit => unit.GatherSource is not null)
+            && !OwnBuildings(BuildingKind.Barracks).Any(barracks => barracks.TrainingQueue.Count > 0);
+
+        if (target is not null && waiting.Count > 0 && (waiting.Count >= Balance.AiAttackArmySize || stopped))
+        {
+            commands.Add(new AttackCommand(player.Id, waiting, target.Id));
         }
     }
 
@@ -251,9 +320,14 @@ internal sealed class AiScript
         commands.Add(new TrainCommand(player.Id, building.Id, kind));
     }
 
-    /// <summary>Whether this tick's budget covers the cost and, on top of it, what is kept aside.</summary>
-    private bool CanSpend(Cost cost, Cost keptAside = default) =>
-        ResourceKinds.All(kind => budget[(int)kind] >= cost.AmountOf(kind) + keptAside.AmountOf(kind));
+    /// <summary>
+    /// Whether this tick's budget covers the cost and, for each Resource the cost takes, still
+    /// leaves what is kept aside. A Resource the cost does not take is not touched, so it is not
+    /// checked against what is kept aside.
+    /// </summary>
+    private bool CanSpend(Cost cost, Cost keptAside = default) => ResourceKinds.All(kind =>
+        budget[(int)kind] >= cost.AmountOf(kind)
+        && (cost.AmountOf(kind) == 0 || budget[(int)kind] - cost.AmountOf(kind) >= keptAside.AmountOf(kind)));
 
     /// <summary>Takes the cost from this tick's budget, when it covers it.</summary>
     private bool Spend(Cost cost)
@@ -274,7 +348,9 @@ internal sealed class AiScript
     /// <summary>
     /// Sends each idle Villager, in ID order, to gather the Resource whose gatherers are fewest
     /// for its share (<see cref="Balance.AiGatherShare"/>), from a source drawn among the
-    /// nearest of that Resource to the Town Center.
+    /// nearest of that Resource to the Player's drop-off points. When even that source lies
+    /// farther than <see cref="Balance.AiStorehouseDistance"/> from all of them, the Villager
+    /// first places a Storehouse by it, one at a time, and is sent to gather once it is idle again.
     /// </summary>
     private void SendIdleVillagersToGather()
     {
@@ -295,8 +371,17 @@ internal sealed class AiScript
                 return;
             }
 
-            var source = DrawSourceNearHome(kind);
+            var source = DrawSource(kind);
             gatherers[(int)kind]++;
+
+            if (DropOffDistance(source.Cell) > Balance.AiStorehouseDistance
+                && !OwnBuildings(BuildingKind.Storehouse).Any(storehouse => !storehouse.IsComplete)
+                && !placed.Any(site => site.Kind == BuildingKind.Storehouse)
+                && Place(BuildingKind.Storehouse, source.Cell, Balance.AiStorehouseReach, [villager]))
+            {
+                continue;
+            }
+
             commands.Add(new GatherCommand(player.Id, [villager.Id], source.Id));
         }
     }
@@ -329,21 +414,36 @@ internal sealed class AiScript
 
     /// <summary>
     /// A source of the Resource drawn from the match's generator among the
-    /// <see cref="Balance.AiSourceChoices"/> nearest to the Town Center; between sources equally
-    /// near, the one with the lowest ID comes first. There must be one.
+    /// <see cref="Balance.AiSourceChoices"/> nearest to the Player's drop-off points, leaving out
+    /// those more than <see cref="Balance.AiSourceSlack"/> Cells farther than the nearest; between
+    /// sources equally near, the one with the lowest ID comes first. There must be one.
     /// </summary>
-    private ResourceSourceState DrawSourceNearHome(ResourceKind kind)
+    private ResourceSourceState DrawSource(ResourceKind kind)
     {
-        var home = Home();
-        var nearest = state.ResourceSources
+        var sources = state.ResourceSources
             .Where(source => source.Kind == kind)
-            .OrderBy(source => SquaredDistance(source.Cell, home))
-            .ThenBy(source => source.Id.Value)
+            .Select(source => (Source: source, Distance: DropOffDistance(source.Cell)))
+            .OrderBy(each => each.Distance)
+            .ThenBy(each => each.Source.Id.Value)
+            .ToList();
+        var nearest = sources
+            .TakeWhile(each => each.Distance <= sources[0].Distance + Balance.AiSourceSlack)
             .Take(Balance.AiSourceChoices)
             .ToList();
 
-        return nearest[state.Random.NextInt(nearest.Count)];
+        return nearest[state.Random.NextInt(nearest.Count)].Source;
     }
+
+    /// <summary>
+    /// Distance in king's moves from the Cell to the nearest of the Player's Town Center and
+    /// Storehouses, construction sites included: a Storehouse being built already counts.
+    /// <see cref="int.MaxValue"/> when the Player has none.
+    /// </summary>
+    private int DropOffDistance(CellPosition cell) => state.Buildings
+        .Where(building => building.Owner == player.Id && building.Kind is BuildingKind.TownCenter or BuildingKind.Storehouse)
+        .Select(building => KingDistance(cell, building.NearestCellTo(cell)))
+        .DefaultIfEmpty(int.MaxValue)
+        .Min();
 
     /// <summary>The Cell the Player's Town Center is centred on, or the map's centre once it has none.</summary>
     private CellPosition Home() =>
@@ -365,6 +465,8 @@ internal sealed class AiScript
     /// <summary>A Villager with no source, no construction site and nowhere to walk.</summary>
     private static bool IsIdleVillager(UnitState unit) =>
         unit.Kind == UnitKind.Villager && unit.GatherSource is null && unit.ConstructionSite is null && !unit.IsMoving;
+
+    private static int KingDistance(CellPosition a, CellPosition b) => Math.Max(Math.Abs(a.X - b.X), Math.Abs(a.Y - b.Y));
 
     private static int SquaredDistance(CellPosition a, CellPosition b) =>
         ((a.X - b.X) * (a.X - b.X)) + ((a.Y - b.Y) * (a.Y - b.Y));

@@ -225,18 +225,33 @@ internal static class Balance
     /// </summary>
     public static int AiGatherShare(ResourceKind kind) => kind switch
     {
-        ResourceKind.Food => 5,
-        ResourceKind.Wood => 3,
-        ResourceKind.Gold => 2,
+        ResourceKind.Food => 6,
+        ResourceKind.Wood => 2,
+        ResourceKind.Gold => 3,
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
     /// <summary>
-    /// Among how many of the sources of a Resource nearest its Town Center the AI draws the one
-    /// an idle Villager goes to. More than one keeps a Villager that cannot reach a source from
-    /// being sent back to it every time.
+    /// Among how many of the sources of a Resource nearest its drop-off points the AI draws the
+    /// one an idle Villager goes to. More than one keeps a Villager that cannot reach a source
+    /// from being sent back to it every time.
     /// </summary>
     public const int AiSourceChoices = 3;
+
+    /// <summary>
+    /// How much farther than the nearest source of a Resource, in Cells, another may lie and
+    /// still be drawn by the AI for an idle Villager.
+    /// </summary>
+    public const int AiSourceSlack = 3;
+
+    /// <summary>
+    /// Farthest, in Cells, the AI lets a source it sends a Villager to lie from its drop-off
+    /// points before it places a Storehouse by the source.
+    /// </summary>
+    public const int AiStorehouseDistance = 8;
+
+    /// <summary>Farthest the AI places a Storehouse from the source it serves, in Cells along either axis.</summary>
+    public const int AiStorehouseReach = 4;
 
     /// <summary>How many Villagers the AI trains, one at a time, before it stops.</summary>
     public const int AiVillagers = 12;
@@ -255,6 +270,9 @@ internal static class Balance
     /// advance is paid, it trains more soldiers only from what is left beyond its cost.
     /// </summary>
     public const int AiArmyBeforeAdvance = 3;
+
+    /// <summary>How many soldiers attacking nothing the AI gathers before it sends them against the enemy Town Center.</summary>
+    public const int AiAttackArmySize = 6;
 
     /// <summary>How many Villagers the AI sends to build a building of the given kind when it places it.</summary>
     public static int AiBuilders(BuildingKind kind) => kind switch
