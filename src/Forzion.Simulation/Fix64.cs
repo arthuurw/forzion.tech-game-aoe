@@ -7,6 +7,7 @@ public readonly struct Fix64 : IEquatable<Fix64>, IComparable<Fix64>
 {
     private const int FractionalBits = 32;
     private const long RawOne = 1L << FractionalBits;
+    private const long FractionMask = RawOne - 1;
 
     private readonly long raw;
 
@@ -37,6 +38,34 @@ public readonly struct Fix64 : IEquatable<Fix64>, IComparable<Fix64>
 
     /// <summary>Largest integer less than or equal to this value.</summary>
     public int FloorToInt() => (int)(raw >> FractionalBits);
+
+    /// <summary>
+    /// Smallest integer greater than or equal to this value, saturating at
+    /// <see cref="int.MaxValue"/> for values above it.
+    /// </summary>
+    public int CeilingToInt()
+    {
+        var floor = raw >> FractionalBits;
+        var ceiling = (raw & FractionMask) == 0 ? floor : floor + 1;
+
+        return (int)Math.Min(ceiling, int.MaxValue);
+    }
+
+    /// <summary>
+    /// Nearest integer, with halves rounded away from zero, saturating at
+    /// <see cref="int.MaxValue"/> for values that round above it.
+    /// </summary>
+    public int RoundToInt()
+    {
+        const long RawHalf = RawOne / 2;
+
+        Int128 wide = raw;
+        var rounded = wide >= 0
+            ? (wide + RawHalf) >> FractionalBits
+            : -((-wide + RawHalf) >> FractionalBits);
+
+        return rounded > int.MaxValue ? int.MaxValue : (int)rounded;
+    }
 
     public static bool operator ==(Fix64 left, Fix64 right) => left.raw == right.raw;
 
