@@ -51,10 +51,10 @@ internal static class Balance
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
-    /// <summary>What placing a building of the given kind costs.</summary>
+    /// <summary>What placing a building of the given kind costs. Town Centers are not placed and have none.</summary>
     public static Cost BuildingCost(BuildingKind kind) => kind switch
     {
-        BuildingKind.TownCenter => new Cost(0, 275, 100),
+        BuildingKind.TownCenter => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Town Centers are not placed."),
         BuildingKind.House => new Cost(0, 30, 0),
         BuildingKind.Storehouse => new Cost(0, 50, 0),
         BuildingKind.Barracks => new Cost(0, 100, 0),

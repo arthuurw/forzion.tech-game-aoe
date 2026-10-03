@@ -26,9 +26,11 @@ public sealed class Match
     public static Match Create(MatchConfig config) => new(config);
 
     /// <summary>What placing a building of the given kind costs, paid in full when it is placed.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">Players do not place buildings of that kind.</exception>
     public static Cost BuildingCost(BuildingKind kind) => Balance.BuildingCost(kind);
 
     /// <summary>Side of the square footprint of a building of the given kind, in Cells.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">The kind is not a <see cref="BuildingKind"/>.</exception>
     public static int BuildingSize(BuildingKind kind) => Balance.BuildingSize(kind);
 
     /// <summary>
@@ -37,6 +39,7 @@ public sealed class Match
     /// it. Cost is not considered. A placement that fits now may not fit by the tick that
     /// applies it.
     /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The kind is not a <see cref="BuildingKind"/>.</exception>
     public bool CanPlace(BuildingKind kind, CellPosition origin) => State.CanPlace(kind, origin);
 
     public MatchState State { get; }

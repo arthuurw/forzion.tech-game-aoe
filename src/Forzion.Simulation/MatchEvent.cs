@@ -42,6 +42,12 @@ public enum RejectionReason
     UnknownResourceSource,
 
     /// <summary>
+    /// The command names a kind of building that Players do not place, such as the Town
+    /// Center each Player starts with.
+    /// </summary>
+    BuildingNotPlaceable,
+
+    /// <summary>
     /// A Cell of the building's footprint is outside the map, is not free or has a unit
     /// standing on it.
     /// </summary>

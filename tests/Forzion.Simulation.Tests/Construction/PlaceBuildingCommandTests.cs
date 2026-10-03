@@ -55,6 +55,24 @@ public class PlaceBuildingCommandTests
         Assert.Equal(2, withRejection.State.Buildings.Count);
     }
 
+    [Theory]
+    [InlineData(BuildingKind.TownCenter)]
+    [InlineData((BuildingKind)99)]
+    public void Placing_a_kind_of_building_Players_do_not_build_is_rejected_and_changes_nothing(BuildingKind kind)
+    {
+        var withRejection = TestMatches.TwoPlayerMatch();
+        var without = TestMatches.TwoPlayerMatch();
+        var origin = Site.FreeOriginNear(withRejection.State, withRejection.State.Buildings[0].Origin, 3);
+        var command = new PlaceBuildingCommand(TestMatches.FirstPlayer, kind, origin);
+        withRejection.Enqueue(command);
+
+        withRejection.Tick();
+        without.Tick();
+
+        Assert.Equal([new CommandRejected(command, RejectionReason.BuildingNotPlaceable)], withRejection.Events);
+        Assert.Equal(without.StateHash, withRejection.StateHash);
+    }
+
     /// <summary>Where a House cannot go: the reason is in the name, the origin is found in the match.</summary>
     public static TheoryData<string> InvalidSpots() => new() { "past_the_edge_of_the_map", "over_the_Town_Center", "over_a_resource_source", "under_a_Villager" };
 
