@@ -22,6 +22,7 @@ public sealed class UnitState
         Owner = owner;
         Kind = kind;
         Position = position;
+        HitPoints = MaxHitPoints;
     }
 
     public EntityId Id { get; }
@@ -40,6 +41,25 @@ public sealed class UnitState
 
     /// <summary>Whether the unit is walking somewhere.</summary>
     public bool IsMoving => path.Count > 0;
+
+    /// <summary>Hit points the unit has when whole.</summary>
+    public int MaxHitPoints => Balance.HitPoints(Kind);
+
+    /// <summary>Hit points left. The unit dies when they reach zero.</summary>
+    public int HitPoints { get; internal set; }
+
+    /// <summary>The unit or building this unit is attacking, or null when it is attacking nothing.</summary>
+    public EntityId? Target { get; private set; }
+
+    /// <summary>Ticks spent within range of the target since the last hit, or since the target was set.</summary>
+    internal int AttackProgress { get; set; }
+
+    /// <summary>Makes the unit attack the given entity, starting a fresh attack interval.</summary>
+    internal void Attack(EntityId target)
+    {
+        Target = target;
+        AttackProgress = 0;
+    }
 
     internal void SetPath(IEnumerable<CellPosition> cells)
     {
@@ -64,5 +84,9 @@ public sealed class UnitState
             hasher.Write(cell.X);
             hasher.Write(cell.Y);
         }
+
+        hasher.Write(HitPoints);
+        hasher.Write(Target?.Value ?? 0);
+        hasher.Write(AttackProgress);
     }
 }
