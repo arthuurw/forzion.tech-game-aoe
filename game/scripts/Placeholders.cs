@@ -1,3 +1,4 @@
+using Forzion.Presentation;
 using Forzion.Simulation;
 using Godot;
 
@@ -43,6 +44,12 @@ public sealed class Placeholders
 
     /// <summary>How high above the ground a unit's placeholder is placed, so it rests on the ground.</summary>
     public static float UnitStandingHeight => UnitHeight / 2;
+
+    /// <summary>
+    /// The shapes as the mouse picks them. A unit is picked a little beyond its drawn radius:
+    /// at a distance the capsules are only a few pixels wide.
+    /// </summary>
+    public static PickSizes PickSizes => new(UnitRadius: UnitRadius + 0.15, UnitHeight: UnitHeight, StructureHeight: BuildingHeight);
 
     /// <summary>The colour that marks what a Player owns.</summary>
     public static Color ColourOf(PlayerId player) =>
