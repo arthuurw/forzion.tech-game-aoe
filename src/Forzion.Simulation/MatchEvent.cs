@@ -115,4 +115,10 @@ public enum RejectionReason
     /// none does.
     /// </summary>
     UnitLocked,
+
+    /// <summary>
+    /// The Player's Age has not unlocked that kind of building: a later Age of its Faction
+    /// does, or none does.
+    /// </summary>
+    BuildingLocked,
 }

@@ -62,6 +62,14 @@ public sealed class Faction
     /// <param name="age">The number of the Age: 1 for Age I.</param>
     public bool Unlocks(UnitKind kind, int age) => AgesUpTo(age).Any(each => each.Units.Contains(kind));
 
+    /// <summary>
+    /// Whether a Player of this Faction in the given Age may place buildings of the given kind:
+    /// whether that Age or one before it unlocks them.
+    /// </summary>
+    /// <param name="kind">The kind of building.</param>
+    /// <param name="age">The number of the Age: 1 for Age I.</param>
+    public bool Unlocks(BuildingKind kind, int age) => AgesUpTo(age).Any(each => each.Buildings.Contains(kind));
+
     private IEnumerable<FactionAge> AgesUpTo(int age) => Ages.Take(Math.Max(age, 0));
 }
 

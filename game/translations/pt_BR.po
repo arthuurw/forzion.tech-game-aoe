@@ -87,6 +87,9 @@ msgstr "Ordem recusada: você já está na última Era."
 msgid "ORDER_REJECTED_UNIT_LOCKED"
 msgstr "Ordem recusada: sua Era ainda não liberou essa unidade."
 
+msgid "ORDER_REJECTED_BUILDING_LOCKED"
+msgstr "Ordem recusada: sua Era ainda não liberou essa construção."
+
 # Nomes das Facções, das suas Eras e das suas unidades, sob as chaves que os dados de cada
 # Facção guardam.
 msgid "FACTION_PORTUGUESE"
