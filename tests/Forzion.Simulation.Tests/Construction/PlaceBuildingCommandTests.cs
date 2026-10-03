@@ -31,4 +31,25 @@ public class PlaceBuildingCommandTests
             Enum.GetValues<ResourceKind>().Select(player.AmountOf));
         Assert.True(cost.Wood > 0);
     }
+
+    [Fact]
+    public void Placing_a_building_the_Player_cannot_afford_is_rejected_and_changes_nothing()
+    {
+        var withRejection = TestMatches.TwoPlayerMatch();
+        var without = TestMatches.TwoPlayerMatch();
+        var cost = Match.BuildingCost(BuildingKind.House);
+        Site.Stockpile(withRejection, TestMatches.FirstPlayer, cost.Wood);
+        Site.Stockpile(without, TestMatches.FirstPlayer, cost.Wood);
+        var origin = Site.FreeOriginNear(withRejection.State, withRejection.State.Buildings[0].Origin, Match.BuildingSize(BuildingKind.Barracks));
+        var command = new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.Barracks, origin);
+        withRejection.Enqueue(command);
+
+        withRejection.Tick();
+        without.Tick();
+
+        Assert.True(withRejection.State.Players[0].AmountOf(ResourceKind.Wood) < Match.BuildingCost(BuildingKind.Barracks).Wood);
+        Assert.Equal([new CommandRejected(command, RejectionReason.NotEnoughResources)], withRejection.Events);
+        Assert.Equal(without.StateHash, withRejection.StateHash);
+        Assert.Equal(2, withRejection.State.Buildings.Count);
+    }
 }

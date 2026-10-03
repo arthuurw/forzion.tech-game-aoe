@@ -218,6 +218,10 @@ public sealed class PlayerState
 
     internal void Receive(ResourceKind kind, int amount) => resources[(int)kind] += amount;
 
+    /// <summary>Whether the Player has at least the cost in each Resource.</summary>
+    internal bool CanAfford(Cost cost) =>
+        Enum.GetValues<ResourceKind>().All(kind => AmountOf(kind) >= cost.AmountOf(kind));
+
     /// <summary>Takes the cost from the Player, who must be able to afford it.</summary>
     internal void Pay(Cost cost)
     {

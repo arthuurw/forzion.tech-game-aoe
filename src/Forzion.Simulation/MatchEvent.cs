@@ -40,4 +40,7 @@ public enum RejectionReason
 
     /// <summary>The command names a resource source that is not in the match, or no longer is.</summary>
     UnknownResourceSource,
+
+    /// <summary>The Player has less of some Resource than the cost asks for.</summary>
+    NotEnoughResources,
 }
