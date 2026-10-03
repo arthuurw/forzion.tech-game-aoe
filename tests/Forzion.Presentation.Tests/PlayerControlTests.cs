@@ -10,6 +10,8 @@ public class PlayerControlTests
     // Units 0.4 Cell across and 1 tall, buildings and resource sources 1.2 tall.
     private static readonly PickSizes Sizes = new(UnitRadius: 0.4, UnitHeight: 1, StructureHeight: 1.2);
 
+    private MatchDriver driver = null!;
+
     [Fact]
     public void Clicking_a_unit_of_the_Player_selects_it()
     {
@@ -169,14 +171,99 @@ public class PlayerControlTests
         Assert.Equal([villager.Id], control.Selected);
     }
 
-    private static PlayerControl NewControl(out Match match, Func<ScreenPoint, SightLine?>? camera = null)
+    [Fact]
+    public void Right_clicking_bare_ground_sends_the_selected_units_walking_to_that_Cell()
+    {
+        var control = NewControl(out var match);
+        var villagers = UnitsOf(match, FirstPlayer);
+        var (from, to) = BoxAround(villagers.Select(unit => unit.Position));
+        control.Select(from, to);
+        var destination = FreeCellAwayFromUnits(match);
+
+        control.OrderAt(Over(MapPosition.CentreOf(destination)));
+        Tick(match);
+
+        Assert.All(villagers, villager => Assert.Equal(destination, villager.Path[^1]));
+    }
+
+    [Fact]
+    public void Right_clicking_a_resource_source_sends_the_selected_Villagers_to_gather_from_it()
+    {
+        var control = NewControl(out var match);
+        var villagers = UnitsOf(match, FirstPlayer);
+        var (from, to) = BoxAround(villagers.Select(unit => unit.Position));
+        control.Select(from, to);
+        var source = match.State.ResourceSources[0];
+
+        control.OrderAt(Over(MapPosition.CentreOf(source.Cell)));
+        Tick(match);
+
+        Assert.All(villagers, villager => Assert.Equal(source.Id, villager.GatherSource));
+    }
+
+    // Seen from a slanted camera, the line of sight through the top of a resource source
+    // meets the ground in the Cell behind it.
+    [Fact]
+    public void Right_clicking_the_top_of_a_resource_source_seen_from_a_slanted_camera_gathers_from_it()
+    {
+        var control = NewControl(out var match, Slanted);
+        var villager = UnitsOf(match, FirstPlayer)[0];
+        control.Select(Over(villager.Position), Over(villager.Position));
+        var source = match.State.ResourceSources.First(source =>
+            source.Cell.Y > 0 && match.State.Map[source.Cell with { Y = source.Cell.Y - 1 }] == CellKind.Free);
+
+        control.OrderAt(new ScreenPoint(source.Cell.X + 0.5, source.Cell.Y - 0.2));
+        Tick(match);
+
+        Assert.Equal(source.Id, villager.GatherSource);
+    }
+
+    [Fact]
+    public void Right_clicking_with_no_unit_selected_gives_no_order()
+    {
+        var control = NewControl(out var match);
+        var townCenter = match.State.Buildings.First(building => building.Owner == FirstPlayer);
+        var middle = new ScreenPoint(townCenter.Origin.X + 1.5, townCenter.Origin.Y + 1.5);
+        control.Select(middle, middle);
+
+        control.OrderAt(new ScreenPoint(-5, -5));
+        var events = Tick(match);
+
+        Assert.Empty(events);
+        Assert.DoesNotContain(match.State.Units, unit => unit.IsMoving);
+    }
+
+    // Whether an order can be carried out is for the match to say, not for the controls.
+    [Fact]
+    public void An_order_the_match_refuses_is_still_sent_and_comes_back_rejected()
+    {
+        var control = NewControl(out var match);
+        var villager = UnitsOf(match, FirstPlayer)[0];
+        control.Select(Over(villager.Position), Over(villager.Position));
+
+        control.OrderAt(new ScreenPoint(-5, -5));
+        var events = Tick(match);
+
+        var rejection = Assert.IsType<CommandRejected>(Assert.Single(events));
+        Assert.Equal(RejectionReason.DestinationOutsideMap, rejection.Reason);
+    }
+
+    private PlayerControl NewControl(out Match match, Func<ScreenPoint, SightLine?>? camera = null)
     {
         var faction = new FactionId(1);
         var config = new MatchConfig(42, new MapConfig(64, 48), [new PlayerConfig(faction), new PlayerConfig(faction)]);
-        var driver = new MatchDriver(Match.Create(config), new TickClock(Match.TicksPerSecond));
+        driver = new MatchDriver(Match.Create(config), new TickClock(Match.TicksPerSecond));
         match = driver.Match;
 
         return new PlayerControl(driver, FirstPlayer, camera ?? TopDown, Sizes);
+    }
+
+    /// <summary>Runs one tick of the match, applying the commands sent so far, and returns its events.</summary>
+    private IReadOnlyList<MatchEvent> Tick(Match match)
+    {
+        Assert.Same(driver.Match, match);
+
+        return driver.Advance(1.0 / Match.TicksPerSecond);
     }
 
     // A camera looking straight down: one pixel of the screen is one Cell of the map.

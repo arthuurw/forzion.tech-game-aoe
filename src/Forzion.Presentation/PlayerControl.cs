@@ -15,6 +15,7 @@ public sealed class PlayerControl
     /// </summary>
     public const double DragThreshold = 6;
 
+    private readonly MatchDriver driver;
     private readonly PlayerId player;
     private readonly Func<ScreenPoint, SightLine?> sightThrough;
     private readonly Picker picker;
@@ -33,6 +34,7 @@ public sealed class PlayerControl
         ArgumentNullException.ThrowIfNull(sightThrough);
         ArgumentNullException.ThrowIfNull(sizes);
 
+        this.driver = driver;
         this.player = player;
         this.sightThrough = sightThrough;
         picker = new Picker(driver, sizes);
@@ -67,6 +69,41 @@ public sealed class PlayerControl
             SelectInBox(pressedAt, releasedAt);
         }
     }
+
+    /// <summary>
+    /// Sends the selected units of the Player the order that fits what the mouse points at,
+    /// as a command the next tick applies: gather from a resource source, otherwise walk to
+    /// the Cell under the mouse. Nothing is sent while no unit is selected. The command goes
+    /// out even when the match will refuse it; the refusal comes back as a
+    /// <see cref="CommandRejected"/> event.
+    /// </summary>
+    public void OrderAt(ScreenPoint point)
+    {
+        var sight = sightThrough(point);
+        var units = selected.Where(IsUnitOfPlayer).ToList();
+
+        if (sight is null || units.Count == 0)
+        {
+            return;
+        }
+
+        driver.Match.Enqueue(OrderFor(units, picker.At(sight.Value), CellUnder(sight.Value.Ground)));
+    }
+
+    /// <summary>
+    /// The command a right-click on <paramref name="target"/> gives. Attacking an enemy unit or
+    /// building and building on a construction site each join as one more case.
+    /// </summary>
+    private Command OrderFor(IReadOnlyList<EntityId> units, object? target, CellPosition ground) => target switch
+    {
+        ResourceSourceState source => new GatherCommand(player, units, source.Id),
+        _ => new MoveCommand(player, units, ground),
+    };
+
+    private bool IsUnitOfPlayer(EntityId id) =>
+        driver.Match.State.Units.Any(unit => unit.Id == id && unit.Owner == player);
+
+    private static CellPosition CellUnder(MapPoint point) => new((int)Math.Floor(point.X), (int)Math.Floor(point.Y));
 
     private void SelectInBox(ScreenPoint corner, ScreenPoint opposite)
     {
