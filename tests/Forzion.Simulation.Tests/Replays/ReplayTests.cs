@@ -51,12 +51,17 @@ public class ReplayTests
         Assert.Equal(Ticks, hashes.Distinct().Count());
     }
 
-    // Recorded from an independent model of the documented hash layout (64-bit FNV-1a over the
-    // tick, the random generator state, the map size and the Players in ID order, each value
-    // as eight little-endian bytes), not from this implementation. CI runs this on Windows,
-    // Linux and macOS: every system must reach the same hash. A change that adds state to the
-    // hash changes this value on purpose and must record the new one.
-    private const ulong ExpectedFinalHash = 8042323952017705414UL;
+    // Recorded from an independent model of the documented design, not from this
+    // implementation: map generation drawn from SplitMix64, then 64-bit FNV-1a over the tick,
+    // the random generator state, the map size and Cells, the Players, the last entity ID and
+    // the resource sources, buildings and units in ID order, each value as eight little-endian
+    // bytes. CI runs this on Windows, Linux and macOS: every system must reach the same hash.
+    // A change that adds state to the hash changes these values on purpose and must record
+    // the new ones.
+    private const ulong ExpectedFinalHash = 11683145104218360870UL;
+
+    // Seed 3 is one whose first scattering of obstacles cuts the Players apart and is drawn again.
+    private const ulong ExpectedInitialHashOfSeed3 = 14745510281533160694UL;
 
     [Fact]
     public void A_recorded_replay_reaches_the_recorded_final_hash()
@@ -64,5 +69,11 @@ public class ReplayTests
         var hashes = Replay.Run(TestMatches.TwoPlayerConfig(seed: 2026), Commands, Ticks);
 
         Assert.Equal(ExpectedFinalHash, hashes[^1]);
+    }
+
+    [Fact]
+    public void A_new_match_has_the_recorded_hash()
+    {
+        Assert.Equal(ExpectedInitialHashOfSeed3, TestMatches.TwoPlayerMatch(seed: 3).StateHash);
     }
 }
