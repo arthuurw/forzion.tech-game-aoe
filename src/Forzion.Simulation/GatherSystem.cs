@@ -187,7 +187,7 @@ internal sealed class GatherSystem : ISystem
     /// <summary>
     /// Sends the Villager walking to the drop-off point of its Player nearest to it, measured
     /// to the nearest Cell of each footprint. Between points equally near, the one with the
-    /// lowest ID.
+    /// lowest ID. A Player with no drop-off point leaves the Villager idle with its load.
     /// </summary>
     private static void CarryToDropOffPoint(MatchState state, UnitState villager)
     {
@@ -212,12 +212,34 @@ internal sealed class GatherSystem : ISystem
             }
         }
 
+        if (nearest is null)
+        {
+            StopGathering(state.Map, villager);
+
+            return;
+        }
+
         villager.GatherPhase = GatherPhase.ToDropOffPoint;
-        MovementSystem.WalkTo(state.Map, villager, nearest!.Value);
+        MovementSystem.WalkTo(state.Map, villager, nearest.Value);
     }
 
+    /// <summary>
+    /// The Villager has walked as far as it can towards a drop-off point: beside one of its
+    /// Player's, it hands its load over and goes back to its source, or stands idle when it
+    /// has none left; short of any, it stands idle with its load.
+    /// </summary>
     private static void Deliver(MatchState state, UnitState villager)
     {
+        var cell = villager.Position.Cell;
+
+        if (!state.Buildings.Any(building =>
+                building.Owner == villager.Owner && building.IsDropOffPoint && building.IsBeside(cell)))
+        {
+            StopGathering(state.Map, villager);
+
+            return;
+        }
+
         state.FindPlayer(villager.Owner)!.Receive(villager.Load.Resource, villager.Load.Amount);
         villager.Load = Load.Empty;
 
