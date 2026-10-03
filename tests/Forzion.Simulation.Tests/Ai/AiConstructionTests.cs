@@ -64,6 +64,32 @@ public class AiConstructionTests
         AiMatches.TickUntil(match, () => site.IsComplete, 1000);
     }
 
+    [Fact]
+    public void An_AI_Player_whose_placement_is_refused_places_the_building_elsewhere()
+    {
+        var config = AiMatches.Config(firstIsAi: false, secondIsAi: true);
+        var wanted = FirstSite(config).Origin;
+        var match = Match.Create(config);
+
+        // The human's order is applied first in the tick, on the very Cells the AI chose.
+        match.Enqueue(new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.House, wanted, []));
+        match.Tick();
+
+        Assert.Contains(
+            match.Events.OfType<CommandRejected>(),
+            rejected => rejected.Command.Player == Ai && rejected.Reason == RejectionReason.InvalidPlacement);
+        AiMatches.TickUntil(match, () => AiMatches.Buildings(match, Ai, BuildingKind.House).Any(house => house.IsComplete), 1000);
+    }
+
+    /// <summary>The construction site the AI places in the first tick of a match of the configuration.</summary>
+    private static BuildingState FirstSite(MatchConfig config)
+    {
+        var match = Match.Create(config);
+        match.Tick();
+
+        return match.State.Buildings.Single(building => building.Owner == Ai && !building.IsComplete);
+    }
+
     /// <summary>The Villager the AI sends to build in the first tick of a match of the configuration.</summary>
     private static UnitState FirstBuilder(MatchConfig config)
     {
