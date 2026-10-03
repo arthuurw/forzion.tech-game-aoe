@@ -74,6 +74,26 @@ _Avoid_: Livre, desocupado
 
 ## Construções
 
+**Construção** (`Building`):
+Estrutura de um Jogador que ocupa um retângulo de Células inteiras e bloqueia o caminho desde que é posicionada.
+_Avoid_: Edifício, prédio, estrutura
+
+**Obra** (`Construction Site`):
+Construção já posicionada e paga que ainda não está pronta. Só avança enquanto Aldeões a constroem; o trabalho de vários Aldeões soma.
+_Avoid_: Fundação, alicerce, canteiro
+
+**Construir** (`Build`):
+Trabalho do Aldeão ao lado de uma Obra do seu Jogador, até ela ficar pronta.
+_Avoid_: Erguer, edificar
+
+**Custo** (`Cost`):
+Recursos que o Jogador paga por uma construção, por inteiro e na hora em que posiciona a Obra.
+_Avoid_: Preço
+
+**Limite de população** (`Population Limit`):
+Quantas unidades o Jogador pode ter ao mesmo tempo. O Centro dá um valor base e cada Casa pronta soma.
+_Avoid_: Capacidade, teto
+
 **Centro** (`Town Center`):
 Construção principal do Jogador: produz Aldeões, recebe Recursos e executa o Avanço de Era. Perder o Centro é perder a partida.
 _Avoid_: Base, sede, prefeitura
