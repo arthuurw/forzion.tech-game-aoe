@@ -60,13 +60,14 @@ public class ReplayTests
     // reproduced the values recorded before. When the economy joined it (each Player's Food,
     // Wood and Gold; each unit's gather source, gather phase, gather progress and load), the
     // same was done again: a model that reproduced the previous values with the previous
-    // layout gave these with the new one. CI runs this on Windows, Linux and macOS: every
-    // system must reach the same hash. A change that adds state to the hash changes these
+    // layout gave these with the new one. When construction joined it (each building's build
+    // progress; each unit's construction site), it was done once more. CI runs this on
+    // Windows, Linux and macOS: every system must reach the same hash. A change that adds state to the hash changes these
     // values on purpose and must record the new ones.
-    private const ulong ExpectedFinalHash = 12557458399794215910UL;
+    private const ulong ExpectedFinalHash = 11762399086086313462UL;
 
     // Seed 3 is one whose first scattering of obstacles cuts the Players apart and is drawn again.
-    private const ulong ExpectedInitialHashOfSeed3 = 1678065515878766806UL;
+    private const ulong ExpectedInitialHashOfSeed3 = 17451013187757272374UL;
 
     [Fact]
     public void A_recorded_replay_reaches_the_recorded_final_hash()

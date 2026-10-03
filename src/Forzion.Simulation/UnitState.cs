@@ -94,5 +94,8 @@ public sealed class UnitState
         hasher.Write(GatherProgress);
         hasher.Write((int)Load.Resource);
         hasher.Write(Load.Amount);
+
+        // A unit without a construction site writes 0, which no entity ID takes.
+        hasher.Write(ConstructionSite?.Value ?? 0);
     }
 }

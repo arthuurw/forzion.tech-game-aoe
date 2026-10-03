@@ -85,5 +85,6 @@ public sealed class BuildingState
         hasher.Write(Origin.Y);
         hasher.Write(Width);
         hasher.Write(Height);
+        hasher.Write(BuildProgress);
     }
 }

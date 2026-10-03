@@ -60,7 +60,7 @@ public class EconomyReplayTests
     // interface shows it, with the Players' Resources, one source depleted and its Villagers
     // gathering from the next. CI runs this on Windows, Linux and macOS: every system must
     // reach the same hash.
-    private const ulong ExpectedFinalHash = 1255198362108905004UL;
+    private const ulong ExpectedFinalHash = 1362008067269163044UL;
 
     [Fact]
     public void A_recorded_replay_of_gathering_reaches_the_recorded_final_hash()
