@@ -247,6 +247,9 @@ internal static class Balance
     /// </summary>
     public const int AiPopulationHeadroom = 2;
 
+    /// <summary>How many Villagers the AI has before it places its Barracks.</summary>
+    public const int AiVillagersBeforeBarracks = 6;
+
     /// <summary>How many Villagers the AI sends to build a building of the given kind when it places it.</summary>
     public static int AiBuilders(BuildingKind kind) => kind switch
     {

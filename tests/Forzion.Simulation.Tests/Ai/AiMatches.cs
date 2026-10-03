@@ -40,6 +40,20 @@ internal static class AiMatches
         return limit;
     }
 
+    /// <summary>Ticks the match the given number of times and returns the events of all those ticks, in order.</summary>
+    public static List<MatchEvent> Run(Match match, int ticks)
+    {
+        var events = new List<MatchEvent>();
+
+        for (var tick = 0; tick < ticks; tick++)
+        {
+            match.Tick();
+            events.AddRange(match.Events);
+        }
+
+        return events;
+    }
+
     /// <summary>The Player's Town Center.</summary>
     public static BuildingState TownCenter(Match match, PlayerId player) =>
         match.State.Buildings.Single(building => building.Owner == player && building.Kind == BuildingKind.TownCenter);

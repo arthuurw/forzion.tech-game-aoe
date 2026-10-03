@@ -39,6 +39,7 @@ internal sealed class AiScript
         var script = new AiScript(state, player);
 
         script.BuildHouse();
+        script.BuildBarracks();
         script.TrainVillager();
         script.SendIdleVillagersToGather();
 
@@ -58,6 +59,21 @@ internal sealed class AiScript
         }
 
         Place(BuildingKind.House);
+    }
+
+    /// <summary>
+    /// Places the Player's one Barracks once it has <see cref="Balance.AiVillagersBeforeBarracks"/>
+    /// Villagers, and again whenever it has none left.
+    /// </summary>
+    private void BuildBarracks()
+    {
+        if (OwnBuildings(BuildingKind.Barracks).Any()
+            || OwnUnits().Count(unit => unit.Kind == UnitKind.Villager) < Balance.AiVillagersBeforeBarracks)
+        {
+            return;
+        }
+
+        Place(BuildingKind.Barracks);
     }
 
     /// <summary>
