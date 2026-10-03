@@ -104,4 +104,18 @@ public class CommandTests
 
         Assert.Equal(without.StateHash, withRejection.StateHash);
     }
+
+    [Fact]
+    public void Commands_of_one_tick_are_applied_in_Player_order_whatever_the_order_they_arrived_in()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        match.Enqueue(new ResignCommand(TestMatches.SecondPlayer));
+        match.Enqueue(new ResignCommand(TestMatches.FirstPlayer));
+
+        match.Tick();
+
+        Assert.Equal(
+            [new PlayerDefeated(TestMatches.FirstPlayer), new PlayerDefeated(TestMatches.SecondPlayer)],
+            match.Events);
+    }
 }

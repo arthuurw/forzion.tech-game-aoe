@@ -43,7 +43,9 @@ public sealed class Match
 
     /// <summary>
     /// Queues a command to be applied by the next tick. Nothing changes until then: pending
-    /// commands are input, not state, and are not covered by <see cref="StateHash"/>.
+    /// commands are input, not state, and are not covered by <see cref="StateHash"/>. The
+    /// commands of one tick are applied in ascending <see cref="PlayerId"/> order and, for the
+    /// same Player, in the order they were enqueued.
     /// </summary>
     public void Enqueue(Command command)
     {
@@ -65,7 +67,10 @@ public sealed class Match
 
     private void ApplyPendingCommands(TickContext context)
     {
-        foreach (var command in pendingCommands)
+        // Stable order (ADR 0002): by issuing Player, then by arrival within the Player. The
+        // result does not depend on how the commands of different Players were interleaved on
+        // arrival. OrderBy is a stable sort.
+        foreach (var command in pendingCommands.OrderBy(command => command.Player.Value).ToList())
         {
             var issuer = State.FindPlayer(command.Player);
 
