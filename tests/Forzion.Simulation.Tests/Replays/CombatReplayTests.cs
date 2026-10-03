@@ -92,7 +92,9 @@ public class CombatReplayTests
     // hash, which is what holds combat (ranges, chases, hits, deaths and the end of the match)
     // to the same result everywhere. With starting Resources, the model gave the value before
     // with them taken out of each Player's stock, and this one with them in.
-    private const ulong ExpectedFinalHash = 1465600196827358805UL;
+    // When training joined the hash, the model reproduced the value before from the same final
+    // state with the layout before, and gave this one with training state added.
+    private const ulong ExpectedFinalHash = 3768448093170773461UL;
 
     [Fact]
     public void A_recorded_replay_of_combat_reaches_the_recorded_final_hash()

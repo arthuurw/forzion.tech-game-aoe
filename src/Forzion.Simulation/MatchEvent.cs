@@ -82,4 +82,13 @@ public enum RejectionReason
 
     /// <summary>The command orders building from a unit that cannot build: only Villagers build.</summary>
     UnitCannotBuild,
+
+    /// <summary>The command names a construction site where only a complete building will do.</summary>
+    BuildingNotComplete,
+
+    /// <summary>
+    /// The building does not train units of that kind: the Town Center trains Villagers, the
+    /// Barracks military units, and other buildings train none.
+    /// </summary>
+    BuildingCannotTrainUnit,
 }

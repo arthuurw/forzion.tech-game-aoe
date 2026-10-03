@@ -21,6 +21,8 @@ public enum BuildingKind
 /// </summary>
 public sealed class BuildingState
 {
+    private readonly List<UnitKind> trainingQueue = [];
+
     internal BuildingState(EntityId id, PlayerId owner, BuildingKind kind, CellPosition origin, int width, int height)
     {
         Id = id;
@@ -71,6 +73,63 @@ public sealed class BuildingState
     /// </summary>
     internal bool IsDropOffPoint => Kind is (BuildingKind.TownCenter or BuildingKind.Storehouse) && IsComplete;
 
+    /// <summary>
+    /// The units the building is to train, in the order it trains them. Only the first is in
+    /// training; the others wait their turn. Each was paid for when it joined the queue.
+    /// </summary>
+    public IReadOnlyList<UnitKind> TrainingQueue => trainingQueue;
+
+    /// <summary>
+    /// Ticks spent training the first unit of the training queue, up to its train time; zero
+    /// while the queue is empty.
+    /// </summary>
+    public int TrainingProgress { get; internal set; }
+
+    /// <summary>Puts a unit of the given kind at the end of the training queue.</summary>
+    internal void QueueTraining(UnitKind kind) => trainingQueue.Add(kind);
+
+    /// <summary>Takes the first unit off the training queue, done training, and starts the next afresh.</summary>
+    internal void FinishTraining()
+    {
+        trainingQueue.RemoveAt(0);
+        TrainingProgress = 0;
+    }
+
+    /// <summary>
+    /// The free Cell beside the footprint, by a side or by a corner, nearest to
+    /// <paramref name="toward"/>; between Cells equally near, the one with the lowest index.
+    /// Null when every Cell beside the building is outside the map or taken.
+    /// </summary>
+    internal CellPosition? FreeCellBeside(MapState map, CellPosition toward)
+    {
+        CellPosition? nearest = null;
+        var nearestDistance = long.MaxValue;
+
+        // Row by row, from the lowest: ascending Cell index, so a strict comparison keeps the lowest index among the equally near.
+        for (var y = Origin.Y - 1; y <= Origin.Y + Height; y++)
+        {
+            for (var x = Origin.X - 1; x <= Origin.X + Width; x++)
+            {
+                var cell = new CellPosition(x, y);
+
+                if (!IsBeside(cell) || !map.IsFree(cell))
+                {
+                    continue;
+                }
+
+                var distance = ((long)(x - toward.X) * (x - toward.X)) + ((long)(y - toward.Y) * (y - toward.Y));
+
+                if (distance < nearestDistance)
+                {
+                    nearest = cell;
+                    nearestDistance = distance;
+                }
+            }
+        }
+
+        return nearest;
+    }
+
     /// <summary>The Cell of the footprint nearest to the given Cell.</summary>
     internal CellPosition NearestCellTo(CellPosition cell) => new(
         Math.Clamp(cell.X, Origin.X, Origin.X + Width - 1),
@@ -94,5 +153,13 @@ public sealed class BuildingState
         hasher.Write(Height);
         hasher.Write(HitPoints);
         hasher.Write(BuildProgress);
+        hasher.Write(trainingQueue.Count);
+
+        foreach (var kind in trainingQueue)
+        {
+            hasher.Write((int)kind);
+        }
+
+        hasher.Write(TrainingProgress);
     }
 }

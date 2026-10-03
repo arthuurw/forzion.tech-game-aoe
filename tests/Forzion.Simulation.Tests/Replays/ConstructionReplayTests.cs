@@ -80,7 +80,9 @@ public class ConstructionReplayTests
     // the other replays from their new states with the starting Resources taken out, gave
     // this one and matched the match's own hash at every tick. CI runs this on Windows, Linux
     // and macOS: every system must reach the same hash.
-    private const ulong ExpectedFinalHash = 1844896880466378755UL;
+    // When training joined the hash, the model reproduced the value before from the same final
+    // state with the layout before, and gave this one with training state added.
+    private const ulong ExpectedFinalHash = 13752553051043202627UL;
 
     [Fact]
     public void A_recorded_replay_of_construction_reaches_the_recorded_final_hash()

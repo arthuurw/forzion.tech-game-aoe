@@ -59,3 +59,9 @@ msgstr "Ordem recusada: faltam Recursos."
 
 msgid "ORDER_REJECTED_UNIT_CANNOT_BUILD"
 msgstr "Ordem recusada: só Aldeões constroem."
+
+msgid "ORDER_REJECTED_BUILDING_NOT_COMPLETE"
+msgstr "Ordem recusada: a construção ainda não está pronta."
+
+msgid "ORDER_REJECTED_BUILDING_CANNOT_TRAIN_UNIT"
+msgstr "Ordem recusada: essa construção não treina essa unidade."

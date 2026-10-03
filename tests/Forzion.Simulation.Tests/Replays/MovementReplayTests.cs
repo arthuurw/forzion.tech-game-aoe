@@ -70,7 +70,9 @@ public class MovementReplayTests
     // fixed-point movement and pathfinding to the same result everywhere. With starting
     // Resources, the model gave the value before with them taken out of each Player's stock,
     // and this one with them in.
-    private const ulong ExpectedFinalHash = 14137954606012381649UL;
+    // When training joined the hash, the model reproduced the value before from the same final
+    // state with the layout before, and gave this one with training state added.
+    private const ulong ExpectedFinalHash = 1002343500276499921UL;
 
     [Fact]
     public void A_recorded_replay_of_moves_reaches_the_recorded_final_hash()

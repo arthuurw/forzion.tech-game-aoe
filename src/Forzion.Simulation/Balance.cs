@@ -160,6 +160,33 @@ internal static class Balance
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
+    /// <summary>The kind of building that trains units of the given kind.</summary>
+    public static BuildingKind TrainedAt(UnitKind kind) => kind switch
+    {
+        UnitKind.Villager => BuildingKind.TownCenter,
+        UnitKind.MeleeSoldier => BuildingKind.Barracks,
+        UnitKind.RangedSoldier => BuildingKind.Barracks,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
+    /// <summary>What training a unit of the given kind costs, paid in full when it joins a training queue.</summary>
+    public static Cost UnitCost(UnitKind kind) => kind switch
+    {
+        UnitKind.Villager => new Cost(50, 0, 0),
+        UnitKind.MeleeSoldier => new Cost(60, 0, 20),
+        UnitKind.RangedSoldier => new Cost(0, 25, 45),
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
+    /// <summary>Ticks a building spends training a unit of the given kind.</summary>
+    public static int TrainTime(UnitKind kind) => kind switch
+    {
+        UnitKind.Villager => 15 * Match.TicksPerSecond,
+        UnitKind.MeleeSoldier => 20 * Match.TicksPerSecond,
+        UnitKind.RangedSoldier => 18 * Match.TicksPerSecond,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
     /// <summary>Ticks a Villager spends gathering one unit of the given Resource.</summary>
     public static int GatherTicksPerUnit(ResourceKind kind) => kind switch
     {

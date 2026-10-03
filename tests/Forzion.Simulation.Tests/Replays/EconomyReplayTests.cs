@@ -71,7 +71,9 @@ public class EconomyReplayTests
     // every system must reach the same hash. With starting Resources, the model gave the value
     // before with them taken out of each Player's stock, and this one with them in: the
     // gathering itself did not change.
-    private const ulong ExpectedFinalHash = 18162774862272638200UL;
+    // When training joined the hash, the model reproduced the value before from the same final
+    // state with the layout before, and gave this one with training state added.
+    private const ulong ExpectedFinalHash = 10047956658189231352UL;
 
     [Fact]
     public void A_recorded_replay_of_gathering_reaches_the_recorded_final_hash()
