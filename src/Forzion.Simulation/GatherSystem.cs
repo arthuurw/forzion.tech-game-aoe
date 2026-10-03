@@ -97,7 +97,9 @@ internal sealed class GatherSystem : ISystem
 
         villager.GatherProgress = 0;
         source.Amount--;
-        villager.Load = new Load(source.Kind, villager.Load.Amount + 1);
+        // A load holds a single Resource: whatever else the Villager carried is dropped.
+        var carried = villager.Load.Resource == source.Kind ? villager.Load.Amount : 0;
+        villager.Load = new Load(source.Kind, carried + 1);
 
         if (villager.Load.Amount == Balance.VillagerCarryCapacity)
         {

@@ -201,4 +201,22 @@ public class GatherCommandTests
         Assert.Equal(0, villager.Load.Amount);
         Assert.Equal(amount, source.Amount);
     }
+
+    [Fact]
+    public void A_Villager_that_starts_on_another_Resource_drops_the_load_it_carried()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var player = match.State.Players[0];
+        var villager = Walk.MiddleVillager(match);
+        var food = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Food);
+        var wood = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Wood);
+        match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], food.Id));
+        Gather.Until(match, () => villager.Load.Amount > 1);
+
+        match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], wood.Id));
+        Gather.Until(match, () => villager.Load.Resource == ResourceKind.Wood);
+
+        Assert.Equal(new Load(ResourceKind.Wood, 1), villager.Load);
+        Assert.Equal(0, player.AmountOf(ResourceKind.Food));
+    }
 }
