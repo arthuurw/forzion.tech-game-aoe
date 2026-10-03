@@ -31,7 +31,9 @@ public sealed record ResignCommand(PlayerId Player) : Command(Player)
 /// </summary>
 /// <remarks>
 /// The command is rejected as a whole, moving none of its units, when the destination is
-/// outside the map or any of the units does not exist or belongs to another Player.
+/// outside the map, when any of the units belongs to another Player, or when none of the
+/// units exists. A unit that does not exist, because it died after the order was given, is
+/// skipped and the others still walk.
 /// </remarks>
 /// <param name="Units">The units to move.</param>
 /// <param name="Destination">The Cell to walk to.</param>
@@ -57,9 +59,7 @@ public sealed record MoveCommand(PlayerId Player, IReadOnlyList<EntityId> Units,
 
             if (unit is null)
             {
-                context.Reject(this, RejectionReason.UnknownUnit);
-
-                return;
+                continue;
             }
 
             if (unit.Owner != issuer.Id)
@@ -70,6 +70,13 @@ public sealed record MoveCommand(PlayerId Player, IReadOnlyList<EntityId> Units,
             }
 
             units.Add(unit);
+        }
+
+        if (units.Count == 0)
+        {
+            context.Reject(this, RejectionReason.UnknownUnit);
+
+            return;
         }
 
         foreach (var unit in units)

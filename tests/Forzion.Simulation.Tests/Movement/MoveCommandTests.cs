@@ -134,18 +134,31 @@ public class MoveCommandTests
     }
 
     [Fact]
-    public void A_move_of_a_unit_that_does_not_exist_is_rejected_and_moves_none_of_its_units()
+    public void A_unit_that_no_longer_exists_is_skipped_and_the_other_units_of_the_move_walk()
     {
         var match = TestMatches.TwoPlayerMatch();
         var villager = Walk.MiddleVillager(match);
+        var destination = Walk.BehindTownCenter(match);
+        match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [new EntityId(100_000), villager.Id], destination));
+
+        match.Tick();
+
+        Assert.Empty(match.Events);
+        Assert.True(villager.IsMoving);
+        Assert.Equal(destination, villager.Path[^1]);
+    }
+
+    [Fact]
+    public void A_move_of_units_none_of_which_exist_is_rejected()
+    {
+        var match = TestMatches.TwoPlayerMatch();
         var command = new MoveCommand(
-            TestMatches.FirstPlayer, [villager.Id, new EntityId(100_000)], Walk.BehindTownCenter(match));
+            TestMatches.FirstPlayer, [new EntityId(100_000), new EntityId(100_001)], Walk.BehindTownCenter(match));
         match.Enqueue(command);
 
         match.Tick();
 
         Assert.Equal([new CommandRejected(command, RejectionReason.UnknownUnit)], match.Events);
-        Assert.False(villager.IsMoving);
     }
 
     [Fact]
@@ -182,9 +195,10 @@ public class MoveCommandTests
     {
         var withRejection = TestMatches.TwoPlayerMatch();
         var without = TestMatches.TwoPlayerMatch();
+        var foreign = withRejection.State.Units.First(unit => unit.Owner == TestMatches.SecondPlayer);
         withRejection.Enqueue(new MoveCommand(
             TestMatches.FirstPlayer,
-            [Walk.MiddleVillager(withRejection).Id, new EntityId(100_000)],
+            [Walk.MiddleVillager(withRejection).Id, foreign.Id],
             Walk.BehindTownCenter(withRejection)));
 
         withRejection.Tick();

@@ -26,7 +26,7 @@ public enum RejectionReason
     /// <summary>The issuing Player has already been defeated.</summary>
     DefeatedPlayer,
 
-    /// <summary>The command names a unit that is not in the match.</summary>
+    /// <summary>None of the units the command names is in the match.</summary>
     UnknownUnit,
 
     /// <summary>The command names a unit that belongs to another Player.</summary>
