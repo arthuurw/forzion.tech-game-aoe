@@ -47,6 +47,15 @@ internal static class Balance
     /// </summary>
     public const int ObstacleWalkSpread = 33;
 
+    /// <summary>How much of the given Resource each Player starts the match with.</summary>
+    public static int StartingAmount(ResourceKind kind) => kind switch
+    {
+        ResourceKind.Food => 200,
+        ResourceKind.Wood => 200,
+        ResourceKind.Gold => 100,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
     /// <summary>How much a new source of the given Resource holds.</summary>
     public static int SourceAmount(ResourceKind kind) => kind switch
     {

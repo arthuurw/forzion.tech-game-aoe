@@ -43,7 +43,7 @@ public sealed class Match
 
     /// <summary>
     /// Creates a match at tick zero: generates its map from the seed and gives each Player a
-    /// Town Center and starting Villagers.
+    /// Town Center, starting Villagers and starting Resources.
     /// </summary>
     /// <exception cref="ArgumentException">
     /// The configuration has fewer than one or more than two Players, or a map less than 32

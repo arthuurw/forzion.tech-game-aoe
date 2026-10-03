@@ -68,8 +68,10 @@ public class EconomyReplayTests
     // by a model of the layout (see ReplayTests): from the same final state it gave the value
     // before with the layout before, and the new one with the new layout, and it matched the
     // match's own hash at every tick of this replay. CI runs this on Windows, Linux and macOS:
-    // every system must reach the same hash.
-    private const ulong ExpectedFinalHash = 13330404736794081936UL;
+    // every system must reach the same hash. With starting Resources, the model gave the value
+    // before with them taken out of each Player's stock, and this one with them in: the
+    // gathering itself did not change.
+    private const ulong ExpectedFinalHash = 18162774862272638200UL;
 
     [Fact]
     public void A_recorded_replay_of_gathering_reaches_the_recorded_final_hash()

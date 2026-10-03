@@ -90,8 +90,9 @@ public class CombatReplayTests
     // before from the same final state with the layout before, and this one with construction
     // state added. CI runs this on Windows, Linux and macOS: every system must reach the same
     // hash, which is what holds combat (ranges, chases, hits, deaths and the end of the match)
-    // to the same result everywhere.
-    private const ulong ExpectedFinalHash = 4674101849192471189UL;
+    // to the same result everywhere. With starting Resources, the model gave the value before
+    // with them taken out of each Player's stock, and this one with them in.
+    private const ulong ExpectedFinalHash = 1465600196827358805UL;
 
     [Fact]
     public void A_recorded_replay_of_combat_reaches_the_recorded_final_hash()

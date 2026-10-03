@@ -80,16 +80,20 @@ public class ReplayTests
     // reproduced the previous values from the same states with the layout before gave these
     // and matched the match's own hash at every tick of the replays. CI runs this on Windows,
     // Linux and macOS: every system must reach the same hash. A change that adds state to the
-    // hash changes these values on purpose and must record the new ones.
-    private const ulong ExpectedFinalHash = 12054671976028062113UL;
+    // hash changes these values on purpose and must record the new ones. When Players began
+    // the match with starting Resources, the layout stayed the same: the model gave the value
+    // before from the new final state with the starting Resources taken out of each Player's
+    // stock, and this one with them in, and matched the match's own hash at every tick.
+    private const ulong ExpectedFinalHash = 11152906662034384673UL;
 
     // Seed 3 is one whose first scattering of obstacles cuts the Players apart and is drawn again.
     // When walled-in sources began to be dropped, the value was recomputed by the same model of
     // the layout, which first reproduced the value recorded before from the state of the old
     // generator; the two states differ only by one walled-in source pair, freed. With combat
     // in the hash, and again with construction, the value was recomputed by the model, which
-    // reproduced the value before with the layout before.
-    private const ulong ExpectedInitialHashOfSeed3 = 12016439931857490753UL;
+    // reproduced the value before with the layout before. With starting Resources, the model
+    // gave the value before with them taken out of each Player's stock, and this one with them in.
+    private const ulong ExpectedInitialHashOfSeed3 = 12891941429591309377UL;
 
     [Fact]
     public void A_recorded_replay_reaches_the_recorded_final_hash()

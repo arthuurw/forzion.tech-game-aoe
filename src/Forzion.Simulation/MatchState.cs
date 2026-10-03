@@ -308,6 +308,11 @@ public sealed class PlayerState
     {
         Id = id;
         Faction = faction;
+
+        foreach (var kind in Enum.GetValues<ResourceKind>())
+        {
+            Receive(kind, Balance.StartingAmount(kind));
+        }
     }
 
     /// <summary>The Player's ID, assigned from 1 upward in configuration order.</summary>

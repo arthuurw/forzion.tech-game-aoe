@@ -53,12 +53,14 @@ public class BuildTests
             Assert.True(ticks < Gather.TickLimit);
             var before = house.BuildProgress;
             match.Tick();
-            ticks++;
 
             // Each Villager standing beside the site adds one tick of work.
             var working = villagers.Count(villager => !villager.IsMoving && Gather.Touches(house, villager.Position.Cell));
             mostAtOnce = Math.Max(mostAtOnce, working);
             Assert.Equal(Math.Min(before + working, house.BuildTime), house.BuildProgress);
+
+            // Counted from the first work on, so the walk up to the site is left out.
+            ticks += house.BuildProgress > 0 ? 1 : 0;
         }
 
         Assert.Equal(villagers.Count, mostAtOnce);

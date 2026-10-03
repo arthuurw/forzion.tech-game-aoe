@@ -70,7 +70,7 @@ public class SourceSwitchTests
         Assert.All(villagers, villager => Assert.Equal(MapPosition.CentreOf(villager.Position.Cell), villager.Position));
 
         // Both sources went, in full, to the Player or to the loads its Villagers still carry.
-        Assert.Equal(initial, player.AmountOf(ResourceKind.Food) + loads.Sum());
+        Assert.Equal(initial, Gather.Delivered(player, ResourceKind.Food) + loads.Sum());
     }
 
     private static List<UnitState> OwnVillagers(Match match) =>
