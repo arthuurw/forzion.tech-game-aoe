@@ -109,4 +109,10 @@ public enum RejectionReason
 
     /// <summary>The Player ordered an Age Advance while in the last Age of its Faction.</summary>
     LastAgeReached,
+
+    /// <summary>
+    /// The Player's Age has not unlocked that kind of unit: a later Age of its Faction does, or
+    /// none does.
+    /// </summary>
+    UnitLocked,
 }

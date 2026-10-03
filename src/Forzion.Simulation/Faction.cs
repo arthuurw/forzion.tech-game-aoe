@@ -53,6 +53,16 @@ public sealed class Faction
 
     /// <summary>Key of the text that names each kind of unit in this Faction. A kind may have none.</summary>
     public IReadOnlyDictionary<UnitKind, string> UnitNameKeys { get; }
+
+    /// <summary>
+    /// Whether a Player of this Faction in the given Age may train units of the given kind:
+    /// whether that Age or one before it unlocks them.
+    /// </summary>
+    /// <param name="kind">The kind of unit.</param>
+    /// <param name="age">The number of the Age: 1 for Age I.</param>
+    public bool Unlocks(UnitKind kind, int age) => AgesUpTo(age).Any(each => each.Units.Contains(kind));
+
+    private IEnumerable<FactionAge> AgesUpTo(int age) => Ages.Take(Math.Max(age, 0));
 }
 
 /// <summary>One Age of a Faction: what the Faction calls it, what advancing to it takes and what it unlocks.</summary>

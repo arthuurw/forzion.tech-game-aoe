@@ -84,6 +84,9 @@ msgstr "Ordem recusada: o Avanço de Era já está em andamento."
 msgid "ORDER_REJECTED_LAST_AGE_REACHED"
 msgstr "Ordem recusada: você já está na última Era."
 
+msgid "ORDER_REJECTED_UNIT_LOCKED"
+msgstr "Ordem recusada: sua Era ainda não liberou essa unidade."
+
 # Nomes das Facções, das suas Eras e das suas unidades, sob as chaves que os dados de cada
 # Facção guardam.
 msgid "FACTION_PORTUGUESE"
