@@ -99,7 +99,7 @@ internal sealed class CombatSystem : ISystem
             else if (!unit.IsMoving)
             {
                 // A building stays put, so the way to it is only searched again when the unit stopped short.
-                MovementSystem.WalkTo(state.Map, unit, NearestCellOf(targetBuilding!, unit.Position.Cell));
+                MovementSystem.WalkTo(state.Map, unit, targetBuilding!.NearestCellTo(unit.Position.Cell));
             }
 
             return;
@@ -141,12 +141,6 @@ internal sealed class CombatSystem : ISystem
             MovementSystem.WalkTo(map, unit, destination);
         }
     }
-
-    /// <summary>The Cell of the building's footprint nearest to <paramref name="cell"/>.</summary>
-    private static CellPosition NearestCellOf(BuildingState building, CellPosition cell) =>
-        new(
-            Math.Clamp(cell.X, building.Origin.X, building.Origin.X + building.Width - 1),
-            Math.Clamp(cell.Y, building.Origin.Y, building.Origin.Y + building.Height - 1));
 
     private static Fix64 Distance(MapPosition from, MapPosition to) => Fix64.Hypot(to.X - from.X, to.Y - from.Y);
 
