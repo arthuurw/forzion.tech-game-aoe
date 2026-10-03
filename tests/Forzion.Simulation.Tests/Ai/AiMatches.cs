@@ -6,12 +6,13 @@ namespace Forzion.Simulation.Tests.Ai;
 internal static class AiMatches
 {
     /// <summary>The two-Player configuration of <see cref="TestMatches"/>, with either Player as AI.</summary>
-    public static MatchConfig Config(bool firstIsAi, bool secondIsAi, ulong seed = 42) =>
+    public static MatchConfig Config(
+        bool firstIsAi, bool secondIsAi, ulong seed = 42, IReadOnlyList<StartingUnit>? firstExtraUnits = null) =>
         new(
             seed,
             new MapConfig(64, 48),
             [
-                new PlayerConfig(TestMatches.FirstFaction, IsAi: firstIsAi),
+                new PlayerConfig(TestMatches.FirstFaction, firstExtraUnits, firstIsAi),
                 new PlayerConfig(TestMatches.FirstFaction, IsAi: secondIsAi),
             ]);
 

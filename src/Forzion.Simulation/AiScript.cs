@@ -48,6 +48,7 @@ internal sealed class AiScript
     {
         var script = new AiScript(state, player);
 
+        script.ResumeConstruction();
         script.BuildHouse();
         script.BuildBarracks();
         script.TrainVillager();
@@ -57,6 +58,34 @@ internal sealed class AiScript
         script.Attack();
 
         return script.commands;
+    }
+
+    /// <summary>
+    /// Sends a Villager to each construction site of the Player that nobody builds, as when its
+    /// builders were killed: the one nearest to it among those that build nothing.
+    /// </summary>
+    private void ResumeConstruction()
+    {
+        foreach (var site in state.Buildings.Where(building => building.Owner == player.Id && !building.IsComplete))
+        {
+            if (OwnUnits().Any(unit => unit.ConstructionSite == site.Id))
+            {
+                continue;
+            }
+
+            var builder = FreeVillagers()
+                .OrderBy(unit => SquaredDistance(unit.Position.Cell, site.Origin))
+                .ThenBy(unit => unit.Id.Value)
+                .FirstOrDefault();
+
+            if (builder is null)
+            {
+                return;
+            }
+
+            busy.Add(builder.Id);
+            commands.Add(new BuildCommand(player.Id, [builder.Id], site.Id));
+        }
     }
 
     /// <summary>
@@ -95,11 +124,7 @@ internal sealed class AiScript
     /// </summary>
     private void PlaceNearHome(BuildingKind kind)
     {
-        var builders = OwnUnits()
-            .Where(unit => unit.Kind == UnitKind.Villager && unit.ConstructionSite is null && !busy.Contains(unit.Id))
-            .ToList();
-
-        Place(kind, Home(), Balance.AiBuildingReach, builders);
+        Place(kind, Home(), Balance.AiBuildingReach, FreeVillagers().ToList());
     }
 
     /// <summary>
@@ -456,6 +481,10 @@ internal sealed class AiScript
 
     private IEnumerable<BuildingState> OwnBuildings(BuildingKind kind) =>
         state.Buildings.Where(building => building.Owner == player.Id && building.Kind == kind);
+
+    /// <summary>The Player's Villagers that build nothing and were given no job this tick.</summary>
+    private IEnumerable<UnitState> FreeVillagers() => OwnUnits()
+        .Where(unit => unit.Kind == UnitKind.Villager && unit.ConstructionSite is null && !busy.Contains(unit.Id));
 
     /// <summary>The Player's units that are not Villagers.</summary>
     private IEnumerable<UnitState> Army() => OwnUnits().Where(unit => unit.Kind != UnitKind.Villager);
