@@ -8,15 +8,14 @@ namespace Forzion.Simulation.Tests.Combat;
 public class DestroyedBuildingTests
 {
     private static readonly PlayerId First = TestMatches.FirstPlayer;
-    private static readonly PlayerId Second = TestMatches.SecondPlayer;
 
     [Fact]
     public void Villagers_building_a_site_destroyed_in_combat_stop_building_and_stand_idle()
     {
-        var match = Raiders();
+        var match = Battle.Raiders();
         var builder = Site.VillagersOf(match, First)[1];
         var site = Site.Place(match, First, BuildingKind.House, []);
-        Raid(match, site);
+        Battle.Raid(match, site);
         Battle.TickUntil(match, () => site.HitPoints < site.MaxHitPoints);
 
         match.Enqueue(new BuildCommand(First, [builder.Id], site.Id));
@@ -32,7 +31,7 @@ public class DestroyedBuildingTests
     [Fact]
     public void A_Villager_carrying_its_load_to_a_Storehouse_destroyed_on_the_way_carries_it_to_the_Town_Center()
     {
-        var match = Raiders();
+        var match = Battle.Raiders();
         var state = match.State;
         var townCenter = Battle.TownCenter(match, First);
         var villagers = Site.VillagersOf(match, First);
@@ -55,7 +54,7 @@ public class DestroyedBuildingTests
         Site.Halt(match, [carrier]);
 
         // The raiders bring the Storehouse down to its last hit.
-        Raid(match, storehouse);
+        Battle.Raid(match, storehouse);
         var smallestHit = int.MaxValue;
         var hitPoints = storehouse.HitPoints;
         Battle.TickUntil(match, () =>
@@ -85,36 +84,17 @@ public class DestroyedBuildingTests
     [Fact]
     public void A_House_destroyed_in_combat_takes_back_what_it_added_to_the_population_limit()
     {
-        var match = Raiders();
+        var match = Battle.Raiders();
         var initial = match.State.PopulationLimitOf(First);
         var villagers = Site.VillagersOf(match, First).Select(villager => villager.Id).ToList();
         var house = Site.Place(match, First, BuildingKind.House, villagers);
         Battle.TickUntil(match, () => house.IsComplete);
         var withHouse = match.State.PopulationLimitOf(First);
 
-        Raid(match, house);
+        Battle.Raid(match, house);
         Battle.TickUntil(match, () => Battle.Building(match, house.Id) is null);
 
         Assert.True(withHouse > initial);
         Assert.Equal(initial, match.State.PopulationLimitOf(First));
     }
-
-    /// <summary>
-    /// The default match, with the second Player starting with melee soldiers beside its own
-    /// Town Center, far from the first Player's.
-    /// </summary>
-    private static Match Raiders() => Battle.Create(
-        second: plain =>
-        [
-            new(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, Second, 2, -1)),
-            new(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, Second, 2, 0)),
-            new(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, Second, 2, 1)),
-        ]);
-
-    /// <summary>Orders the second Player's soldiers to attack the building.</summary>
-    private static void Raid(Match match, BuildingState building) =>
-        match.Enqueue(new AttackCommand(
-            Second,
-            match.State.Units.Where(unit => unit.Owner == Second && unit.Kind == UnitKind.MeleeSoldier).Select(unit => unit.Id).ToList(),
-            building.Id));
 }

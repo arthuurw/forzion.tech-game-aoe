@@ -53,6 +53,27 @@ internal static class Battle
         return match;
     }
 
+    /// <summary>
+    /// The default match, with the second Player starting with three melee soldiers beside
+    /// its own Town Center, far from the first Player's.
+    /// </summary>
+    public static Match Raiders() => Create(
+        second: plain =>
+        [
+            new(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, TestMatches.SecondPlayer, 2, -1)),
+            new(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, TestMatches.SecondPlayer, 2, 0)),
+            new(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, TestMatches.SecondPlayer, 2, 1)),
+        ]);
+
+    /// <summary>The second Player's soldiers of <see cref="Raiders"/> still standing.</summary>
+    public static List<UnitState> RaidersOf(Match match) =>
+        match.State.Units.Where(unit => unit.Owner == TestMatches.SecondPlayer && unit.Kind == UnitKind.MeleeSoldier).ToList();
+
+    /// <summary>Orders the soldiers of <see cref="Raiders"/> to attack the building.</summary>
+    public static void Raid(Match match, BuildingState building) =>
+        match.Enqueue(new AttackCommand(
+            TestMatches.SecondPlayer, RaidersOf(match).Select(unit => unit.Id).ToList(), building.Id));
+
     /// <summary>The first Player's soldiers of a <see cref="Siege"/> still standing.</summary>
     public static List<UnitState> Besiegers(Match match) =>
         match.State.Units.Where(unit => unit.Owner == TestMatches.FirstPlayer && unit.Kind == UnitKind.MeleeSoldier).ToList();
