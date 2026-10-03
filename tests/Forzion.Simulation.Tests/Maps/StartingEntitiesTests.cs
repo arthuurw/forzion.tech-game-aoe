@@ -109,11 +109,14 @@ public class StartingEntitiesTests
         var state = TestMatches.TwoPlayerMatch().State;
         var buildings = state.Buildings.Select(building => building.Id.Value).ToList();
         var units = state.Units.Select(unit => unit.Id.Value).ToList();
+        var sources = state.ResourceSources.Select(source => source.Id.Value).ToList();
+        var all = buildings.Concat(units).Concat(sources).ToList();
 
         Assert.Equal(buildings.Order(), buildings);
         Assert.Equal(units.Order(), units);
-        Assert.Equal(buildings.Count + units.Count, buildings.Concat(units).Distinct().Count());
-        Assert.All(buildings.Concat(units), id => Assert.True(id >= 1));
+        Assert.Equal(sources.Order(), sources);
+        Assert.Equal(all.Count, all.Distinct().Count());
+        Assert.All(all, id => Assert.True(id >= 1));
     }
 
     [Fact]

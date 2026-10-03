@@ -5,6 +5,9 @@ public enum CellKind
 {
     Free = 0,
 
+    /// <summary>Occupied by a resource source.</summary>
+    ResourceSource = 3,
+
     /// <summary>Occupied by a building.</summary>
     Building = 4,
 }

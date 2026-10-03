@@ -7,6 +7,7 @@ namespace Forzion.Simulation;
 public sealed class MatchState
 {
     private readonly List<PlayerState> players;
+    private readonly List<ResourceSourceState> resourceSources = [];
     private readonly List<BuildingState> buildings = [];
     private readonly List<UnitState> units = [];
     private int lastEntityId;
@@ -31,11 +32,16 @@ public sealed class MatchState
             .Select((player, index) => new PlayerState(new PlayerId(index + 1), player.Faction))
             .ToList();
 
-        var homes = MapGenerator.Generate(Map, Random);
+        var generated = MapGenerator.Generate(Map, Random);
+
+        foreach (var (cell, kind) in generated.Sources)
+        {
+            AddResourceSource(kind, cell, Balance.SourceAmount(kind));
+        }
 
         foreach (var player in players)
         {
-            PlaceStartingEntities(player.Id, homes[player.Id.Value - 1]);
+            PlaceStartingEntities(player.Id, generated.Homes[player.Id.Value - 1]);
         }
     }
 
@@ -49,6 +55,9 @@ public sealed class MatchState
     /// <summary>The Players, ordered by ascending <see cref="PlayerState.Id"/>.</summary>
     public IReadOnlyList<PlayerState> Players => players;
 
+    /// <summary>The resource sources, ordered by ascending <see cref="ResourceSourceState.Id"/>.</summary>
+    public IReadOnlyList<ResourceSourceState> ResourceSources => resourceSources;
+
     /// <summary>The buildings, ordered by ascending <see cref="BuildingState.Id"/>.</summary>
     public IReadOnlyList<BuildingState> Buildings => buildings;
 
@@ -58,6 +67,20 @@ public sealed class MatchState
     /// <summary>The Player with the given ID, or null when the match has no such Player.</summary>
     internal PlayerState? FindPlayer(PlayerId id) =>
         id.Value >= 1 && id.Value <= players.Count ? players[id.Value - 1] : null;
+
+    /// <summary>
+    /// Adds a resource source and marks its Cell occupied. IDs only grow, so appending keeps
+    /// the collection in ID order.
+    /// </summary>
+    internal ResourceSourceState AddResourceSource(ResourceKind kind, CellPosition cell, int amount)
+    {
+        var source = new ResourceSourceState(NextEntityId(), kind, cell, amount);
+
+        Map[cell] = CellKind.ResourceSource;
+        resourceSources.Add(source);
+
+        return source;
+    }
 
     /// <summary>
     /// Adds a building on free Cells and marks them occupied. IDs only grow, so appending
@@ -108,6 +131,13 @@ public sealed class MatchState
         }
 
         hasher.Write(lastEntityId);
+        hasher.Write(resourceSources.Count);
+
+        foreach (var source in resourceSources)
+        {
+            source.WriteTo(hasher);
+        }
+
         hasher.Write(buildings.Count);
 
         foreach (var building in buildings)

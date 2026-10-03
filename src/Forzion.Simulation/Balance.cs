@@ -11,4 +11,16 @@ internal static class Balance
 
     /// <summary>Villagers each Player starts with. No more than <see cref="TownCenterSize"/>: they line up along one of its sides.</summary>
     public const int StartingVillagers = 3;
+
+    /// <summary>Sources of each Resource placed within reach of each Player's Town Center.</summary>
+    public const int HomeSourcesPerResource = 2;
+
+    /// <summary>How much a new source of the given Resource holds.</summary>
+    public static int SourceAmount(ResourceKind kind) => kind switch
+    {
+        ResourceKind.Food => 300,
+        ResourceKind.Wood => 300,
+        ResourceKind.Gold => 400,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
 }

@@ -54,7 +54,7 @@ public class ReplayTests
     // The hash this replay reached when it was recorded. CI runs this on Windows, Linux and
     // macOS: every system must reach the same hash. A change that adds state to the hash
     // changes this value on purpose and must record the new one.
-    private const ulong ExpectedFinalHash = 1212394067160387255UL;
+    private const ulong ExpectedFinalHash = 5387064578200551770UL;
 
     [Fact]
     public void A_recorded_replay_reaches_the_recorded_final_hash()
