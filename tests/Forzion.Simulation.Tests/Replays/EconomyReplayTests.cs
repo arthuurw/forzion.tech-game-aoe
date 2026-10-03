@@ -63,9 +63,13 @@ public class EconomyReplayTests
     // same and the value was recorded again from this implementation, after comparing the
     // final state with the one before: every load still handed over beside the Town Center,
     // every Resource taken from a source found in a Player's stock or a load, and the shorter
-    // trips letting the first Player run out of its second Food source and stand idle. CI
-    // runs this on Windows, Linux and macOS: every system must reach the same hash.
-    private const ulong ExpectedFinalHash = 12546618843277906592UL;
+    // trips letting the first Player run out of its second Food source and stand idle. When
+    // combat joined the hash, and again when construction joined it, the value was recomputed
+    // by a model of the layout (see ReplayTests): from the same final state it gave the value
+    // before with the layout before, and the new one with the new layout, and it matched the
+    // match's own hash at every tick of this replay. CI runs this on Windows, Linux and macOS:
+    // every system must reach the same hash.
+    private const ulong ExpectedFinalHash = 13330404736794081936UL;
 
     [Fact]
     public void A_recorded_replay_of_gathering_reaches_the_recorded_final_hash()

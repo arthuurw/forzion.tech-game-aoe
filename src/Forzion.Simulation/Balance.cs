@@ -60,6 +60,38 @@ internal static class Balance
     public static Fix64 Speed(UnitKind kind) => kind switch
     {
         UnitKind.Villager => Fix64.FromInt(2),
+        UnitKind.MeleeSoldier => Fix64.FromInt(2),
+        UnitKind.RangedSoldier => Fix64.FromInt(2),
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
+    /// <summary>Hit points of a unit of the given kind when it is whole.</summary>
+    public static int HitPoints(UnitKind kind) => kind switch
+    {
+        UnitKind.Villager => 25,
+        UnitKind.MeleeSoldier => 45,
+        UnitKind.RangedSoldier => 30,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
+    /// <summary>Hit points of a building of the given kind when it is whole.</summary>
+    public static int HitPoints(BuildingKind kind) => kind switch
+    {
+        BuildingKind.TownCenter => 600,
+        BuildingKind.House => 150,
+        BuildingKind.Storehouse => 200,
+        BuildingKind.Barracks => 300,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
+    /// <summary>How a unit of the given kind fights, or null when it cannot attack.</summary>
+    public static AttackStats? Attack(UnitKind kind) => kind switch
+    {
+        UnitKind.Villager => null,
+        UnitKind.MeleeSoldier => new AttackStats(
+            Damage: 6, Range: Fix64.One, IntervalTicks: 20, PerceptionRadius: Fix64.FromInt(6)),
+        UnitKind.RangedSoldier => new AttackStats(
+            Damage: 4, Range: Fix64.FromInt(5), IntervalTicks: 30, PerceptionRadius: Fix64.FromInt(7)),
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
@@ -73,6 +105,52 @@ internal static class Balance
     /// </summary>
     public const int SourceSearchRadius = 15;
 
+    /// <summary>Side of the square footprint of a building of the given kind, in Cells.</summary>
+    public static int BuildingSize(BuildingKind kind) => kind switch
+    {
+        BuildingKind.TownCenter => TownCenterSize,
+        BuildingKind.House => 2,
+        BuildingKind.Storehouse => 2,
+        BuildingKind.Barracks => 3,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
+    /// <summary>What placing a building of the given kind costs. Town Centers are not placed and have none.</summary>
+    public static Cost BuildingCost(BuildingKind kind) => kind switch
+    {
+        BuildingKind.TownCenter => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Town Centers are not placed."),
+        BuildingKind.House => new Cost(0, 30, 0),
+        BuildingKind.Storehouse => new Cost(0, 50, 0),
+        BuildingKind.Barracks => new Cost(0, 100, 0),
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
+    /// <summary>
+    /// Ticks of one Villager's work a building of the given kind takes to build. Villagers
+    /// building together each add their own work.
+    /// </summary>
+    public static int BuildTime(BuildingKind kind) => kind switch
+    {
+        BuildingKind.TownCenter => 60 * Match.TicksPerSecond,
+        BuildingKind.House => 15 * Match.TicksPerSecond,
+        BuildingKind.Storehouse => 20 * Match.TicksPerSecond,
+        BuildingKind.Barracks => 30 * Match.TicksPerSecond,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
+    /// <summary>
+    /// How much a complete building of the given kind adds to its Player's population limit:
+    /// the Town Center gives the base and each House adds to it.
+    /// </summary>
+    public static int PopulationProvided(BuildingKind kind) => kind switch
+    {
+        BuildingKind.TownCenter => 5,
+        BuildingKind.House => 5,
+        BuildingKind.Storehouse => 0,
+        BuildingKind.Barracks => 0,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
     /// <summary>Ticks a Villager spends gathering one unit of the given Resource.</summary>
     public static int GatherTicksPerUnit(ResourceKind kind) => kind switch
     {
@@ -82,3 +160,13 @@ internal static class Balance
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 }
+
+/// <summary>How a unit fights.</summary>
+/// <param name="Damage">Hit points one hit takes from the target.</param>
+/// <param name="Range">
+/// Farthest the target may be for a hit, in Cells: from the attacker's position to the
+/// target's position, or to the nearest point of a building's footprint.
+/// </param>
+/// <param name="IntervalTicks">Ticks spent within range for each hit, which lands at the end of them.</param>
+/// <param name="PerceptionRadius">How far, in Cells, an idle unit notices an enemy unit and attacks it.</param>
+internal sealed record AttackStats(int Damage, Fix64 Range, int IntervalTicks, Fix64 PerceptionRadius);

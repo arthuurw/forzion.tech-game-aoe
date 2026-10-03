@@ -25,10 +25,12 @@ internal sealed class GatherSystem : ISystem
 {
     /// <summary>
     /// Sends the Villager walking up to the source to gather from it. A load of the source's
-    /// Resource is kept, and when it is already full the Villager delivers it first.
+    /// Resource is kept, and when it is already full the Villager delivers it first. It stops
+    /// building.
     /// </summary>
     public static void GatherFrom(MatchState state, UnitState villager, ResourceSourceState source)
     {
+        villager.StopBuilding();
         villager.GatherSource = source.Id;
         villager.GatherProgress = 0;
 
@@ -42,6 +44,23 @@ internal sealed class GatherSystem : ISystem
 
         villager.GatherPhase = GatherPhase.ToSource;
         MovementSystem.WalkTo(state.Map, villager, source.Cell);
+    }
+
+    /// <summary>
+    /// Sends every Villager carrying its load to a drop-off point that has left the match to
+    /// the nearest one its Player still has, or leaves it idle with its load when there is none.
+    /// </summary>
+    public static void RedirectCarriers(MatchState state)
+    {
+        foreach (var unit in state.Units)
+        {
+            if (unit.GatherPhase == GatherPhase.ToDropOffPoint
+                && unit.IsMoving
+                && !DropOffPointsOf(state, unit.Owner).Any(building => building.IsBeside(unit.Path[^1])))
+            {
+                CarryToDropOffPoint(state, unit);
+            }
+        }
     }
 
     public void Run(TickContext context)

@@ -43,6 +43,12 @@ public sealed class MatchState
         {
             PlaceStartingEntities(player.Id, generated.Homes[player.Id.Value - 1]);
         }
+
+        // After every Player's usual start, so extra units never shift the IDs of the rest.
+        foreach (var player in players)
+        {
+            PlaceExtraUnits(player.Id, config.Players[player.Id.Value - 1].ExtraUnits ?? []);
+        }
     }
 
     /// <summary>Number of ticks simulated so far.</summary>
@@ -64,12 +70,35 @@ public sealed class MatchState
     /// <summary>The units, ordered by ascending <see cref="UnitState.Id"/>.</summary>
     public IReadOnlyList<UnitState> Units => units;
 
+    /// <summary>Whether the match has ended: at most one of its Players remains undefeated.</summary>
+    public bool IsOver { get; private set; }
+
+    /// <summary>The Player who won the match, or null while it goes on or when it ended without a winner.</summary>
+    public PlayerId? Winner { get; private set; }
+
+    internal void End(PlayerId? winner)
+    {
+        IsOver = true;
+        Winner = winner;
+    }
+
+    /// <summary>
+    /// How many units the Player may have at once: what its complete buildings provide, the
+    /// Town Center a base and each House more. Construction sites provide nothing.
+    /// </summary>
+    public int PopulationLimitOf(PlayerId player) => buildings
+        .Where(building => building.Owner == player && building.IsComplete)
+        .Sum(building => Balance.PopulationProvided(building.Kind));
+
     /// <summary>The Player with the given ID, or null when the match has no such Player.</summary>
     internal PlayerState? FindPlayer(PlayerId id) =>
         id.Value >= 1 && id.Value <= players.Count ? players[id.Value - 1] : null;
 
     /// <summary>The unit with the given ID, or null when the match has no such unit.</summary>
     internal UnitState? FindUnit(EntityId id) => units.Find(unit => unit.Id == id);
+
+    /// <summary>The building with the given ID, or null when the match has no such building.</summary>
+    internal BuildingState? FindBuilding(EntityId id) => buildings.Find(building => building.Id == id);
 
     /// <summary>The resource source with the given ID, or null when the match has no such source.</summary>
     internal ResourceSourceState? FindResourceSource(EntityId id) => resourceSources.Find(source => source.Id == id);
@@ -116,6 +145,33 @@ public sealed class MatchState
         return building;
     }
 
+    /// <summary>
+    /// Whether every Cell of the footprint a building of the given kind would have from
+    /// <paramref name="origin"/> is inside the map, free and has no unit standing on it.
+    /// </summary>
+    internal bool CanPlace(BuildingKind kind, CellPosition origin)
+    {
+        var size = Balance.BuildingSize(kind);
+
+        for (var y = origin.Y; y < origin.Y + size; y++)
+        {
+            for (var x = origin.X; x < origin.X + size; x++)
+            {
+                var cell = new CellPosition(x, y);
+
+                if (!Map.IsFree(cell))
+                {
+                    return false;
+                }
+            }
+        }
+
+        // A unit inside the footprint would be walled in by it.
+        return !units.Any(unit =>
+            unit.Position.Cell.X >= origin.X && unit.Position.Cell.X < origin.X + size
+            && unit.Position.Cell.Y >= origin.Y && unit.Position.Cell.Y < origin.Y + size);
+    }
+
     /// <summary>Adds a unit. IDs only grow, so appending keeps the collection in ID order.</summary>
     internal UnitState AddUnit(PlayerId owner, UnitKind kind, MapPosition position)
     {
@@ -124,6 +180,35 @@ public sealed class MatchState
         units.Add(unit);
 
         return unit;
+    }
+
+    /// <summary>
+    /// Removes every unit and building left without hit points, freeing the Cells the
+    /// buildings occupied, and returns their IDs in ascending order.
+    /// </summary>
+    internal List<EntityId> RemoveDestroyed()
+    {
+        var destroyedUnits = units.Where(unit => unit.HitPoints <= 0).ToList();
+        var destroyedBuildings = buildings.Where(building => building.HitPoints <= 0).ToList();
+
+        foreach (var building in destroyedBuildings)
+        {
+            for (var y = building.Origin.Y; y < building.Origin.Y + building.Height; y++)
+            {
+                for (var x = building.Origin.X; x < building.Origin.X + building.Width; x++)
+                {
+                    Map[new CellPosition(x, y)] = CellKind.Free;
+                }
+            }
+        }
+
+        units.RemoveAll(unit => unit.HitPoints <= 0);
+        buildings.RemoveAll(building => building.HitPoints <= 0);
+
+        return destroyedUnits.Select(unit => unit.Id)
+            .Concat(destroyedBuildings.Select(building => building.Id))
+            .OrderBy(id => id.Value)
+            .ToList();
     }
 
     /// <summary>
@@ -164,21 +249,41 @@ public sealed class MatchState
         {
             unit.WriteTo(hasher);
         }
+
+        hasher.Write(IsOver);
+        hasher.Write(Winner?.Value ?? 0);
     }
 
     private EntityId NextEntityId() => new(++lastEntityId);
+
+    private void PlaceExtraUnits(PlayerId player, IReadOnlyList<StartingUnit> extraUnits)
+    {
+        foreach (var extra in extraUnits)
+        {
+            if (!Map.Contains(extra.Cell) || Map[extra.Cell] != CellKind.Free)
+            {
+                throw new ArgumentException(
+                    $"Player {player.Value} has an extra unit on {extra.Cell}, which is not a free Cell of the map.",
+                    "config");
+            }
+
+            AddUnit(player, extra.Kind, MapPosition.CentreOf(extra.Cell));
+        }
+    }
 
     /// <summary>What a Player starts the match with, around the Cell the map gave as home.</summary>
     private void PlaceStartingEntities(PlayerId player, CellPosition home)
     {
         var reach = Balance.TownCenterSize / 2;
 
-        AddBuilding(
+        var townCenter = AddBuilding(
             player,
             BuildingKind.TownCenter,
             new CellPosition(home.X - reach, home.Y - reach),
             Balance.TownCenterSize,
             Balance.TownCenterSize);
+
+        townCenter.BuildProgress = townCenter.BuildTime;
 
         // The Villagers line up on the row just outside the Town Center, on the side facing
         // the centre of the map, so that the two Players' lines mirror each other.
@@ -218,6 +323,19 @@ public sealed class PlayerState
     public int AmountOf(ResourceKind kind) => resources[(int)kind];
 
     internal void Receive(ResourceKind kind, int amount) => resources[(int)kind] += amount;
+
+    /// <summary>Whether the Player has at least the cost in each Resource.</summary>
+    internal bool CanAfford(Cost cost) =>
+        Enum.GetValues<ResourceKind>().All(kind => AmountOf(kind) >= cost.AmountOf(kind));
+
+    /// <summary>Takes the cost from the Player, who must be able to afford it.</summary>
+    internal void Pay(Cost cost)
+    {
+        foreach (var kind in Enum.GetValues<ResourceKind>())
+        {
+            resources[(int)kind] -= cost.AmountOf(kind);
+        }
+    }
 
     internal void WriteTo(StateHasher hasher)
     {
