@@ -94,8 +94,8 @@ public sealed class BuildingState
     public CellPosition? RallyPoint { get; internal set; }
 
     /// <summary>
-    /// Ticks spent on the Age Advance the building is making, counting the tick that ordered
-    /// it; null while it makes none. Only a Town Center makes one, for its Player, and the
+    /// Ticks spent on the Age Advance the building is making, counting the tick that applied
+    /// the order; null while it makes none. Only a Town Center makes one, for its Player, and the
     /// Player reaches the next Age once this would reach that Age's advance time.
     /// </summary>
     public int? AgeAdvanceProgress { get; internal set; }
