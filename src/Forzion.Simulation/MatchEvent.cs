@@ -80,6 +80,6 @@ public enum RejectionReason
     /// <summary>The Player has less of some Resource than the cost asks for.</summary>
     NotEnoughResources,
 
-    /// <summary>The command orders building from a unit that cannot build: only Villagers build.</summary>
+    /// <summary>The command orders building from units none of which can build: only Villagers build.</summary>
     UnitCannotBuild,
 }
