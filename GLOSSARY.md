@@ -207,10 +207,10 @@ Obstáculo que ocupa Células inteiras: Unidades não a atravessam e Construçõ
 Nomes que a Facção Portugueses dá às suas Eras e unidades, escolhidos na história do Brasil colonial dos séculos XVI e XVII. São textos do jogo: ficam em `game/translations/pt_BR.po`, sob as chaves entre parênteses, e os dados da Facção guardam só a chave. O código continua usando os nomes genéricos (`Age` 1, `MeleeSoldier` e assim por diante).
 
 **Era das Feitorias** (Era I, `FACTION_PORTUGUESE_AGE_1`):
-Os primeiros anos da colônia, até a década de 1530, quando a Coroa explorava o pau-brasil por meio de feitorias no litoral.
+Os primeiros anos da presença portuguesa, até a década de 1530, quando o pau-brasil, monopólio da Coroa arrendado a mercadores, era trocado com os indígenas e embarcado em feitorias no litoral.
 
 **Era dos Engenhos** (Era II, `FACTION_PORTUGUESE_AGE_2`):
-A colônia do açúcar, da segunda metade do século XVI em diante, organizada em torno dos engenhos.
+A colônia do açúcar. Os primeiros engenhos são da década de 1530; da segunda metade do século XVI em diante, a colônia se organiza em torno deles.
 
 **Rodeleiro** (`MeleeSoldier`, `FACTION_PORTUGUESE_MELEE_SOLDIER`):
 Infante de espada e rodela, o escudo redondo, das tropas portuguesas dos séculos XVI e XVII.
