@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Simulation core: pure C# with no engine reference (ADR 0001).
+    Never add a Godot package or project reference here.
+  -->
+
+</Project>

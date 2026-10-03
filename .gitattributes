@@ -1,0 +1,13 @@
+# Normalize text files to LF in the repository and in every working tree,
+# so sources are byte-identical on Windows, Linux and macOS.
+* text=auto eol=lf
+
+*.sln text eol=crlf
+
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.glb binary
+*.ogg binary
+*.wav binary
