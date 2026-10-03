@@ -1,0 +1,19 @@
+<Project Sdk="Godot.NET.Sdk/4.7.2">
+
+  <!--
+    Presentation layer (ADR 0001): renders the match and drives its ticks. Every game rule
+    stays in Forzion.Simulation; this project only reads its state and sends it commands.
+  -->
+
+  <PropertyGroup>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <RootNamespace>Forzion.Game</RootNamespace>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\src\Forzion.Simulation\Forzion.Simulation.csproj" />
+    <ProjectReference Include="..\src\Forzion.Presentation\Forzion.Presentation.csproj" />
+  </ItemGroup>
+
+</Project>
