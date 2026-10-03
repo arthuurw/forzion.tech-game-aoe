@@ -44,6 +44,15 @@ public enum RejectionReason
     /// <summary>The command names a resource source that is not in the match, or no longer is.</summary>
     UnknownResourceSource,
 
+    /// <summary>The command names a building that is not in the match, or no longer is.</summary>
+    UnknownBuilding,
+
+    /// <summary>The command names a building that belongs to another Player.</summary>
+    BuildingOfAnotherPlayer,
+
+    /// <summary>The command names a building that is already complete and needs no more building.</summary>
+    BuildingAlreadyComplete,
+
     /// <summary>
     /// The command names a kind of building that Players do not place, such as the Town
     /// Center each Player starts with.

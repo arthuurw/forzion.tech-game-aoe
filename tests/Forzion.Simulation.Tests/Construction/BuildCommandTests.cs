@@ -1,0 +1,79 @@
+using Forzion.Simulation.Tests.Economy;
+using Forzion.Simulation.Tests.Matches;
+
+namespace Forzion.Simulation.Tests.Construction;
+
+public class BuildCommandTests
+{
+    [Fact]
+    public void A_Villager_sent_to_an_unfinished_site_of_its_Player_builds_it_to_completion()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var villager = Site.VillagersOf(match, TestMatches.FirstPlayer)[2];
+        var house = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.House, []);
+        match.Enqueue(new BuildCommand(TestMatches.FirstPlayer, [villager.Id], house.Id));
+
+        Gather.Until(match, () => house.IsComplete);
+
+        Assert.True(Gather.Touches(house, villager.Position.Cell));
+        Assert.Null(villager.ConstructionSite);
+    }
+
+    [Fact]
+    public void A_build_order_for_a_building_that_does_not_exist_is_rejected_and_changes_nothing()
+    {
+        AssertRejected(RejectionReason.UnknownBuilding, (match, _, villager) =>
+            new BuildCommand(TestMatches.FirstPlayer, [villager.Id], match.State.ResourceSources[0].Id));
+    }
+
+    [Fact]
+    public void A_build_order_for_another_Players_building_is_rejected_and_changes_nothing()
+    {
+        AssertRejected(RejectionReason.BuildingOfAnotherPlayer, (match, _, villager) =>
+            new BuildCommand(TestMatches.FirstPlayer, [villager.Id], match.State.Buildings[1].Id));
+    }
+
+    [Fact]
+    public void A_build_order_for_a_complete_building_is_rejected_and_changes_nothing()
+    {
+        AssertRejected(RejectionReason.BuildingAlreadyComplete, (match, _, villager) =>
+            new BuildCommand(TestMatches.FirstPlayer, [villager.Id], match.State.Buildings[0].Id));
+    }
+
+    [Fact]
+    public void A_build_order_by_a_unit_that_does_not_exist_is_rejected_and_changes_nothing()
+    {
+        AssertRejected(RejectionReason.UnknownUnit, (_, house, villager) =>
+            new BuildCommand(TestMatches.FirstPlayer, [villager.Id, new EntityId(100_000)], house.Id));
+    }
+
+    [Fact]
+    public void A_build_order_by_another_Players_Villager_is_rejected_and_changes_nothing()
+    {
+        AssertRejected(RejectionReason.UnitOfAnotherPlayer, (match, house, villager) =>
+            new BuildCommand(TestMatches.FirstPlayer, [villager.Id, Site.VillagersOf(match, TestMatches.SecondPlayer)[0].Id], house.Id));
+    }
+
+    /// <summary>
+    /// Places a House of the first Player with no builder in two equal matches, sends the
+    /// command <paramref name="build"/> makes from one of them, its House and its first Villager,
+    /// and checks the command is rejected for <paramref name="reason"/> and leaves that match
+    /// as the other.
+    /// </summary>
+    private static void AssertRejected(RejectionReason reason, Func<Match, BuildingState, UnitState, BuildCommand> build)
+    {
+        var withRejection = TestMatches.TwoPlayerMatch();
+        var without = TestMatches.TwoPlayerMatch();
+        var house = Site.Place(withRejection, TestMatches.FirstPlayer, BuildingKind.House, []);
+        Site.Place(without, TestMatches.FirstPlayer, BuildingKind.House, []);
+        var command = build(withRejection, house, Site.VillagersOf(withRejection, TestMatches.FirstPlayer)[0]);
+        withRejection.Enqueue(command);
+
+        withRejection.Tick();
+        without.Tick();
+
+        Assert.Equal([new CommandRejected(command, reason)], withRejection.Events);
+        Assert.Equal(without.StateHash, withRejection.StateHash);
+        Assert.All(withRejection.State.Units, unit => Assert.Null(unit.ConstructionSite));
+    }
+}
