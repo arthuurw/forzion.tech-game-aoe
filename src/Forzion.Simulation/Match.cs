@@ -125,7 +125,8 @@ public sealed class Match
     }
 
     /// <summary>
-    /// Advances the match by one fixed tick: applies the pending commands, then runs every
+    /// Advances the match by one fixed tick: lets each AI Player decide its commands from the
+    /// state the last tick left, applies those and the other pending commands, then runs every
     /// system once.
     /// </summary>
     public void Tick()
@@ -133,6 +134,7 @@ public sealed class Match
         var context = new TickContext(State);
 
         State.Tick++;
+        EnqueueAiCommands();
         ApplyPendingCommands(context);
 
         foreach (var system in Systems)
@@ -141,6 +143,27 @@ public sealed class Match
         }
 
         events = context.Events;
+    }
+
+    /// <summary>
+    /// Lets every AI Player still in play decide its commands from the state the last tick left,
+    /// as a human decides between two ticks, and queues them with the others (ADR 0003). They
+    /// are ordinary commands, applied and rejected like anyone's.
+    /// </summary>
+    private void EnqueueAiCommands()
+    {
+        if (State.IsOver)
+        {
+            return;
+        }
+
+        foreach (var player in State.Players)
+        {
+            if (player.IsAi && !player.IsDefeated)
+            {
+                pendingCommands.AddRange(AiScript.Decide(State, player));
+            }
+        }
     }
 
     private void ApplyPendingCommands(TickContext context)

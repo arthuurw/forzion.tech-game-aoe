@@ -218,6 +218,25 @@ internal static class Balance
         ResourceKind.Gold => 16,
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
+
+    /// <summary>
+    /// The AI's share of Villagers for each Resource: an idle Villager goes to the Resource
+    /// whose gatherers are fewest for its share.
+    /// </summary>
+    public static int AiGatherShare(ResourceKind kind) => kind switch
+    {
+        ResourceKind.Food => 5,
+        ResourceKind.Wood => 3,
+        ResourceKind.Gold => 2,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
+    /// <summary>
+    /// Among how many of the sources of a Resource nearest its Town Center the AI draws the one
+    /// an idle Villager goes to. More than one keeps a Villager that cannot reach a source from
+    /// being sent back to it every time.
+    /// </summary>
+    public const int AiSourceChoices = 3;
 }
 
 /// <summary>How a unit fights.</summary>
