@@ -16,6 +16,19 @@ internal sealed class Picker(MatchDriver driver, PickSizes sizes)
     /// </summary>
     public object? At(SightLine sight) => (object?)UnitAt(sight) ?? StructureAt(sight);
 
+    /// <summary>
+    /// The units seen inside the area that four lines of sight, through the corners of a box
+    /// on screen taken in turn around it, mark out. A unit counts as inside when the middle of
+    /// its body is, half its height up.
+    /// </summary>
+    public IEnumerable<UnitState> UnitsInside(IReadOnlyList<SightLine> corners)
+    {
+        var middle = sizes.UnitHeight / 2;
+        var area = corners.Select(corner => corner.At(middle)).ToList();
+
+        return driver.Match.State.Units.Where(unit => IsInside(driver.PositionOf(unit), area));
+    }
+
     /// <summary>The unit the line points at, the one nearest to the line when several are.</summary>
     private UnitState? UnitAt(SightLine sight)
     {
@@ -120,6 +133,28 @@ internal sealed class Picker(MatchDriver driver, PickSizes sizes)
         }
 
         return entry <= exit ? entry : double.PositiveInfinity;
+    }
+
+    /// <summary>
+    /// Whether the point lies inside the convex polygon, or on its edge, whichever way round
+    /// its corners are given: the point is on the same side of every edge.
+    /// </summary>
+    private static bool IsInside(MapPoint point, List<MapPoint> polygon)
+    {
+        var left = false;
+        var right = false;
+
+        for (var index = 0; index < polygon.Count; index++)
+        {
+            var start = polygon[index];
+            var end = polygon[(index + 1) % polygon.Count];
+            var side = ((end.X - start.X) * (point.Y - start.Y)) - ((end.Y - start.Y) * (point.X - start.X));
+
+            left |= side > 0;
+            right |= side < 0;
+        }
+
+        return !(left && right);
     }
 
     private static double DistanceToSegment(MapPoint point, MapPoint start, MapPoint end)

@@ -9,6 +9,12 @@ namespace Forzion.Presentation;
 /// </summary>
 public sealed class PlayerControl
 {
+    /// <summary>
+    /// How far, in pixels, the mouse moves with the button down before a click becomes a box.
+    /// A hand never holds the mouse perfectly still.
+    /// </summary>
+    public const double DragThreshold = 6;
+
     private readonly PlayerId player;
     private readonly Func<ScreenPoint, SightLine?> sightThrough;
     private readonly Picker picker;
@@ -35,12 +41,60 @@ public sealed class PlayerControl
     /// <summary>The selected entities, in ascending ID order.</summary>
     public IReadOnlyList<EntityId> Selected => selected;
 
-    /// <summary>Selects what the mouse pressed and released at.</summary>
+    /// <summary>
+    /// Whether the mouse, pressed at one point and now at the other, makes a click rather than
+    /// a box: it has moved less than <see cref="DragThreshold"/> pixels either way.
+    /// </summary>
+    public bool IsClick(ScreenPoint pressedAt, ScreenPoint currentlyAt) =>
+        Math.Abs(currentlyAt.X - pressedAt.X) < DragThreshold && Math.Abs(currentlyAt.Y - pressedAt.Y) < DragThreshold;
+
+    /// <summary>
+    /// Replaces the selection with what the mouse picks between press and release. A click
+    /// selects the Player's unit or building where the button went down; a box drawn on
+    /// screen selects every unit of the Player inside it and no building, as in other strategy
+    /// games. Picking nothing of the Player's leaves the selection empty.
+    /// </summary>
     public void Select(ScreenPoint pressedAt, ScreenPoint releasedAt)
     {
         selected.Clear();
 
-        var sight = sightThrough(releasedAt);
+        if (IsClick(pressedAt, releasedAt))
+        {
+            SelectAt(pressedAt);
+        }
+        else
+        {
+            SelectInBox(pressedAt, releasedAt);
+        }
+    }
+
+    private void SelectInBox(ScreenPoint corner, ScreenPoint opposite)
+    {
+        ScreenPoint[] corners =
+        [
+            corner,
+            new(opposite.X, corner.Y),
+            opposite,
+            new(corner.X, opposite.Y),
+        ];
+
+        var sights = corners.Select(sightThrough).ToList();
+
+        // A corner above the horizon marks out no area on the ground.
+        if (sights.Any(sight => sight is null))
+        {
+            return;
+        }
+
+        selected.AddRange(picker
+            .UnitsInside(sights.Select(sight => sight!.Value).ToList())
+            .Where(unit => unit.Owner == player)
+            .Select(unit => unit.Id));
+    }
+
+    private void SelectAt(ScreenPoint point)
+    {
+        var sight = sightThrough(point);
 
         if (sight is null)
         {

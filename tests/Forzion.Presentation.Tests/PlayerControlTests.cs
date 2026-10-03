@@ -100,6 +100,75 @@ public class PlayerControlTests
         Assert.Equal([villager.Id], control.Selected);
     }
 
+    [Fact]
+    public void Dragging_a_box_selects_the_units_of_the_Player_inside_it_and_no_building()
+    {
+        var control = NewControl(out var match);
+        var villagers = UnitsOf(match, FirstPlayer);
+        var townCenter = match.State.Buildings.First(building => building.Owner == FirstPlayer);
+        var (from, to) = BoxAround(villagers.Select(unit => unit.Position).Append(MapPosition.CentreOf(townCenter.Origin)));
+
+        control.Select(from, to);
+
+        Assert.Equal(villagers.Select(unit => unit.Id), control.Selected);
+    }
+
+    [Fact]
+    public void Dragging_a_box_from_any_corner_selects_the_same_units()
+    {
+        var control = NewControl(out var match);
+        var villagers = UnitsOf(match, FirstPlayer);
+        var (from, to) = BoxAround(villagers.Select(unit => unit.Position));
+
+        control.Select(new ScreenPoint(to.X, from.Y), new ScreenPoint(from.X, to.Y));
+
+        Assert.Equal(villagers.Select(unit => unit.Id), control.Selected);
+    }
+
+    [Fact]
+    public void Dragging_a_box_around_units_of_another_Player_clears_the_selection()
+    {
+        var control = NewControl(out var match);
+        var villager = UnitsOf(match, FirstPlayer)[0];
+        control.Select(Over(villager.Position), Over(villager.Position));
+        var (from, to) = BoxAround(UnitsOf(match, SecondPlayer).Select(unit => unit.Position));
+
+        control.Select(from, to);
+
+        Assert.Empty(control.Selected);
+    }
+
+    // Seen from a slanted camera the units' bodies stand out over the ground: a box drawn
+    // around them on screen ends short of their feet.
+    [Fact]
+    public void A_box_drawn_around_the_bodies_of_units_seen_from_a_slanted_camera_selects_them()
+    {
+        var control = NewControl(out var match, Slanted);
+        var villagers = UnitsOf(match, FirstPlayer);
+        var (from, to) = BoxAround(villagers.Select(unit => unit.Position));
+        // The Villagers start side by side on one row. The middle of their bodies, half a unit
+        // up, shows 0.35 Cell short of their feet: the box spans from 0.6 short of the feet,
+        // short of their heads, to 0.1 short of the feet.
+        var feet = villagers[0].Position.Y.ToDouble();
+
+        control.Select(new ScreenPoint(from.X, feet - 0.6), new ScreenPoint(to.X, feet - 0.1));
+
+        Assert.Equal(villagers.Select(unit => unit.Id), control.Selected);
+    }
+
+    [Fact]
+    public void A_mouse_that_barely_moves_between_press_and_release_clicks()
+    {
+        var control = NewControl(out var match);
+        var villager = UnitsOf(match, FirstPlayer)[0];
+        var pressedAt = Over(villager.Position);
+
+        control.Select(pressedAt, new ScreenPoint(pressedAt.X + 2, pressedAt.Y + 2));
+
+        Assert.True(control.IsClick(pressedAt, new ScreenPoint(pressedAt.X + 2, pressedAt.Y + 2)));
+        Assert.Equal([villager.Id], control.Selected);
+    }
+
     private static PlayerControl NewControl(out Match match, Func<ScreenPoint, SightLine?>? camera = null)
     {
         var faction = new FactionId(1);
@@ -119,6 +188,18 @@ public class PlayerControlTests
     private static SightLine? Slanted(ScreenPoint point) => new SightLine(new MapPoint(point.X, point.Y), new MapPoint(0, 0.7));
 
     private static ScreenPoint Over(MapPosition position) => new(position.X.ToDouble(), position.Y.ToDouble());
+
+    /// <summary>
+    /// The corners of a box on the top-down screen around the positions, with 3 Cells to spare
+    /// across and 1 up and down: wide enough to count as a drag, not a click.
+    /// </summary>
+    private static (ScreenPoint From, ScreenPoint To) BoxAround(IEnumerable<MapPosition> positions)
+    {
+        var points = positions.Select(Over).ToList();
+
+        return (new ScreenPoint(points.Min(point => point.X) - 3, points.Min(point => point.Y) - 1),
+                new ScreenPoint(points.Max(point => point.X) + 3, points.Max(point => point.Y) + 1));
+    }
 
     private static List<UnitState> UnitsOf(Match match, PlayerId player) =>
         match.State.Units.Where(unit => unit.Owner == player).ToList();
