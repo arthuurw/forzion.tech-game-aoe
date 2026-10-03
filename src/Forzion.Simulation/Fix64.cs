@@ -103,6 +103,47 @@ public readonly struct Fix64 : IEquatable<Fix64>, IComparable<Fix64>
         return Saturate((Int128)left.raw * RawOne / right.raw);
     }
 
+    /// <summary>Square root, rounded down to the nearest representable value.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">The value is negative.</exception>
+    public static Fix64 Sqrt(Fix64 value)
+    {
+        if (value.raw < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(value), "Square root of a negative value.");
+        }
+
+        return new((long)IntegerSqrt((UInt128)value.raw << FractionalBits));
+    }
+
+    /// <summary>Floor of the square root, computed digit by digit in base 4.</summary>
+    private static UInt128 IntegerSqrt(UInt128 n)
+    {
+        UInt128 root = 0;
+        var bit = UInt128.One << 126;
+
+        while (bit > n)
+        {
+            bit >>= 2;
+        }
+
+        while (bit != 0)
+        {
+            if (n >= root + bit)
+            {
+                n -= root + bit;
+                root = (root >> 1) + bit;
+            }
+            else
+            {
+                root >>= 1;
+            }
+
+            bit >>= 2;
+        }
+
+        return root;
+    }
+
     private static Fix64 Saturate(Int128 wideRaw)
     {
         if (wideRaw > long.MaxValue)
