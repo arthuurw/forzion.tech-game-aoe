@@ -14,16 +14,6 @@ public abstract record Command(PlayerId Player)
     internal abstract void Execute(TickContext context, PlayerState issuer);
 }
 
-/// <summary>The Player gives up the match and is defeated.</summary>
-public sealed record ResignCommand(PlayerId Player) : Command(Player)
-{
-    internal override void Execute(TickContext context, PlayerState issuer)
-    {
-        issuer.IsDefeated = true;
-        context.Emit(new PlayerDefeated(issuer.Id));
-    }
-}
-
 /// <summary>
 /// Sends units of the Player walking to a Cell. Each unit finds its own way around obstacles,
 /// resource sources and buildings and stops on the centre of the Cell, or of the nearest Cell
