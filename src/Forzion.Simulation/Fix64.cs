@@ -115,6 +115,19 @@ public readonly struct Fix64 : IEquatable<Fix64>, IComparable<Fix64>
         return new((long)IntegerSqrt((UInt128)value.raw << FractionalBits));
     }
 
+    /// <summary>
+    /// Length of the vector (x, y), rounded down: the distance between two points given their
+    /// coordinate differences. The squares are held in 128 bits, so only a result beyond
+    /// <see cref="MaxValue"/> saturates.
+    /// </summary>
+    public static Fix64 Hypot(Fix64 x, Fix64 y)
+    {
+        var sumOfSquares = (UInt128)((Int128)x.raw * x.raw) + (UInt128)((Int128)y.raw * y.raw);
+        var length = IntegerSqrt(sumOfSquares);
+
+        return length > (UInt128)long.MaxValue ? MaxValue : new((long)length);
+    }
+
     /// <summary>Floor of the square root, computed digit by digit in base 4.</summary>
     private static UInt128 IntegerSqrt(UInt128 n)
     {
