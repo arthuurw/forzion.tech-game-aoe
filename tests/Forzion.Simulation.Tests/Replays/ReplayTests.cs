@@ -54,14 +54,16 @@ public class ReplayTests
     // Recorded from an independent model of the documented design, not from this
     // implementation: map generation drawn from SplitMix64, then 64-bit FNV-1a over the tick,
     // the random generator state, the map size and Cells, the Players, the last entity ID and
-    // the resource sources, buildings and units in ID order, each value as eight little-endian
-    // bytes. CI runs this on Windows, Linux and macOS: every system must reach the same hash.
-    // A change that adds state to the hash changes these values on purpose and must record
-    // the new ones.
-    private const ulong ExpectedFinalHash = 11683145104218360870UL;
+    // the resource sources, buildings and units in ID order, each unit followed by the number
+    // of Cells in its path and those Cells, each value as eight little-endian bytes. When
+    // paths joined the hash, the values were recomputed by a model of this layout that first
+    // reproduced the values recorded before. CI runs this on Windows, Linux and macOS: every
+    // system must reach the same hash. A change that adds state to the hash changes these
+    // values on purpose and must record the new ones.
+    private const ulong ExpectedFinalHash = 16333524943516671878UL;
 
     // Seed 3 is one whose first scattering of obstacles cuts the Players apart and is drawn again.
-    private const ulong ExpectedInitialHashOfSeed3 = 14745510281533160694UL;
+    private const ulong ExpectedInitialHashOfSeed3 = 3758147136652764918UL;
 
     [Fact]
     public void A_recorded_replay_reaches_the_recorded_final_hash()

@@ -51,5 +51,12 @@ public sealed class UnitState
         hasher.Write((int)Kind);
         hasher.Write(Position.X.RawValue);
         hasher.Write(Position.Y.RawValue);
+        hasher.Write(path.Count);
+
+        foreach (var cell in path)
+        {
+            hasher.Write(cell.X);
+            hasher.Write(cell.Y);
+        }
     }
 }
