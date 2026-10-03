@@ -34,10 +34,10 @@ public sealed class BuildingState
     public int Height { get; }
 
     /// <summary>
-    /// Whether Villagers deliver the Resources they carry here. Every kind of drop-off point
-    /// takes every Resource.
+    /// Whether Villagers deliver their loads here. Every kind of drop-off point takes every
+    /// Resource; the Storehouse joins this list when it is added.
     /// </summary>
-    internal bool IsDropOff => Kind is BuildingKind.TownCenter;
+    internal bool IsDropOffPoint => Kind is BuildingKind.TownCenter;
 
     /// <summary>The Cell of the footprint nearest to the given Cell.</summary>
     internal CellPosition NearestCellTo(CellPosition cell) => new(

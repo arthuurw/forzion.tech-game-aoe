@@ -13,7 +13,7 @@ public enum GatherPhase
     Gathering = 2,
 
     /// <summary>Carrying its load to the nearest drop-off point of its Player.</summary>
-    ToDropOff = 3,
+    ToDropOffPoint = 3,
 }
 
 /// <summary>
@@ -40,15 +40,27 @@ internal sealed class GatherSystem : ISystem
         {
             switch (unit.GatherPhase)
             {
-                case GatherPhase.ToSource when !unit.IsMoving:
-                    ReachSource(state, unit);
+                case GatherPhase.None:
+                    break;
+                case GatherPhase.ToSource:
+                    if (!unit.IsMoving)
+                    {
+                        ReachSource(state, unit);
+                    }
+
                     break;
                 case GatherPhase.Gathering:
                     TakeFromSource(context, state.FindResourceSource(unit.GatherSource!.Value)!, unit);
                     break;
-                case GatherPhase.ToDropOff when !unit.IsMoving:
-                    Deliver(state, unit);
+                case GatherPhase.ToDropOffPoint:
+                    if (!unit.IsMoving)
+                    {
+                        Deliver(state, unit);
+                    }
+
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(unit), unit.GatherPhase, "Unknown gather phase.");
             }
         }
     }
@@ -85,12 +97,11 @@ internal sealed class GatherSystem : ISystem
 
         villager.GatherProgress = 0;
         source.Amount--;
-        villager.CarriedResource = source.Kind;
-        villager.CarriedAmount++;
+        villager.Load = new Load(source.Kind, villager.Load.Amount + 1);
 
-        if (villager.CarriedAmount == Balance.VillagerCarryCapacity)
+        if (villager.Load.Amount == Balance.VillagerCarryCapacity)
         {
-            CarryToDropOff(state, villager);
+            CarryToDropOffPoint(state, villager);
         }
 
         if (source.Amount == 0)
@@ -122,7 +133,7 @@ internal sealed class GatherSystem : ISystem
 
             unit.GatherSource = replacement?.Id;
 
-            if (unit.GatherPhase == GatherPhase.ToDropOff)
+            if (unit.GatherPhase == GatherPhase.ToDropOffPoint)
             {
                 continue;
             }
@@ -171,23 +182,42 @@ internal sealed class GatherSystem : ISystem
         MovementSystem.WalkTo(map, villager, villager.Position.Cell);
     }
 
-    /// <summary>Sends the Villager walking to the drop-off point of its Player nearest to it.</summary>
-    private static void CarryToDropOff(MatchState state, UnitState villager)
+    /// <summary>
+    /// Sends the Villager walking to the drop-off point of its Player nearest to it, measured
+    /// to the nearest Cell of each footprint. Between points equally near, the one with the
+    /// lowest ID.
+    /// </summary>
+    private static void CarryToDropOffPoint(MatchState state, UnitState villager)
     {
         var from = villager.Position.Cell;
-        var nearest = state.Buildings
-            .Where(building => building.Owner == villager.Owner && building.IsDropOff)
-            .Select(building => building.NearestCellTo(from))
-            .MinBy(cell => SquaredDistance(cell, from));
+        CellPosition? nearest = null;
+        var nearestDistance = int.MaxValue;
 
-        villager.GatherPhase = GatherPhase.ToDropOff;
-        MovementSystem.WalkTo(state.Map, villager, nearest);
+        foreach (var building in state.Buildings)
+        {
+            if (building.Owner != villager.Owner || !building.IsDropOffPoint)
+            {
+                continue;
+            }
+
+            var cell = building.NearestCellTo(from);
+            var distance = SquaredDistance(cell, from);
+
+            if (distance < nearestDistance)
+            {
+                nearest = cell;
+                nearestDistance = distance;
+            }
+        }
+
+        villager.GatherPhase = GatherPhase.ToDropOffPoint;
+        MovementSystem.WalkTo(state.Map, villager, nearest!.Value);
     }
 
     private static void Deliver(MatchState state, UnitState villager)
     {
-        state.FindPlayer(villager.Owner)!.Receive(villager.CarriedResource, villager.CarriedAmount);
-        villager.CarriedAmount = 0;
+        state.FindPlayer(villager.Owner)!.Receive(villager.Load.Resource, villager.Load.Amount);
+        villager.Load = Load.Empty;
 
         if (villager.GatherSource is { } source)
         {

@@ -22,7 +22,7 @@ public class DepletionTests
         Assert.Equal(CellKind.Free, match.State.Map[source.Cell]);
 
         // Every unit of it went to a Villager: none was lost or taken twice.
-        Assert.Equal(initial, player.AmountOf(ResourceKind.Food) + villagers.Sum(villager => villager.CarriedAmount));
+        Assert.Equal(initial, player.AmountOf(ResourceKind.Food) + villagers.Sum(villager => villager.Load.Amount));
     }
 
     [Fact]

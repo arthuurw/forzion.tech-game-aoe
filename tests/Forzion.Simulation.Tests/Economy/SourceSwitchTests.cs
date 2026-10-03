@@ -56,7 +56,7 @@ public class SourceSwitchTests
 
         // Idle: no source, no walk, and nothing changes as time goes by.
         var positions = villagers.Select(villager => villager.Position).ToList();
-        var loads = villagers.Select(villager => villager.CarriedAmount).ToList();
+        var loads = villagers.Select(villager => villager.Load.Amount).ToList();
 
         for (var tick = 0; tick < 200; tick++)
         {
@@ -66,7 +66,7 @@ public class SourceSwitchTests
         Assert.All(villagers, villager => Assert.Null(villager.GatherSource));
         Assert.All(villagers, villager => Assert.Equal(GatherPhase.None, villager.GatherPhase));
         Assert.Equal(positions, villagers.Select(villager => villager.Position));
-        Assert.Equal(loads, villagers.Select(villager => villager.CarriedAmount));
+        Assert.Equal(loads, villagers.Select(villager => villager.Load.Amount));
         Assert.All(villagers, villager => Assert.Equal(MapPosition.CentreOf(villager.Position.Cell), villager.Position));
 
         // Both sources went, in full, to the Player or to the loads its Villagers still carry.

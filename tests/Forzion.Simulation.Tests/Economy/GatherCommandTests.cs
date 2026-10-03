@@ -15,11 +15,11 @@ public class GatherCommandTests
         var before = source.Amount;
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
 
-        Gather.Until(match, () => villager.CarriedAmount > 0);
+        Gather.Until(match, () => villager.Load.Amount > 0);
 
         Assert.True(Gather.Touch(villager.Position.Cell, source.Cell));
-        Assert.Equal(ResourceKind.Food, villager.CarriedResource);
-        Assert.Equal(before - villager.CarriedAmount, source.Amount);
+        Assert.Equal(ResourceKind.Food, villager.Load.Resource);
+        Assert.Equal(before - villager.Load.Amount, source.Amount);
         Assert.Equal(source.Id, villager.GatherSource);
     }
 
@@ -38,7 +38,7 @@ public class GatherCommandTests
         Gather.Until(match, () =>
         {
             var delivered = player.AmountOf(ResourceKind.Food) > 0;
-            load = delivered ? load : villager.CarriedAmount;
+            load = delivered ? load : villager.Load.Amount;
 
             return delivered;
         });
@@ -46,14 +46,14 @@ public class GatherCommandTests
         // The first delivery: a full load, handed over beside the Town Center.
         Assert.True(load > 1);
         Assert.Equal(load, player.AmountOf(ResourceKind.Food));
-        Assert.Equal(0, villager.CarriedAmount);
+        Assert.Equal(0, villager.Load.Amount);
         Assert.True(Gather.Touches(townCenter, villager.Position.Cell));
 
         // With no further command, back to the source for more.
-        Gather.Until(match, () => villager.CarriedAmount > 0);
+        Gather.Until(match, () => villager.Load.Amount > 0);
 
         Assert.True(Gather.Touch(villager.Position.Cell, source.Cell));
-        Assert.Equal(initial, source.Amount + villager.CarriedAmount + player.AmountOf(ResourceKind.Food));
+        Assert.Equal(initial, source.Amount + villager.Load.Amount + player.AmountOf(ResourceKind.Food));
 
         // And the next trip brings another load of the same size.
         Gather.Until(match, () => player.AmountOf(ResourceKind.Food) > load);
@@ -69,16 +69,16 @@ public class GatherCommandTests
         var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Food);
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
 
-        Gather.Until(match, () => villager.GatherPhase == GatherPhase.ToDropOff);
+        Gather.Until(match, () => villager.GatherPhase == GatherPhase.ToDropOffPoint);
 
         // Walking away to deliver: neither the load nor the source changes on the way.
-        var load = villager.CarriedAmount;
+        var load = villager.Load.Amount;
         var left = source.Amount;
 
-        for (var tick = 0; villager.GatherPhase == GatherPhase.ToDropOff; tick++)
+        for (var tick = 0; villager.GatherPhase == GatherPhase.ToDropOffPoint; tick++)
         {
             Assert.True(tick < Gather.TickLimit);
-            Assert.Equal(load, villager.CarriedAmount);
+            Assert.Equal(load, villager.Load.Amount);
             Assert.Equal(left, source.Amount);
 
             match.Tick();
@@ -158,8 +158,8 @@ public class GatherCommandTests
         var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Food);
         var destination = Walk.BehindTownCenter(match);
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
-        Gather.Until(match, () => villager.CarriedAmount > 1);
-        var load = villager.CarriedAmount;
+        Gather.Until(match, () => villager.Load.Amount > 1);
+        var load = villager.Load.Amount;
         var left = source.Amount;
 
         match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], destination));
@@ -173,7 +173,7 @@ public class GatherCommandTests
         Assert.Equal(MapPosition.CentreOf(destination), villager.Position);
         Assert.Equal(GatherPhase.None, villager.GatherPhase);
         Assert.Null(villager.GatherSource);
-        Assert.Equal(load, villager.CarriedAmount);
+        Assert.Equal(load, villager.Load.Amount);
         Assert.Equal(left, source.Amount);
     }
 
@@ -198,7 +198,7 @@ public class GatherCommandTests
 
         Assert.False(villager.IsMoving);
         Assert.Equal(GatherPhase.None, villager.GatherPhase);
-        Assert.Equal(0, villager.CarriedAmount);
+        Assert.Equal(0, villager.Load.Amount);
         Assert.Equal(amount, source.Amount);
     }
 }

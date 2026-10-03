@@ -41,11 +41,8 @@ public sealed class UnitState
     /// <summary>What the Villager is doing towards gathering.</summary>
     public GatherPhase GatherPhase { get; internal set; }
 
-    /// <summary>The Resource the Villager carries. Meaningless while <see cref="CarriedAmount"/> is zero.</summary>
-    public ResourceKind CarriedResource { get; internal set; }
-
-    /// <summary>How much of <see cref="CarriedResource"/> the Villager carries.</summary>
-    public int CarriedAmount { get; internal set; }
+    /// <summary>What the Villager carries.</summary>
+    public Load Load { get; internal set; }
 
     /// <summary>Ticks spent gathering towards the next unit of Resource.</summary>
     internal int GatherProgress { get; set; }
