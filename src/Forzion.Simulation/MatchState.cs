@@ -183,6 +183,7 @@ public sealed class MatchState
     }
 }
 
+/// <summary>A Player of the match, human or AI, as the state knows them.</summary>
 public sealed class PlayerState
 {
     internal PlayerState(PlayerId id, FactionId faction)
@@ -191,8 +192,10 @@ public sealed class PlayerState
         Faction = faction;
     }
 
+    /// <summary>The Player's ID, assigned from 1 upward in configuration order.</summary>
     public PlayerId Id { get; }
 
+    /// <summary>The Faction the Player controls, as configured. It never changes during the match.</summary>
     public FactionId Faction { get; }
 
     /// <summary>Whether the Player has been defeated. A defeated Player stays in the state.</summary>

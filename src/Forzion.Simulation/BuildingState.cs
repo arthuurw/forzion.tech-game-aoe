@@ -1,5 +1,6 @@
 namespace Forzion.Simulation;
 
+/// <summary>What a building is. Its kind decides what the building does.</summary>
 public enum BuildingKind
 {
     TownCenter = 0,

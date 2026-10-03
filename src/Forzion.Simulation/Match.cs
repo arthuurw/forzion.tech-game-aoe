@@ -23,8 +23,21 @@ public sealed class Match
 
     private Match(MatchConfig config) => State = new MatchState(config);
 
+    /// <summary>
+    /// Creates a match at tick zero: generates its map from the seed and gives each Player a
+    /// Town Center and starting Villagers.
+    /// </summary>
+    /// <exception cref="ArgumentException">
+    /// The configuration has fewer than one or more than two Players, or a map less than 32
+    /// Cells wide or high.
+    /// </exception>
     public static Match Create(MatchConfig config) => new(config);
 
+    /// <summary>
+    /// The state of the match, read-only from outside. It is the same object for the whole
+    /// match and changes in place as ticks pass, so a reference kept from an earlier tick shows
+    /// the current one.
+    /// </summary>
     public MatchState State { get; }
 
     /// <summary>
