@@ -118,9 +118,9 @@ internal static class Pathfinder
             }
 
             var cell = map.CellAt(index);
-            long x = cell.X - destination.X;
-            long y = cell.Y - destination.Y;
-            var distance = (x * x) + (y * y);
+            long deltaX = cell.X - destination.X;
+            long deltaY = cell.Y - destination.Y;
+            var distance = (deltaX * deltaX) + (deltaY * deltaY);
 
             if (distance < nearestDistance || (distance == nearestDistance && costs[index] < costs[nearest]))
             {
@@ -139,9 +139,9 @@ internal static class Pathfinder
     /// </summary>
     private static int Estimate(CellPosition from, CellPosition to)
     {
-        var x = Math.Abs(from.X - to.X);
-        var y = Math.Abs(from.Y - to.Y);
+        var deltaX = Math.Abs(from.X - to.X);
+        var deltaY = Math.Abs(from.Y - to.Y);
 
-        return (DiagonalCost * Math.Min(x, y)) + (StraightCost * Math.Abs(x - y));
+        return (DiagonalCost * Math.Min(deltaX, deltaY)) + (StraightCost * Math.Abs(deltaX - deltaY));
     }
 }
