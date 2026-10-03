@@ -23,3 +23,58 @@ public sealed record ResignCommand(PlayerId Player) : Command(Player)
         context.Emit(new PlayerDefeated(issuer.Id));
     }
 }
+
+/// <summary>
+/// Sends units of the Player walking to a Cell. Each unit finds its own way around obstacles,
+/// resource sources and buildings and stops on the centre of the Cell, or of the nearest Cell
+/// it can reach when the destination itself cannot be reached.
+/// </summary>
+/// <remarks>
+/// The command is rejected as a whole, moving none of its units, when the destination is
+/// outside the map or any of the units does not exist or belongs to another Player.
+/// </remarks>
+/// <param name="Units">The units to move.</param>
+/// <param name="Destination">The Cell to walk to.</param>
+public sealed record MoveCommand(PlayerId Player, IReadOnlyList<EntityId> Units, CellPosition Destination)
+    : Command(Player)
+{
+    internal override void Execute(TickContext context, PlayerState issuer)
+    {
+        var state = context.State;
+
+        if (!state.Map.Contains(Destination))
+        {
+            context.Reject(this, RejectionReason.DestinationOutsideMap);
+
+            return;
+        }
+
+        var units = new List<UnitState>(Units.Count);
+
+        foreach (var id in Units)
+        {
+            var unit = state.FindUnit(id);
+
+            if (unit is null)
+            {
+                context.Reject(this, RejectionReason.UnknownUnit);
+
+                return;
+            }
+
+            if (unit.Owner != issuer.Id)
+            {
+                context.Reject(this, RejectionReason.UnitOfAnotherPlayer);
+
+                return;
+            }
+
+            units.Add(unit);
+        }
+
+        foreach (var unit in units)
+        {
+            MovementSystem.WalkTo(state.Map, unit, Destination);
+        }
+    }
+}
