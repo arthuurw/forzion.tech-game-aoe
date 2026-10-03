@@ -47,16 +47,23 @@ internal sealed class GatherSystem : ISystem
     }
 
     /// <summary>
-    /// Sends every Villager carrying its load to a drop-off point that has left the match to
-    /// the nearest one its Player still has, or leaves it idle with its load when there is none.
+    /// Sends every Villager carrying its load to a drop-off point that has left the match, on
+    /// its way there or already waiting beside it, to the nearest one its Player still has, or
+    /// leaves it idle with its load when there is none. It keeps its source.
     /// </summary>
     public static void RedirectCarriers(MatchState state)
     {
         foreach (var unit in state.Units)
         {
-            if (unit.GatherPhase == GatherPhase.ToDropOffPoint
-                && unit.IsMoving
-                && !DropOffPointsOf(state, unit.Owner).Any(building => building.IsBeside(unit.Path[^1])))
+            if (unit.GatherPhase != GatherPhase.ToDropOffPoint)
+            {
+                continue;
+            }
+
+            // A carrier whose load filled beside a drop-off point waits there, with no path, for the next tick.
+            var destination = unit.IsMoving ? unit.Path[^1] : unit.Position.Cell;
+
+            if (!DropOffPointsOf(state, unit.Owner).Any(building => building.IsBeside(destination)))
             {
                 CarryToDropOffPoint(state, unit);
             }

@@ -10,7 +10,7 @@ namespace Forzion.Simulation;
 /// acting first in ID order is no advantage. Whatever is left without hit points is removed at
 /// the end of the tick's combat, in the same tick: the units attacking it stop, the
 /// Villagers building a destroyed site stand idle, and those carrying their loads to a
-/// destroyed drop-off point turn to the nearest one left.
+/// destroyed drop-off point, or waiting beside it to hand them over, turn to the nearest one left.
 /// </remarks>
 internal sealed class CombatSystem : ISystem
 {
