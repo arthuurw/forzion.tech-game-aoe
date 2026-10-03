@@ -18,7 +18,17 @@ internal sealed class CombatSystem : ISystem
 
         foreach (var unit in state.Units)
         {
-            if (unit.Target is { } target && Balance.Attack(unit.Kind) is { } attack)
+            if (Balance.Attack(unit.Kind) is not { } attack)
+            {
+                continue;
+            }
+
+            if (unit.Target is null && !unit.IsMoving && NearestEnemyUnit(state, unit, attack.PerceptionRadius) is { } enemy)
+            {
+                unit.Attack(enemy.Id);
+            }
+
+            if (unit.Target is { } target)
             {
                 Fight(state, unit, target, attack);
             }
@@ -38,6 +48,36 @@ internal sealed class CombatSystem : ISystem
                 unit.StopAttacking();
             }
         }
+    }
+
+    /// <summary>
+    /// The unit of another Player nearest to <paramref name="unit"/> within the radius; between
+    /// units equally near, the one with the lowest ID. Null when there is none. Buildings do not
+    /// draw an idle unit's attack.
+    /// </summary>
+    private static UnitState? NearestEnemyUnit(MatchState state, UnitState unit, Fix64 radius)
+    {
+        UnitState? nearest = null;
+        var nearestDistance = radius;
+
+        // Ascending ID order and a strict comparison keep the lowest ID among the equally near.
+        foreach (var other in state.Units)
+        {
+            if (other.Owner == unit.Owner)
+            {
+                continue;
+            }
+
+            var distance = Distance(unit.Position, other.Position);
+
+            if (distance < nearestDistance || (nearest is null && distance == nearestDistance))
+            {
+                nearest = other;
+                nearestDistance = distance;
+            }
+        }
+
+        return nearest;
     }
 
     private static void Fight(MatchState state, UnitState unit, EntityId target, AttackStats attack)
