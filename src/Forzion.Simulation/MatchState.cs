@@ -71,6 +71,9 @@ public sealed class MatchState
     /// <summary>The unit with the given ID, or null when the match has no such unit.</summary>
     internal UnitState? FindUnit(EntityId id) => units.Find(unit => unit.Id == id);
 
+    /// <summary>The resource source with the given ID, or null when the match has no such source.</summary>
+    internal ResourceSourceState? FindResourceSource(EntityId id) => resourceSources.Find(source => source.Id == id);
+
     /// <summary>
     /// Adds a resource source and marks its Cell occupied. IDs only grow, so appending keeps
     /// the collection in ID order.

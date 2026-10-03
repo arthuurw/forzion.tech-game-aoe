@@ -30,4 +30,13 @@ internal static class Balance
         UnitKind.Villager => Fix64.FromInt(2),
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
+
+    /// <summary>Ticks a Villager spends gathering one unit of the given Resource.</summary>
+    public static int GatherTicksPerUnit(ResourceKind kind) => kind switch
+    {
+        ResourceKind.Food => 10,
+        ResourceKind.Wood => 12,
+        ResourceKind.Gold => 16,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
 }
