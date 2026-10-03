@@ -23,9 +23,10 @@ public enum GatherPhase
 /// </summary>
 internal sealed class GatherSystem : ISystem
 {
-    /// <summary>Sends the Villager walking up to the source to gather from it.</summary>
+    /// <summary>Sends the Villager walking up to the source to gather from it. It stops building.</summary>
     public static void GatherFrom(MapState map, UnitState villager, ResourceSourceState source)
     {
+        villager.StopBuilding();
         villager.GatherSource = source.Id;
         villager.GatherPhase = GatherPhase.ToSource;
         villager.GatherProgress = 0;

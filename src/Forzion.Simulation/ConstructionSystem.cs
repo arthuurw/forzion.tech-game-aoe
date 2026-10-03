@@ -38,7 +38,7 @@ internal sealed class ConstructionSystem : ISystem
             else
             {
                 // Walked as far as it could and still short of the site: it cannot be reached.
-                unit.ConstructionSite = null;
+                unit.StopBuilding();
             }
         }
     }
@@ -58,7 +58,7 @@ internal sealed class ConstructionSystem : ISystem
         {
             if (unit.ConstructionSite == site.Id)
             {
-                unit.ConstructionSite = null;
+                unit.StopBuilding();
             }
         }
     }

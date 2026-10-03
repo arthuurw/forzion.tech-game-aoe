@@ -28,7 +28,7 @@ public sealed record ResignCommand(PlayerId Player) : Command(Player)
 /// Sends units of the Player walking to a Cell. Each unit finds its own way around obstacles,
 /// resource sources and buildings and stops on the centre of the Cell, or of the nearest Cell
 /// it can reach when the destination itself cannot be reached. A Villager that was gathering
-/// stops gathering and keeps its load.
+/// stops gathering and keeps its load; one that was building stops building.
 /// </summary>
 /// <remarks>
 /// The command is rejected as a whole, moving none of its units, when the destination is
@@ -76,6 +76,7 @@ public sealed record MoveCommand(PlayerId Player, IReadOnlyList<EntityId> Units,
         foreach (var unit in units)
         {
             unit.StopGathering();
+            unit.StopBuilding();
             MovementSystem.WalkTo(state.Map, unit, Destination);
         }
     }

@@ -67,6 +67,9 @@ public sealed class UnitState
         GatherProgress = 0;
     }
 
+    /// <summary>Takes the Villager off building. The site keeps the work already put into it.</summary>
+    internal void StopBuilding() => ConstructionSite = null;
+
     /// <summary>Drops the next Cell of the path: the unit has reached its centre.</summary>
     internal void ReachWaypoint() => path.RemoveAt(0);
 
