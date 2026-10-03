@@ -313,6 +313,45 @@ public class GatherCommandTests
         Assert.Equal(initial, source.Amount + villager.Load.Amount + player.AmountOf(ResourceKind.Food));
     }
 
+    // Generated maps keep every Cell beside a Town Center free and reachable, so no test
+    // through the match can block the way to some of them; this covers delivery from every
+    // side instead.
+    [Theory]
+    [InlineData(1, 0)]
+    [InlineData(1, 1)]
+    [InlineData(0, 1)]
+    [InlineData(-1, 1)]
+    [InlineData(-1, 0)]
+    [InlineData(-1, -1)]
+    [InlineData(0, -1)]
+    [InlineData(1, -1)]
+    public void A_Villager_with_a_full_load_hands_it_over_beside_its_Town_Center_from_any_side(int towardsX, int towardsY)
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var player = match.State.Players[0];
+        var townCenter = match.State.Buildings[0];
+        var villager = Walk.MiddleVillager(match);
+        var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Food);
+        match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
+        Gather.Until(match, () => villager.GatherPhase == GatherPhase.ToDropOffPoint);
+        var full = villager.Load.Amount;
+
+        // Six Cells out from the middle of the Town Center: inside the clearing around it and
+        // past its resource sources.
+        var start = new CellPosition(
+            townCenter.Origin.X + (townCenter.Width / 2) + (6 * towardsX),
+            townCenter.Origin.Y + (townCenter.Height / 2) + (6 * towardsY));
+        match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], start));
+        Walk.UntilStopped(match, villager);
+        Assert.Equal(start, villager.Position.Cell);
+
+        match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
+        FirstDelivery(match, villager);
+
+        Assert.Equal(full, player.AmountOf(ResourceKind.Food));
+        Assert.True(Gather.Touches(townCenter, villager.Position.Cell));
+    }
+
     /// <summary>
     /// Ticks the match until the first Player receives Food and returns the largest load the
     /// Villager carried on the way, failing after <see cref="Gather.TickLimit"/> ticks.

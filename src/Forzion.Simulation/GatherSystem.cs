@@ -197,34 +197,17 @@ internal sealed class GatherSystem : ISystem
     }
 
     /// <summary>
-    /// Sends the Villager walking to the drop-off point of its Player nearest to it, measured
-    /// to the nearest Cell of each footprint. Between points equally near, the one with the
-    /// lowest ID. A Player with no drop-off point leaves the Villager idle with its load.
+    /// Sends the Villager walking to the free Cell beside a drop-off point of its Player that
+    /// has the shortest way to it, whichever point that is; between Cells equally far, the one
+    /// with the lowest index. A Player with no drop-off point leaves the Villager idle with its
+    /// load, and so does a way blocked to every Cell beside one, once <see cref="Deliver"/>
+    /// finds the Villager short of them.
     /// </summary>
     private static void CarryToDropOffPoint(MatchState state, UnitState villager)
     {
-        var from = villager.Position.Cell;
-        CellPosition? nearest = null;
-        var nearestDistance = int.MaxValue;
+        var dropOffPoints = DropOffPointsOf(state, villager.Owner);
 
-        foreach (var building in state.Buildings)
-        {
-            if (building.Owner != villager.Owner || !building.IsDropOffPoint)
-            {
-                continue;
-            }
-
-            var cell = building.NearestCellTo(from);
-            var distance = SquaredDistance(cell, from);
-
-            if (distance < nearestDistance)
-            {
-                nearest = cell;
-                nearestDistance = distance;
-            }
-        }
-
-        if (nearest is null)
+        if (dropOffPoints.Count == 0)
         {
             StopGathering(state.Map, villager);
 
@@ -232,7 +215,8 @@ internal sealed class GatherSystem : ISystem
         }
 
         villager.GatherPhase = GatherPhase.ToDropOffPoint;
-        MovementSystem.WalkTo(state.Map, villager, nearest.Value);
+        MovementSystem.WalkToNearest(
+            state.Map, villager, cell => dropOffPoints.Any(building => building.IsBeside(cell)));
     }
 
     /// <summary>
@@ -244,8 +228,7 @@ internal sealed class GatherSystem : ISystem
     {
         var cell = villager.Position.Cell;
 
-        if (!state.Buildings.Any(building =>
-                building.Owner == villager.Owner && building.IsDropOffPoint && building.IsBeside(cell)))
+        if (!DropOffPointsOf(state, villager.Owner).Any(building => building.IsBeside(cell)))
         {
             StopGathering(state.Map, villager);
 
@@ -264,6 +247,10 @@ internal sealed class GatherSystem : ISystem
             StopGathering(state.Map, villager);
         }
     }
+
+    /// <summary>The Player's drop-off points, in ascending ID order.</summary>
+    private static List<BuildingState> DropOffPointsOf(MatchState state, PlayerId owner) =>
+        state.Buildings.Where(building => building.Owner == owner && building.IsDropOffPoint).ToList();
 
     private static int SquaredDistance(CellPosition a, CellPosition b) =>
         ((a.X - b.X) * (a.X - b.X)) + ((a.Y - b.Y) * (a.Y - b.Y));
