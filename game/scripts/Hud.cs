@@ -1,0 +1,490 @@
+using System.Globalization;
+using System.Text;
+using Forzion.Presentation;
+using Forzion.Simulation;
+using Godot;
+
+namespace Forzion.Game;
+
+/// <summary>
+/// The HUD: a bar at the top with the human Player's Resources, population, Faction and Age,
+/// and a panel at the bottom with the selection and the orders it takes. What each shows
+/// comes from <see cref="PlayerStatus"/> and <see cref="SelectionPanel"/>, and each button
+/// calls <see cref="PlayerControl"/>, which sends the command; this node only lays them out.
+/// Texts come from the project's translations.
+/// </summary>
+public partial class Hud : CanvasLayer
+{
+    private const int PanelHeight = 210;
+    private const int MostUnitsShown = 24;
+
+    private static readonly Color PanelColour = new(0.08f, 0.09f, 0.11f, 0.88f);
+    private static readonly Color HintColour = new(0.8f, 0.85f, 0.95f);
+
+    // The panel is rebuilt only when what it holds changes, and its buttons act on press, so a
+    // rebuild never swallows a click; in between, these refresh the values shown.
+    private readonly List<Action<SelectionPanel>> refreshers = [];
+
+    private Label food = null!;
+    private Label wood = null!;
+    private Label gold = null!;
+    private Label population = null!;
+    private Label age = null!;
+    private ProgressBar ageAdvanceBar = null!;
+    private Label ageAdvanceLabel = null!;
+    private PanelContainer bottom = null!;
+    private HBoxContainer bottomContent = null!;
+    private Label placementHint = null!;
+    private string shownLayout = "";
+
+    /// <summary>The match the HUD shows.</summary>
+    [Export]
+    public MatchView MatchView { get; set; } = null!;
+
+    /// <summary>The input whose selection the HUD shows and through which its buttons give orders.</summary>
+    [Export]
+    public SelectionInput SelectionInput { get; set; } = null!;
+
+    private PlayerControl Control => SelectionInput.Control;
+
+    public override void _Ready()
+    {
+        var root = new Control { Name = "HudRoot", MouseFilter = Godot.Control.MouseFilterEnum.Ignore };
+        root.SetAnchorsAndOffsetsPreset(Godot.Control.LayoutPreset.FullRect);
+        AddChild(root);
+
+        root.AddChild(BuildTopBar());
+        root.AddChild(BuildBottomPanel());
+
+        placementHint = NewLabel("", 18, HintColour);
+        placementHint.Name = "PlacementHint";
+        placementHint.HorizontalAlignment = HorizontalAlignment.Center;
+        placementHint.SetAnchorsAndOffsetsPreset(Godot.Control.LayoutPreset.BottomWide);
+        placementHint.OffsetTop = -PanelHeight - 40;
+        placementHint.OffsetBottom = -PanelHeight - 8;
+        placementHint.MouseFilter = Godot.Control.MouseFilterEnum.Ignore;
+        root.AddChild(placementHint);
+    }
+
+    public override void _Process(double delta)
+    {
+        ShowStatus(PlayerStatus.Of(MatchView.Match.State, MatchView.HumanPlayer));
+
+        var panel = SelectionPanel.For(MatchView.Match.State, MatchView.HumanPlayer, Control.Selected);
+        var layout = LayoutOf(panel);
+
+        if (layout != shownLayout)
+        {
+            shownLayout = layout;
+            Rebuild(panel);
+        }
+
+        foreach (var refresh in refreshers)
+        {
+            refresh(panel);
+        }
+
+        bottom.Visible = bottomContent.GetChildCount() > 0;
+
+        placementHint.Visible = Control.PlacingBuilding is not null;
+
+        if (Control.PlacingBuilding is { } placing)
+        {
+            placementHint.Text = Format(HudTexts.PlacementHint, Tr(TextKeys.NameOf(placing)));
+        }
+    }
+
+    private Control BuildTopBar()
+    {
+        var bar = new PanelContainer { Name = "TopBar", MouseFilter = Godot.Control.MouseFilterEnum.Stop };
+        bar.AddThemeStyleboxOverride("panel", PanelStyle());
+        bar.SetAnchorsAndOffsetsPreset(Godot.Control.LayoutPreset.TopWide);
+        bar.CustomMinimumSize = new Vector2(0, 40);
+
+        var row = new HBoxContainer();
+        row.AddThemeConstantOverride("separation", 28);
+        bar.AddChild(row);
+
+        food = NewLabel("", 18, new Color(0.95f, 0.55f, 0.6f));
+        wood = NewLabel("", 18, new Color(0.85f, 0.65f, 0.4f));
+        gold = NewLabel("", 18, new Color(1f, 0.85f, 0.35f));
+        population = NewLabel("", 18, new Color(0.85f, 0.9f, 1f));
+        row.AddChild(food);
+        row.AddChild(wood);
+        row.AddChild(gold);
+        row.AddChild(population);
+
+        row.AddChild(new Control { SizeFlagsHorizontal = Godot.Control.SizeFlags.ExpandFill, MouseFilter = Godot.Control.MouseFilterEnum.Ignore });
+
+        ageAdvanceLabel = NewLabel("", 16, HintColour);
+        ageAdvanceBar = NewBar(new Color(0.55f, 0.75f, 1f), new Vector2(160, 14));
+        ageAdvanceBar.SizeFlagsVertical = Godot.Control.SizeFlags.ShrinkCenter;
+        row.AddChild(ageAdvanceLabel);
+        row.AddChild(ageAdvanceBar);
+
+        age = NewLabel("", 18, new Color(1f, 0.95f, 0.8f));
+        row.AddChild(age);
+
+        return bar;
+    }
+
+    private Control BuildBottomPanel()
+    {
+        bottom = new PanelContainer { Name = "SelectionPanel", MouseFilter = Godot.Control.MouseFilterEnum.Stop };
+        bottom.AddThemeStyleboxOverride("panel", PanelStyle());
+        bottom.SetAnchorsAndOffsetsPreset(Godot.Control.LayoutPreset.BottomWide);
+        bottom.OffsetTop = -PanelHeight;
+
+        bottomContent = new HBoxContainer { Name = "Content" };
+        bottomContent.AddThemeConstantOverride("separation", 24);
+        bottom.AddChild(bottomContent);
+
+        return bottom;
+    }
+
+    private void ShowStatus(PlayerStatus status)
+    {
+        food.Text = $"{Tr(TextKeys.NameOf(ResourceKind.Food))}: {status.Food}";
+        wood.Text = $"{Tr(TextKeys.NameOf(ResourceKind.Wood))}: {status.Wood}";
+        gold.Text = $"{Tr(TextKeys.NameOf(ResourceKind.Gold))}: {status.Gold}";
+        population.Text = $"{Tr(HudTexts.Population)}: {status.Population}/{status.PopulationLimit}";
+        age.Text = $"{Tr(status.FactionNameKey)} · {Tr(status.AgeNameKey)}";
+
+        var advance = status.AgeAdvance;
+        ageAdvanceLabel.Visible = advance is not null;
+        ageAdvanceBar.Visible = advance is not null;
+
+        if (advance is not null)
+        {
+            ageAdvanceLabel.Text = $"{Format(HudTexts.AdvancingTo, Tr(advance.AgeNameKey))} {HudTexts.Percent(advance.Progress)}";
+            ageAdvanceBar.Value = advance.Progress;
+        }
+    }
+
+    /// <summary>
+    /// What decides the controls of the panel: the entities shown, the choices offered and
+    /// whether each is locked, the units queued and whether an Age Advance is underway.
+    /// Progress and hit points change without changing it.
+    /// </summary>
+    private static string LayoutOf(SelectionPanel panel)
+    {
+        var layout = new StringBuilder();
+        layout.Append(string.Join(',', panel.Units.Select(unit => unit.Id.Value))).Append('|');
+        layout.Append(string.Join(',', panel.BuildingChoices.Select(choice => $"{choice.Kind}:{choice.IsLocked}"))).Append('|');
+
+        if (panel.Building is { } building)
+        {
+            layout.Append(building.Id.Value).Append(':').Append(building.ConstructionProgress is null).Append('|');
+            layout.Append(string.Join(',', building.TrainingQueue.Select(queued => queued.Kind))).Append('|');
+            layout.Append(string.Join(',', building.UnitChoices.Select(choice => $"{choice.Kind}:{choice.IsLocked}"))).Append('|');
+            layout.Append(building.AgeAdvance?.AgeNameKey).Append(':').Append(building.AgeAdvance?.IsUnderway);
+        }
+
+        return layout.ToString();
+    }
+
+    private void Rebuild(SelectionPanel panel)
+    {
+        refreshers.Clear();
+
+        foreach (var child in bottomContent.GetChildren())
+        {
+            bottomContent.RemoveChild(child);
+            child.QueueFree();
+        }
+
+        if (panel.Building is { } building)
+        {
+            bottomContent.AddChild(BuildingInfo(building));
+            bottomContent.AddChild(BuildingOrders(building));
+
+            if (building.TrainingQueue.Count > 0)
+            {
+                bottomContent.AddChild(TrainingQueue(building.TrainingQueue));
+            }
+        }
+        else if (panel.Units.Count > 0)
+        {
+            bottomContent.AddChild(UnitsInfo(panel.Units));
+
+            if (panel.BuildingChoices.Count > 0)
+            {
+                bottomContent.AddChild(BuildingChoices(panel.BuildingChoices));
+            }
+        }
+    }
+
+    private Control BuildingInfo(SelectedBuilding building)
+    {
+        var column = NewColumn(300);
+        column.AddChild(NewLabel(Tr(building.NameKey), 22, Colors.White));
+        column.AddChild(HitPointsRow(panel => panel.Building!.HitPoints, panel => panel.Building!.MaxHitPoints));
+
+        if (building.ConstructionProgress is not null)
+        {
+            var label = NewLabel("", 16, HintColour);
+            var bar = NewBar(new Color(0.95f, 0.7f, 0.25f), new Vector2(260, 14));
+            column.AddChild(label);
+            column.AddChild(bar);
+            refreshers.Add(panel =>
+            {
+                var progress = panel.Building!.ConstructionProgress ?? 1;
+                label.Text = $"{Tr(HudTexts.Construction)}: {HudTexts.Percent(progress)}";
+                bar.Value = progress;
+            });
+        }
+        else if (building.UnitChoices.Count > 0)
+        {
+            var hint = NewLabel(Tr(HudTexts.RallyPointHint), 14, HintColour);
+            hint.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            column.AddChild(hint);
+        }
+
+        return column;
+    }
+
+    private Control BuildingOrders(SelectedBuilding building)
+    {
+        var column = NewColumn(0);
+
+        if (building.UnitChoices.Count > 0)
+        {
+            column.AddChild(NewLabel(Tr(HudTexts.Train), 16, HintColour));
+            var row = new HBoxContainer();
+            column.AddChild(row);
+
+            foreach (var choice in building.UnitChoices)
+            {
+                var kind = choice.Kind;
+                var button = ChoiceButton(Tr(choice.NameKey), choice.Cost, choice.LockedUntilAgeNameKey);
+                button.Name = $"Train{kind}";
+                button.Pressed += () => Control.Train(kind);
+                row.AddChild(button);
+            }
+        }
+
+        if (building.AgeAdvance is { } advance)
+        {
+            column.AddChild(AgeAdvanceControl(advance));
+        }
+
+        return column;
+    }
+
+    private Control AgeAdvanceControl(AgeAdvanceChoice advance)
+    {
+        if (!advance.IsUnderway)
+        {
+            var button = new Button
+            {
+                Name = "AdvanceAge",
+                ActionMode = BaseButton.ActionModeEnum.Press,
+                Text = $"{Format(HudTexts.AdvanceTo, Tr(advance.AgeNameKey))}\n{CostText(advance.Cost)}",
+                SizeFlagsHorizontal = Godot.Control.SizeFlags.ShrinkBegin,
+            };
+            button.Pressed += Control.AdvanceAge;
+
+            return button;
+        }
+
+        var box = new VBoxContainer();
+        var label = NewLabel("", 16, HintColour);
+        var bar = NewBar(new Color(0.55f, 0.75f, 1f), new Vector2(260, 14));
+        box.AddChild(label);
+        box.AddChild(bar);
+        refreshers.Add(panel =>
+        {
+            if (panel.Building?.AgeAdvance is { Progress: { } progress } underway)
+            {
+                label.Text = $"{Format(HudTexts.AdvancingTo, Tr(underway.AgeNameKey))} {HudTexts.Percent(progress)}";
+                bar.Value = progress;
+            }
+        });
+
+        return box;
+    }
+
+    private Control TrainingQueue(IReadOnlyList<QueuedUnit> queue)
+    {
+        var box = NewColumn(0);
+        box.AddChild(NewLabel(Tr(HudTexts.TrainingQueue), 16, HintColour));
+        var row = new HFlowContainer { CustomMinimumSize = new Vector2(320, 0) };
+        box.AddChild(row);
+
+        for (var position = 0; position < queue.Count; position++)
+        {
+            var at = position;
+            var entry = new VBoxContainer();
+            var button = new Button
+            {
+                Name = $"Queued{at}",
+                Text = Tr(queue[at].NameKey),
+                CustomMinimumSize = new Vector2(96, 32),
+                ActionMode = BaseButton.ActionModeEnum.Press,
+            };
+            button.Pressed += () => Control.CancelTraining(at);
+            entry.AddChild(button);
+
+            if (at == 0)
+            {
+                var bar = NewBar(new Color(0.45f, 0.85f, 0.45f), new Vector2(96, 8));
+                entry.AddChild(bar);
+                refreshers.Add(panel =>
+                {
+                    if (panel.Building is { TrainingQueue.Count: > 0 } building)
+                    {
+                        bar.Value = building.TrainingQueue[0].Progress;
+                    }
+                });
+            }
+
+            row.AddChild(entry);
+        }
+
+        var hint = NewLabel(Tr(HudTexts.CancelTrainingHint), 14, HintColour);
+        hint.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        hint.CustomMinimumSize = new Vector2(320, 0);
+        box.AddChild(hint);
+
+        return box;
+    }
+
+    private Control UnitsInfo(IReadOnlyList<SelectedUnit> units)
+    {
+        var column = NewColumn(300);
+
+        if (units.Count == 1)
+        {
+            column.AddChild(NewLabel(Tr(units[0].NameKey), 22, Colors.White));
+            column.AddChild(HitPointsRow(panel => panel.Units[0].HitPoints, panel => panel.Units[0].MaxHitPoints));
+
+            return column;
+        }
+
+        column.AddChild(NewLabel(Format(HudTexts.SelectedUnits, units.Count), 20, Colors.White));
+        var grid = new GridContainer { Columns = 8 };
+        grid.AddThemeConstantOverride("h_separation", 10);
+        column.AddChild(grid);
+
+        for (var index = 0; index < Math.Min(units.Count, MostUnitsShown); index++)
+        {
+            var at = index;
+            var entry = new VBoxContainer();
+            entry.AddChild(NewLabel(Tr(units[at].NameKey), 13, Colors.White));
+            var bar = NewBar(new Color(0.35f, 0.85f, 0.35f), new Vector2(90, 6));
+            entry.AddChild(bar);
+            grid.AddChild(entry);
+            refreshers.Add(panel => ShowHitPoints(bar, panel.Units[at].HitPoints, panel.Units[at].MaxHitPoints));
+        }
+
+        return column;
+    }
+
+    private Control BuildingChoices(IReadOnlyList<BuildingChoice> choices)
+    {
+        var column = NewColumn(0);
+        column.AddChild(NewLabel(Tr(HudTexts.Build), 16, HintColour));
+        var row = new HBoxContainer();
+        column.AddChild(row);
+
+        foreach (var choice in choices)
+        {
+            var kind = choice.Kind;
+            var button = ChoiceButton(Tr(choice.NameKey), choice.Cost, choice.LockedUntilAgeNameKey);
+            button.Name = $"Build{kind}";
+            button.Pressed += () => Control.ChooseBuilding(kind);
+            row.AddChild(button);
+        }
+
+        return column;
+    }
+
+    /// <summary>The hit points as a bar and as numbers, refreshed every frame.</summary>
+    private Control HitPointsRow(Func<SelectionPanel, int> hitPoints, Func<SelectionPanel, int> maxHitPoints)
+    {
+        var box = new VBoxContainer();
+        var label = NewLabel("", 15, HintColour);
+        var bar = NewBar(new Color(0.35f, 0.85f, 0.35f), new Vector2(260, 12));
+        box.AddChild(label);
+        box.AddChild(bar);
+        refreshers.Add(panel =>
+        {
+            label.Text = $"{Tr(HudTexts.HitPoints)}: {hitPoints(panel)}/{maxHitPoints(panel)}";
+            ShowHitPoints(bar, hitPoints(panel), maxHitPoints(panel));
+        });
+
+        return box;
+    }
+
+    /// <summary>A button naming a unit or building and its cost; disabled, naming the Age that unlocks it, while locked.</summary>
+    private Button ChoiceButton(string name, Cost cost, string? lockedUntilAgeNameKey)
+    {
+        var button = new Button
+        {
+            Text = lockedUntilAgeNameKey is null
+                ? $"{name}\n{CostText(cost)}"
+                : $"{name}\n{Format(HudTexts.LockedUntil, Tr(lockedUntilAgeNameKey))}",
+            Disabled = lockedUntilAgeNameKey is not null,
+            CustomMinimumSize = new Vector2(150, 56),
+            ActionMode = BaseButton.ActionModeEnum.Press,
+        };
+
+        return button;
+    }
+
+    private static void ShowHitPoints(ProgressBar bar, int hitPoints, int maxHitPoints)
+    {
+        var fraction = maxHitPoints <= 0 ? 0 : (double)hitPoints / maxHitPoints;
+        bar.Value = fraction;
+        ((StyleBoxFlat)bar.GetThemeStylebox("fill")).BgColor = WorldBarsOverlay.HealthColour(fraction);
+    }
+
+    private string CostText(Cost cost) => HudTexts.CostText(cost, key => Tr(key));
+
+    private string Format(string key, object argument) =>
+        string.Format(CultureInfo.InvariantCulture, Tr(key), argument);
+
+    private static VBoxContainer NewColumn(int width)
+    {
+        var column = new VBoxContainer { CustomMinimumSize = new Vector2(width, 0) };
+        column.AddThemeConstantOverride("separation", 6);
+
+        return column;
+    }
+
+    private static Label NewLabel(string text, int size, Color colour)
+    {
+        var label = new Label { Text = text, MouseFilter = Godot.Control.MouseFilterEnum.Ignore };
+        label.AddThemeFontSizeOverride("font_size", size);
+        label.AddThemeColorOverride("font_color", colour);
+
+        return label;
+    }
+
+    private static ProgressBar NewBar(Color fill, Vector2 size)
+    {
+        var bar = new ProgressBar
+        {
+            MinValue = 0,
+            MaxValue = 1,
+            Step = 0,
+            ShowPercentage = false,
+            CustomMinimumSize = size,
+            SizeFlagsHorizontal = Godot.Control.SizeFlags.ShrinkBegin,
+            MouseFilter = Godot.Control.MouseFilterEnum.Ignore,
+        };
+        bar.AddThemeStyleboxOverride("background", new StyleBoxFlat { BgColor = new Color(0, 0, 0, 0.6f) });
+        bar.AddThemeStyleboxOverride("fill", new StyleBoxFlat { BgColor = fill });
+
+        return bar;
+    }
+
+    private static StyleBoxFlat PanelStyle() => new()
+    {
+        BgColor = PanelColour,
+        ContentMarginLeft = 16,
+        ContentMarginRight = 16,
+        ContentMarginTop = 8,
+        ContentMarginBottom = 8,
+    };
+}
