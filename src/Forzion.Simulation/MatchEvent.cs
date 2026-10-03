@@ -34,4 +34,13 @@ public enum RejectionReason
 
     /// <summary>The destination Cell is outside the map.</summary>
     DestinationOutsideMap,
+
+    /// <summary>The attack target is neither a unit nor a building of the match.</summary>
+    UnknownTarget,
+
+    /// <summary>The attack target belongs to the issuing Player.</summary>
+    OwnTarget,
+
+    /// <summary>The command orders an attack from a unit that cannot attack.</summary>
+    UnitCannotAttack,
 }

@@ -64,4 +64,101 @@ public class AttackCommandTests
         List<int> Hits() =>
             Enumerable.Range(1, hitPoints.Count - 1).Where(tick => hitPoints[tick] < hitPoints[tick - 1]).ToList();
     }
+
+    [Fact]
+    public void An_attack_on_an_entity_that_is_neither_a_unit_nor_a_building_is_rejected()
+    {
+        var match = MatchWithSoldier();
+        var soldier = Battle.Last(match);
+
+        AssertRejected(match, new AttackCommand(First, [soldier.Id], match.State.ResourceSources[0].Id), RejectionReason.UnknownTarget);
+        AssertRejected(match, new AttackCommand(First, [soldier.Id], new EntityId(100_000)), RejectionReason.UnknownTarget);
+    }
+
+    [Fact]
+    public void An_attack_on_the_Players_own_unit_or_building_is_rejected()
+    {
+        var match = MatchWithSoldier();
+        var soldier = Battle.Last(match);
+
+        AssertRejected(match, new AttackCommand(First, [soldier.Id], Battle.MiddleVillager(match, First).Id), RejectionReason.OwnTarget);
+        AssertRejected(match, new AttackCommand(First, [soldier.Id], Battle.TownCenter(match, First).Id), RejectionReason.OwnTarget);
+    }
+
+    [Fact]
+    public void An_attack_by_a_unit_that_does_not_exist_is_rejected_and_sends_none_of_its_units()
+    {
+        var match = MatchWithSoldier();
+        var soldier = Battle.Last(match);
+        var target = Battle.MiddleVillager(match, Second).Id;
+
+        AssertRejected(match, new AttackCommand(First, [soldier.Id, new EntityId(100_000)], target), RejectionReason.UnknownUnit);
+        Assert.Null(soldier.Target);
+    }
+
+    [Fact]
+    public void An_attack_by_another_Players_unit_is_rejected_and_sends_none_of_its_units()
+    {
+        var match = MatchWithSoldier();
+        var soldier = Battle.Last(match);
+        var foreign = Battle.MiddleVillager(match, Second);
+        var target = Battle.TownCenter(match, Second).Id;
+
+        AssertRejected(match, new AttackCommand(First, [soldier.Id, foreign.Id], target), RejectionReason.UnitOfAnotherPlayer);
+        Assert.Null(soldier.Target);
+    }
+
+    [Fact]
+    public void An_attack_by_a_Villager_is_rejected_and_sends_none_of_its_units()
+    {
+        var match = MatchWithSoldier();
+        var soldier = Battle.Last(match);
+        var villager = Battle.MiddleVillager(match, First);
+        var target = Battle.TownCenter(match, Second).Id;
+
+        AssertRejected(match, new AttackCommand(First, [soldier.Id, villager.Id], target), RejectionReason.UnitCannotAttack);
+        Assert.Null(soldier.Target);
+        Assert.Null(villager.Target);
+    }
+
+    [Fact]
+    public void A_rejected_attack_leaves_the_state_as_if_it_had_not_been_sent()
+    {
+        var withRejection = MatchWithSoldier();
+        var without = MatchWithSoldier();
+        withRejection.Enqueue(new AttackCommand(
+            First, [Battle.Last(withRejection).Id], Battle.TownCenter(withRejection, First).Id));
+
+        withRejection.Tick();
+        without.Tick();
+
+        Assert.Equal(without.StateHash, withRejection.StateHash);
+    }
+
+    [Fact]
+    public void An_attack_makes_the_hash_diverge_from_a_match_without_it()
+    {
+        var withAttack = MatchWithSoldier();
+        var without = MatchWithSoldier();
+        withAttack.Enqueue(new AttackCommand(
+            First, [Battle.Last(withAttack).Id], Battle.TownCenter(withAttack, Second).Id));
+
+        withAttack.Tick();
+        without.Tick();
+
+        Assert.NotEqual(without.StateHash, withAttack.StateHash);
+    }
+
+    /// <summary>A match in which the first Player has a melee soldier beside its own Town Center.</summary>
+    private static Match MatchWithSoldier() =>
+        Battle.Create(first: plain =>
+            [new StartingUnit(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, First, -2, 0))]);
+
+    private static void AssertRejected(Match match, AttackCommand command, RejectionReason reason)
+    {
+        match.Enqueue(command);
+        match.Tick();
+
+        Assert.Equal([new CommandRejected(command, reason)], match.Events);
+    }
 }
