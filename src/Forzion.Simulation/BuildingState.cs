@@ -88,6 +88,23 @@ public sealed class BuildingState
     /// <summary>Puts a unit of the given kind at the end of the training queue.</summary>
     internal void QueueTraining(UnitKind kind) => trainingQueue.Add(kind);
 
+    /// <summary>
+    /// Takes the unit at the given position off the training queue and returns its kind. When
+    /// it is the first, in training, the next one starts afresh.
+    /// </summary>
+    internal UnitKind CancelTraining(int position)
+    {
+        var kind = trainingQueue[position];
+        trainingQueue.RemoveAt(position);
+
+        if (position == 0)
+        {
+            TrainingProgress = 0;
+        }
+
+        return kind;
+    }
+
     /// <summary>Takes the first unit off the training queue, done training, and starts the next afresh.</summary>
     internal void FinishTraining()
     {

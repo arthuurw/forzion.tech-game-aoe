@@ -65,3 +65,6 @@ msgstr "Ordem recusada: a construção ainda não está pronta."
 
 msgid "ORDER_REJECTED_BUILDING_CANNOT_TRAIN_UNIT"
 msgstr "Ordem recusada: essa construção não treina essa unidade."
+
+msgid "ORDER_REJECTED_NOT_IN_TRAINING_QUEUE"
+msgstr "Ordem recusada: essa unidade não está mais na fila de treino."

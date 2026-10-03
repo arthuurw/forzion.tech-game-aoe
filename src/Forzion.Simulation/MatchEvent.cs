@@ -91,4 +91,7 @@ public enum RejectionReason
     /// Barracks military units, and other buildings train none.
     /// </summary>
     BuildingCannotTrainUnit,
+
+    /// <summary>The building's training queue has no unit at the position the command names.</summary>
+    NotInTrainingQueue,
 }

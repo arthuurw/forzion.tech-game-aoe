@@ -342,6 +342,15 @@ public sealed class PlayerState
         }
     }
 
+    /// <summary>Gives the Player back the cost of something paid for and called off.</summary>
+    internal void Refund(Cost cost)
+    {
+        foreach (var kind in Enum.GetValues<ResourceKind>())
+        {
+            Receive(kind, cost.AmountOf(kind));
+        }
+    }
+
     internal void WriteTo(StateHasher hasher)
     {
         hasher.Write(Id.Value);
