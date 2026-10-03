@@ -1,3 +1,4 @@
+using Forzion.Simulation.Tests.Matches;
 using Forzion.Simulation.Tests.Movement;
 
 namespace Forzion.Simulation.Tests.Economy;
@@ -30,6 +31,17 @@ internal static class Gather
         && cell.Y >= building.Origin.Y - 1 && cell.Y <= building.Origin.Y + building.Height
         && !(cell.X >= building.Origin.X && cell.X < building.Origin.X + building.Width
             && cell.Y >= building.Origin.Y && cell.Y < building.Origin.Y + building.Height);
+
+    // Read once from a new match: every Player starts with the same Resources.
+    private static readonly int[] StartingAmounts = Enum.GetValues<ResourceKind>()
+        .Select(Match.Create(TestMatches.SinglePlayerConfig()).State.Players[0].AmountOf)
+        .ToArray();
+
+    /// <summary>
+    /// How much of the Resource the Player holds beyond what it started the match with: all it
+    /// has had delivered, as long as it has spent none of it.
+    /// </summary>
+    public static int Delivered(PlayerState player, ResourceKind kind) => player.AmountOf(kind) - StartingAmounts[(int)kind];
 
     /// <summary>Ticks the match until the condition holds, failing the test after <see cref="TickLimit"/> ticks.</summary>
     public static void Until(Match match, Func<bool> condition)

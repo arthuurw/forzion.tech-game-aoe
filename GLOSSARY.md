@@ -107,11 +107,11 @@ Trabalho do Aldeão ao lado de uma Obra do seu Jogador, até ela ficar pronta.
 _Avoid_: Erguer, edificar
 
 **Custo** (`Cost`):
-Recursos que o Jogador paga por uma construção, por inteiro e na hora em que posiciona a Obra.
+Recursos que o Jogador paga por uma construção, por inteiro e na hora em que posiciona a Obra, ou por uma unidade, por inteiro e na hora em que a põe na Fila de treino.
 _Avoid_: Preço
 
 **Limite de população** (`Population Limit`):
-Quantas unidades o Jogador pode ter ao mesmo tempo. O Centro dá um valor base e cada Casa pronta soma.
+Quantas unidades o Jogador pode ter ao mesmo tempo. O Centro dá um valor base e cada Casa pronta soma. Um Treino que faria a População passar do limite é recusado.
 _Avoid_: Capacidade, teto
 
 **Centro** (`Town Center`):
@@ -124,6 +124,24 @@ Construção que aumenta o limite de população do Jogador.
 **Quartel** (`Barracks`):
 Construção que produz unidades militares.
 
+## Produção
+
+**Treinar** (`Train`):
+Produzir uma unidade numa construção pronta: o Centro treina Aldeões e o Quartel, unidades militares. Leva um tempo fixo por tipo de unidade, e a unidade pronta aparece numa Célula livre ao lado da construção.
+_Avoid_: Recrutar, criar, produzir
+
+**Fila de treino** (`Training Queue`):
+As unidades que uma construção ainda vai treinar, em ordem; só a primeira avança. O Custo é pago ao pôr a unidade na fila e devolvido por inteiro se ela for cancelada antes de ficar pronta.
+_Avoid_: Lista de produção, buffer
+
+**População** (`Population`):
+Quantas unidades o Jogador tem, somadas às que estão nas Filas de treino das suas construções.
+_Avoid_: Contagem de unidades
+
+**Ponto de reunião** (`Rally Point`):
+Célula de uma construção que treina unidades para onde as unidades recém-treinadas andam sozinhas.
+_Avoid_: Bandeira, ponto de encontro
+
 ## Combate
 
 **Soldado corpo a corpo** (`Melee Soldier`):
@@ -131,6 +149,9 @@ Unidade militar que precisa encostar no alvo para atacar. Nome provisório até 
 
 **Soldado à distância** (`Ranged Soldier`):
 Unidade militar que ataca de longe, sem projétil simulado. Nome provisório até a escolha do nome histórico.
+
+**Soldado pesado** (`Heavy Soldier`):
+Unidade militar corpo a corpo mais forte, liberada pela Era II. Nome provisório até a escolha do nome histórico.
 
 **Pontos de vida** (`Hit Points`):
 Quanto dano uma unidade ou construção ainda aguenta. Ao chegar a zero, ela sai do mapa no mesmo tick.

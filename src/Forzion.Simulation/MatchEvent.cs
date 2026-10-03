@@ -82,4 +82,22 @@ public enum RejectionReason
 
     /// <summary>The command orders building from a unit that cannot build: only Villagers build.</summary>
     UnitCannotBuild,
+
+    /// <summary>The command names a construction site where only a complete building will do.</summary>
+    BuildingNotComplete,
+
+    /// <summary>
+    /// The building does not train units of that kind: the Town Center trains Villagers, the
+    /// Barracks military units, and other buildings train none.
+    /// </summary>
+    BuildingCannotTrainUnit,
+
+    /// <summary>The building's training queue has no unit at the position the command names.</summary>
+    NotInTrainingQueue,
+
+    /// <summary>Training the unit would take the Player's population past its population limit.</summary>
+    PopulationLimitReached,
+
+    /// <summary>The command names a building that trains no units: only the Town Center and the Barracks do.</summary>
+    BuildingCannotTrain,
 }

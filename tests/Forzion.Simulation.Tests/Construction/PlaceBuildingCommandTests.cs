@@ -39,20 +39,35 @@ public class PlaceBuildingCommandTests
     {
         var withRejection = TestMatches.TwoPlayerMatch();
         var without = TestMatches.TwoPlayerMatch();
-        var cost = Match.BuildingCost(BuildingKind.House);
-        Site.Stockpile(withRejection, TestMatches.FirstPlayer, cost.Wood);
-        Site.Stockpile(without, TestMatches.FirstPlayer, cost.Wood);
-        var origin = Site.FreeOriginNear(withRejection.State, withRejection.State.Buildings[0].Origin, Match.BuildingSize(BuildingKind.Barracks));
-        var command = new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.Barracks, origin, []);
+        SpendWoodOnBarracks(withRejection);
+        SpendWoodOnBarracks(without);
+        var origin = Site.FreeOriginNear(withRejection.State, withRejection.State.Buildings[0].Origin, Match.BuildingSize(BuildingKind.House));
+        var command = new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.House, origin, []);
         withRejection.Enqueue(command);
 
         withRejection.Tick();
         without.Tick();
 
-        Assert.True(withRejection.State.Players[0].AmountOf(ResourceKind.Wood) < Match.BuildingCost(BuildingKind.Barracks).Wood);
+        Assert.True(withRejection.State.Players[0].AmountOf(ResourceKind.Wood) < Match.BuildingCost(BuildingKind.House).Wood);
         Assert.Equal([new CommandRejected(command, RejectionReason.NotEnoughResources)], withRejection.Events);
         Assert.Equal(without.StateHash, withRejection.StateHash);
-        Assert.Equal(2, withRejection.State.Buildings.Count);
+        Assert.Equal(without.State.Buildings.Count, withRejection.State.Buildings.Count);
+    }
+
+    /// <summary>Has the first Player place Barracks sites near its Town Center until it is left without the Wood for another.</summary>
+    private static void SpendWoodOnBarracks(Match match)
+    {
+        var state = match.State;
+        var size = Match.BuildingSize(BuildingKind.Barracks);
+
+        while (state.Players[0].AmountOf(ResourceKind.Wood) >= Match.BuildingCost(BuildingKind.Barracks).Wood)
+        {
+            var origin = Site.FreeOriginNear(state, state.Buildings[0].Origin, size);
+            match.Enqueue(new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.Barracks, origin, []));
+            match.Tick();
+
+            Assert.Empty(match.Events);
+        }
     }
 
     [Theory]

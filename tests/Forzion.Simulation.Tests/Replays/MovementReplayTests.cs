@@ -67,8 +67,13 @@ public class MovementReplayTests
     // hash layout confirmed is that this is the hash of the final state as the public
     // interface shows it, paths, economy, combat and construction state included. CI runs this
     // on Windows, Linux and macOS: every system must reach the same hash, which is what holds
-    // fixed-point movement and pathfinding to the same result everywhere.
-    private const ulong ExpectedFinalHash = 2836565732608488657UL;
+    // fixed-point movement and pathfinding to the same result everywhere. With starting
+    // Resources, the model gave the value before with them taken out of each Player's stock,
+    // and this one with them in.
+    // When training joined the hash, the model reproduced the value before from the same final
+    // state with the layout before, and gave this one with training state added.
+    // Likewise when the rally point joined it.
+    private const ulong ExpectedFinalHash = 6611298794240541393UL;
 
     [Fact]
     public void A_recorded_replay_of_moves_reaches_the_recorded_final_hash()

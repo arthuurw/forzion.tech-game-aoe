@@ -35,6 +35,19 @@ public class MatchCreationTests
     }
 
     [Fact]
+    public void Each_Player_starts_with_200_Food_200_Wood_and_100_Gold()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+
+        Assert.All(match.State.Players, player =>
+        {
+            Assert.Equal(200, player.AmountOf(ResourceKind.Food));
+            Assert.Equal(200, player.AmountOf(ResourceKind.Wood));
+            Assert.Equal(100, player.AmountOf(ResourceKind.Gold));
+        });
+    }
+
+    [Fact]
     public void The_map_has_the_configured_size()
     {
         var match = Match.Create(TestMatches.SinglePlayerConfig());

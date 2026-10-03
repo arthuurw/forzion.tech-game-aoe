@@ -13,8 +13,8 @@ public class ConstructionReplayTests
 
     /// <summary>
     /// Construction by both Players: Wood gathered for it, a House built by two Villagers and
-    /// joined by a third, a Barracks the Player cannot afford yet, a Storehouse built near the
-    /// Wood, a build order for the other Player's site and the builders sent back to
+    /// joined by a third, a Barracks left unfinished when its builder joins the House, a
+    /// Storehouse built near the Wood, a build order for the other Player's site and the builders sent back to
     /// gathering. Unit, source and building IDs and the origins are read
     /// from a match of the same configuration.
     /// </summary>
@@ -29,9 +29,9 @@ public class ConstructionReplayTests
         var storehouse = Site.FreeOriginNear(state, secondWood.Cell, Match.BuildingSize(BuildingKind.Storehouse));
         var barracks = Site.FreeOriginNear(state, firstWood.Cell, Match.BuildingSize(BuildingKind.Barracks));
 
-        // Entities take IDs in creation order: the first site placed is the House.
+        // Entities take IDs in creation order: the sites are placed House, Barracks, Storehouse.
         var houseId = new EntityId(state.Units[^1].Id.Value + 1);
-        var storehouseId = new EntityId(houseId.Value + 1);
+        var storehouseId = new EntityId(houseId.Value + 2);
 
         return
         [
@@ -70,13 +70,20 @@ public class ConstructionReplayTests
 
     // The construction itself comes from this implementation; what an independent model of
     // the hash layout confirmed is that this is the hash of the final state as the public
-    // interface shows it, with a complete House and Storehouse, the Barracks refused, the
-    // second Player's Villagers gathering again and the first Player's idle once the Wood
-    // near them ran out. When construction and combat met in the hash, the model gave the
-    // value before from the same final state with the layout before, and this one with
-    // combat state added, and it matched the match's own hash at every tick. CI runs this on
-    // Windows, Linux and macOS: every system must reach the same hash.
-    private const ulong ExpectedFinalHash = 16449309013391325823UL;
+    // interface shows it, with a complete House and Storehouse, the Barracks left unfinished
+    // and both Players' Villagers gathering Wood again. When construction and combat met in
+    // the hash, the model gave the value before from the same final state with the layout
+    // before, and this one with combat state added, and it matched the match's own hash at
+    // every tick. When Players began the match with starting Resources, the Barracks, refused
+    // until then for want of Wood, was placed instead and its builder called off to the House;
+    // the layout stayed the same and the model, which first reproduced the values before of
+    // the other replays from their new states with the starting Resources taken out, gave
+    // this one and matched the match's own hash at every tick. CI runs this on Windows, Linux
+    // and macOS: every system must reach the same hash.
+    // When training joined the hash, the model reproduced the value before from the same final
+    // state with the layout before, and gave this one with training state added.
+    // Likewise when the rally point joined it.
+    private const ulong ExpectedFinalHash = 1348516145706742691UL;
 
     [Fact]
     public void A_recorded_replay_of_construction_reaches_the_recorded_final_hash()

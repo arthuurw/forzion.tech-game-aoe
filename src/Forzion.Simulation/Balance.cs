@@ -47,6 +47,15 @@ internal static class Balance
     /// </summary>
     public const int ObstacleWalkSpread = 33;
 
+    /// <summary>How much of the given Resource each Player starts the match with.</summary>
+    public static int StartingAmount(ResourceKind kind) => kind switch
+    {
+        ResourceKind.Food => 200,
+        ResourceKind.Wood => 200,
+        ResourceKind.Gold => 100,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
     /// <summary>How much a new source of the given Resource holds.</summary>
     public static int SourceAmount(ResourceKind kind) => kind switch
     {
@@ -62,6 +71,7 @@ internal static class Balance
         UnitKind.Villager => Fix64.FromInt(2),
         UnitKind.MeleeSoldier => Fix64.FromInt(2),
         UnitKind.RangedSoldier => Fix64.FromInt(2),
+        UnitKind.HeavySoldier => Fix64.FromInt(2),
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
@@ -71,6 +81,7 @@ internal static class Balance
         UnitKind.Villager => 25,
         UnitKind.MeleeSoldier => 45,
         UnitKind.RangedSoldier => 30,
+        UnitKind.HeavySoldier => 80,
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
@@ -92,6 +103,8 @@ internal static class Balance
             Damage: 6, Range: Fix64.One, IntervalTicks: 20, PerceptionRadius: Fix64.FromInt(6)),
         UnitKind.RangedSoldier => new AttackStats(
             Damage: 4, Range: Fix64.FromInt(5), IntervalTicks: 30, PerceptionRadius: Fix64.FromInt(7)),
+        UnitKind.HeavySoldier => new AttackStats(
+            Damage: 10, Range: Fix64.One, IntervalTicks: 20, PerceptionRadius: Fix64.FromInt(6)),
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
@@ -148,6 +161,46 @@ internal static class Balance
         BuildingKind.House => 5,
         BuildingKind.Storehouse => 0,
         BuildingKind.Barracks => 0,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
+    /// <summary>Whether buildings of the given kind train units.</summary>
+    public static bool Trains(BuildingKind kind) => kind switch
+    {
+        BuildingKind.TownCenter => true,
+        BuildingKind.House => false,
+        BuildingKind.Storehouse => false,
+        BuildingKind.Barracks => true,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
+    /// <summary>The kind of building that trains units of the given kind.</summary>
+    public static BuildingKind TrainedAt(UnitKind kind) => kind switch
+    {
+        UnitKind.Villager => BuildingKind.TownCenter,
+        UnitKind.MeleeSoldier => BuildingKind.Barracks,
+        UnitKind.RangedSoldier => BuildingKind.Barracks,
+        UnitKind.HeavySoldier => BuildingKind.Barracks,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
+    /// <summary>What training a unit of the given kind costs, paid in full when it joins a training queue.</summary>
+    public static Cost UnitCost(UnitKind kind) => kind switch
+    {
+        UnitKind.Villager => new Cost(50, 0, 0),
+        UnitKind.MeleeSoldier => new Cost(60, 0, 20),
+        UnitKind.RangedSoldier => new Cost(0, 25, 45),
+        UnitKind.HeavySoldier => new Cost(70, 0, 30),
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
+    /// <summary>Ticks a building spends training a unit of the given kind.</summary>
+    public static int TrainTime(UnitKind kind) => kind switch
+    {
+        UnitKind.Villager => 15 * Match.TicksPerSecond,
+        UnitKind.MeleeSoldier => 20 * Match.TicksPerSecond,
+        UnitKind.RangedSoldier => 18 * Match.TicksPerSecond,
+        UnitKind.HeavySoldier => 25 * Match.TicksPerSecond,
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
