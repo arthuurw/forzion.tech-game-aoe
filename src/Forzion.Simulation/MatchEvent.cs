@@ -11,7 +11,12 @@ public abstract record MatchEvent
     }
 }
 
-/// <summary>A Player was defeated and takes no further part in the match.</summary>
+/// <summary>
+/// A Player was defeated: it has no Town Center left. Its commands are rejected from then on
+/// with <see cref="RejectionReason.DefeatedPlayer"/>. Its remaining units and buildings stay
+/// on the map and act on their own: soldiers still attack enemies that come near, and
+/// Villagers go on with their gathering and building.
+/// </summary>
 public sealed record PlayerDefeated(PlayerId Player) : MatchEvent;
 
 /// <summary>A resource source was gathered to the end and left the map, freeing its Cell.</summary>
