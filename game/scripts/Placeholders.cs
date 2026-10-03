@@ -10,8 +10,8 @@ namespace Forzion.Game;
 public sealed class Placeholders
 {
     private const float BuildingHeight = 1.2f;
-    private const float UnitRadius = 0.2f;
-    private const float UnitHeight = 0.8f;
+    private const float UnitRadius = 0.25f;
+    private const float UnitHeight = 1.0f;
 
     private static readonly Color Grass = new(0.36f, 0.52f, 0.25f);
     private static readonly Color ForestGreen = new(0.1f, 0.3f, 0.12f);
@@ -38,7 +38,7 @@ public sealed class Placeholders
     {
         foodMesh = new SphereMesh { Radius = 0.35f, Height = 0.7f, Material = MaterialFor(FoodRed) };
         woodMesh = new CylinderMesh { TopRadius = 0.25f, BottomRadius = 0.3f, Height = 1.2f, Material = MaterialFor(WoodBrown) };
-        goldMesh = new BoxMesh { Size = new Vector3(0.8f, 0.5f, 0.8f), Material = MaterialFor(GoldYellow, metallic: 0.6f) };
+        goldMesh = new BoxMesh { Size = new Vector3(0.8f, 0.5f, 0.8f), Material = MaterialFor(GoldYellow) };
     }
 
     /// <summary>How high above the ground a unit's placeholder is placed, so it rests on the ground.</summary>
@@ -148,11 +148,11 @@ public sealed class Placeholders
         return new MultiMeshInstance3D { Name = name, Multimesh = multiMesh };
     }
 
-    private StandardMaterial3D MaterialFor(Color colour, float metallic = 0)
+    private StandardMaterial3D MaterialFor(Color colour)
     {
         if (!materials.TryGetValue(colour, out var material))
         {
-            material = new StandardMaterial3D { AlbedoColor = colour, Metallic = metallic, Roughness = 0.8f };
+            material = new StandardMaterial3D { AlbedoColor = colour, Roughness = 0.8f };
             materials[colour] = material;
         }
 
