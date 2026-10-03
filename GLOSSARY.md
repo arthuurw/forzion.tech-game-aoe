@@ -218,7 +218,7 @@ Infante de espada e rodela, o escudo redondo, das tropas portuguesas dos século
 **Arcabuzeiro** (`RangedSoldier`, `FACTION_PORTUGUESE_RANGED_SOLDIER`):
 Infante armado de arcabuz, a arma de fogo portátil das expedições portuguesas do século XVI.
 
-**Piqueiro** (`HeavySoldier`, `FACTION_PORTUGUESE_HEAVY_SOLDIER`):
-Infante de pique e corselete, o núcleo pesado dos terços que defenderam o Brasil no século XVII.
+**Cavaleiro** (`HeavySoldier`, `FACTION_PORTUGUESE_HEAVY_SOLDIER`):
+Combatente a cavalo. No Brasil quinhentista, os de cavalo do ouvidor-geral Martim Leitão combateram na conquista da Paraíba, em 1585.
 
 O Aldeão (`Villager`, `FACTION_PORTUGUESE_VILLAGER`) mantém o nome genérico.

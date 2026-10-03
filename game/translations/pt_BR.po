@@ -111,4 +111,4 @@ msgid "FACTION_PORTUGUESE_RANGED_SOLDIER"
 msgstr "Arcabuzeiro"
 
 msgid "FACTION_PORTUGUESE_HEAVY_SOLDIER"
-msgstr "Piqueiro"
+msgstr "Cavaleiro"
