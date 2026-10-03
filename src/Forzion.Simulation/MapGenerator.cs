@@ -1,6 +1,6 @@
 namespace Forzion.Simulation;
 
-/// <summary>What generation decided beyond the Cells it filled in the map.</summary>
+/// <summary>What generation decided beyond the forest and water it laid on the map.</summary>
 /// <param name="Homes">The Cells the Players' Town Centers are centred on, the first Player's first.</param>
 /// <param name="Sources">The resource sources, by row and then by column.</param>
 internal sealed record GeneratedMap(
@@ -59,42 +59,69 @@ internal static class MapGenerator
 
     private static readonly ResourceKind[] ResourceKinds = [ResourceKind.Food, ResourceKind.Wood, ResourceKind.Gold];
 
-    /// <summary>Fills <paramref name="map"/>, which must be all free, and returns what else was decided.</summary>
+    /// <summary>
+    /// Lays forest and water on <paramref name="map"/>, which must be all free, and returns
+    /// where the homes and the resource sources go.
+    /// </summary>
+    /// <remarks>
+    /// Generation works on a plan of its own, where source Cells are marked too so that
+    /// scattering and reach take them into account. Only the forest and water are copied to
+    /// <paramref name="map"/>: a source's Cell is marked by whoever creates the source, in the
+    /// same step (EST-8).
+    /// </remarks>
     public static GeneratedMap Generate(MapState map, MatchRandom random)
     {
+        var plan = new MapState(map.Width, map.Height);
         var home = new CellPosition(
             HomeMargin + random.NextInt(HomeJitter),
             HomeMargin + random.NextInt(HomeJitter));
         var sources = new List<SourcePlacement>();
 
-        PlaceHomeSources(map, random, home, sources);
+        PlaceHomeSources(plan, random, home, sources);
 
         for (var attempt = 0; attempt < ScatterAttempts; attempt++)
         {
             var homeSources = sources.Count;
             var scattered = new List<CellPosition>();
 
-            ScatterFarSources(map, random, home, sources, scattered);
-            ScatterObstacles(map, random, home, scattered);
+            ScatterFarSources(plan, random, home, sources, scattered);
+            ScatterObstacles(plan, random, home, scattered);
 
-            if (ReachableFrom(map, home).Contains(map.Mirror(home)))
+            if (ReachableFrom(plan, home).Contains(plan.Mirror(home)))
             {
                 break;
             }
 
             foreach (var cell in scattered)
             {
-                map[cell] = CellKind.Free;
+                plan[cell] = CellKind.Free;
             }
 
             sources.RemoveRange(homeSources, sources.Count - homeSources);
         }
 
-        DropWalledInSources(map, home, sources);
+        DropWalledInSources(plan, home, sources);
+        CopyObstacles(plan, map);
 
         return new GeneratedMap(
-            [home, map.Mirror(home)],
+            [home, plan.Mirror(home)],
             sources.OrderBy(source => source.Cell.Y).ThenBy(source => source.Cell.X).ToList());
+    }
+
+    private static void CopyObstacles(MapState plan, MapState map)
+    {
+        for (var y = 0; y < plan.Height; y++)
+        {
+            for (var x = 0; x < plan.Width; x++)
+            {
+                var cell = new CellPosition(x, y);
+
+                if (plan[cell] is CellKind.Forest or CellKind.Water)
+                {
+                    map[cell] = plan[cell];
+                }
+            }
+        }
     }
 
     private static void PlaceHomeSources(
