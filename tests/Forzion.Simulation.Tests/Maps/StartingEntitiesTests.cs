@@ -59,6 +59,75 @@ public class StartingEntitiesTests
     }
 
     [Fact]
+    public void Each_Player_starts_with_the_same_number_of_Villagers()
+    {
+        var state = TestMatches.TwoPlayerMatch().State;
+
+        Assert.NotEmpty(state.Units);
+        Assert.All(state.Units, unit => Assert.Equal(UnitKind.Villager, unit.Kind));
+        Assert.Equal(
+            state.Units.Count(unit => unit.Owner == TestMatches.FirstPlayer),
+            state.Units.Count(unit => unit.Owner == TestMatches.SecondPlayer));
+        Assert.Equal(state.Units.Count, state.Units.Count(unit => unit.Owner == TestMatches.FirstPlayer) * 2);
+    }
+
+    [Fact]
+    public void Starting_Villagers_stand_at_the_centre_of_distinct_free_Cells_beside_their_Town_Center()
+    {
+        var state = TestMatches.TwoPlayerMatch().State;
+        var half = Fix64.One / Fix64.FromInt(2);
+
+        Assert.Equal(state.Units.Count, state.Units.Select(unit => unit.Position.Cell).Distinct().Count());
+        Assert.All(state.Units, unit =>
+        {
+            var cell = unit.Position.Cell;
+            var townCenter = state.Buildings.Single(building => building.Owner == unit.Owner);
+
+            Assert.Equal(CellKind.Free, state.Map[cell]);
+            Assert.Equal(Fix64.FromInt(cell.X) + half, unit.Position.X);
+            Assert.Equal(Fix64.FromInt(cell.Y) + half, unit.Position.Y);
+            Assert.Contains(MapProbe.Footprint(townCenter), under => MapProbe.AreNeighbours(under, cell));
+        });
+    }
+
+    [Fact]
+    public void The_starting_Villagers_of_the_two_Players_mirror_each_other()
+    {
+        var state = TestMatches.TwoPlayerMatch().State;
+
+        Assert.Equal(
+            CellsOf(TestMatches.FirstPlayer).Select(cell => MapProbe.Mirror(state.Map, cell)).ToHashSet(),
+            CellsOf(TestMatches.SecondPlayer).ToHashSet());
+
+        IEnumerable<CellPosition> CellsOf(PlayerId player) =>
+            state.Units.Where(unit => unit.Owner == player).Select(unit => unit.Position.Cell);
+    }
+
+    [Fact]
+    public void Entities_have_distinct_ids_and_each_collection_is_in_ascending_id_order()
+    {
+        var state = TestMatches.TwoPlayerMatch().State;
+        var buildings = state.Buildings.Select(building => building.Id.Value).ToList();
+        var units = state.Units.Select(unit => unit.Id.Value).ToList();
+
+        Assert.Equal(buildings.Order(), buildings);
+        Assert.Equal(units.Order(), units);
+        Assert.Equal(buildings.Count + units.Count, buildings.Concat(units).Distinct().Count());
+        Assert.All(buildings.Concat(units), id => Assert.True(id >= 1));
+    }
+
+    [Fact]
+    public void A_match_with_a_single_Player_has_only_that_Players_entities()
+    {
+        var config = new MatchConfig(1, new MapConfig(64, 48), [new PlayerConfig(TestMatches.FirstFaction)]);
+
+        var state = Match.Create(config).State;
+
+        Assert.Single(state.Buildings);
+        Assert.All(state.Units, unit => Assert.Equal(TestMatches.FirstPlayer, unit.Owner));
+    }
+
+    [Fact]
     public void Reading_a_Cell_outside_the_map_is_an_error()
     {
         var map = TestMatches.TwoPlayerMatch().State.Map;

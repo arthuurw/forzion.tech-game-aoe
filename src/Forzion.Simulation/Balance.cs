@@ -8,4 +8,7 @@ internal static class Balance
 {
     /// <summary>Side of the Town Center's square footprint, in Cells. Odd, so it has a centre Cell.</summary>
     public const int TownCenterSize = 3;
+
+    /// <summary>Villagers each Player starts with. No more than <see cref="TownCenterSize"/>: they line up along one of its sides.</summary>
+    public const int StartingVillagers = 3;
 }

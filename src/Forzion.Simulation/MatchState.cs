@@ -8,6 +8,7 @@ public sealed class MatchState
 {
     private readonly List<PlayerState> players;
     private readonly List<BuildingState> buildings = [];
+    private readonly List<UnitState> units = [];
     private int lastEntityId;
 
     internal MatchState(MatchConfig config)
@@ -51,6 +52,9 @@ public sealed class MatchState
     /// <summary>The buildings, ordered by ascending <see cref="BuildingState.Id"/>.</summary>
     public IReadOnlyList<BuildingState> Buildings => buildings;
 
+    /// <summary>The units, ordered by ascending <see cref="UnitState.Id"/>.</summary>
+    public IReadOnlyList<UnitState> Units => units;
+
     /// <summary>The Player with the given ID, or null when the match has no such Player.</summary>
     internal PlayerState? FindPlayer(PlayerId id) =>
         id.Value >= 1 && id.Value <= players.Count ? players[id.Value - 1] : null;
@@ -74,6 +78,16 @@ public sealed class MatchState
         buildings.Add(building);
 
         return building;
+    }
+
+    /// <summary>Adds a unit. IDs only grow, so appending keeps the collection in ID order.</summary>
+    internal UnitState AddUnit(PlayerId owner, UnitKind kind, MapPosition position)
+    {
+        var unit = new UnitState(NextEntityId(), owner, kind, position);
+
+        units.Add(unit);
+
+        return unit;
     }
 
     /// <summary>
@@ -100,6 +114,13 @@ public sealed class MatchState
         {
             building.WriteTo(hasher);
         }
+
+        hasher.Write(units.Count);
+
+        foreach (var unit in units)
+        {
+            unit.WriteTo(hasher);
+        }
     }
 
     private EntityId NextEntityId() => new(++lastEntityId);
@@ -115,6 +136,17 @@ public sealed class MatchState
             new CellPosition(home.X - reach, home.Y - reach),
             Balance.TownCenterSize,
             Balance.TownCenterSize);
+
+        // The Villagers line up on the row just outside the Town Center, on the side facing
+        // the centre of the map, so that the two Players' lines mirror each other.
+        var towardsCentre = home.Y < Map.Height - 1 - home.Y ? 1 : -1;
+
+        for (var offset = -reach; offset < Balance.StartingVillagers - reach; offset++)
+        {
+            var cell = new CellPosition(home.X + (offset * towardsCentre), home.Y + ((reach + 1) * towardsCentre));
+
+            AddUnit(player, UnitKind.Villager, MapPosition.CentreOf(cell));
+        }
     }
 }
 

@@ -18,6 +18,10 @@ internal static class MapProbe
     public static CellPosition Mirror(MapState map, CellPosition cell) =>
         new(map.Width - 1 - cell.X, map.Height - 1 - cell.Y);
 
+    /// <summary>Whether the two Cells share a side.</summary>
+    public static bool AreNeighbours(CellPosition a, CellPosition b) =>
+        Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y) == 1;
+
     public static IEnumerable<CellPosition> Footprint(BuildingState building)
     {
         for (var y = building.Origin.Y; y < building.Origin.Y + building.Height; y++)
