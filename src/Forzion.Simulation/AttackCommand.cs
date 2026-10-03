@@ -6,8 +6,9 @@ namespace Forzion.Simulation;
 /// </summary>
 /// <remarks>
 /// The command is rejected as a whole, sending none of its units, when the target is not a
-/// unit or building of another Player, or any of the units does not exist, belongs to another
-/// Player or cannot attack.
+/// unit or building of another Player, when any of the units belongs to another Player or
+/// cannot attack, or when none of the units exists. A unit that does not exist, because it
+/// died after the order was given, is skipped and the others still attack.
 /// </remarks>
 /// <param name="Units">The units to attack with.</param>
 /// <param name="Target">The unit or building to attack.</param>
@@ -33,34 +34,18 @@ public sealed record AttackCommand(PlayerId Player, IReadOnlyList<EntityId> Unit
             return;
         }
 
-        var units = new List<UnitState>(Units.Count);
+        var units = OrderedUnits.Find(context, this, issuer, Units);
 
-        foreach (var id in Units)
+        if (units is null)
         {
-            var unit = state.FindUnit(id);
+            return;
+        }
 
-            if (unit is null)
-            {
-                context.Reject(this, RejectionReason.UnknownUnit);
+        if (units.Any(unit => Balance.Attack(unit.Kind) is null))
+        {
+            context.Reject(this, RejectionReason.UnitCannotAttack);
 
-                return;
-            }
-
-            if (unit.Owner != issuer.Id)
-            {
-                context.Reject(this, RejectionReason.UnitOfAnotherPlayer);
-
-                return;
-            }
-
-            if (Balance.Attack(unit.Kind) is null)
-            {
-                context.Reject(this, RejectionReason.UnitCannotAttack);
-
-                return;
-            }
-
-            units.Add(unit);
+            return;
         }
 
         foreach (var unit in units)

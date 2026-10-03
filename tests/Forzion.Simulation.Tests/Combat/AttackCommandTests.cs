@@ -86,14 +86,58 @@ public class AttackCommandTests
     }
 
     [Fact]
-    public void An_attack_by_a_unit_that_does_not_exist_is_rejected_and_sends_none_of_its_units()
+    public void An_attack_naming_a_unit_that_does_not_exist_still_sends_the_others()
     {
         var match = MatchWithSoldier();
         var soldier = Battle.Last(match);
-        var target = Battle.MiddleVillager(match, Second).Id;
+        var target = Battle.TownCenter(match, Second).Id;
+        match.Enqueue(new AttackCommand(First, [new EntityId(100_000), soldier.Id], target));
 
-        AssertRejected(match, new AttackCommand(First, [soldier.Id, new EntityId(100_000)], target), RejectionReason.UnknownUnit);
-        Assert.Null(soldier.Target);
+        match.Tick();
+
+        Assert.Empty(match.Events);
+        Assert.Equal(target, soldier.Target);
+    }
+
+    [Fact]
+    public void An_attack_naming_no_unit_that_exists_is_rejected()
+    {
+        var match = MatchWithSoldier();
+        var target = Battle.TownCenter(match, Second).Id;
+
+        AssertRejected(match, new AttackCommand(First, [new EntityId(100_000)], target), RejectionReason.UnknownUnit);
+    }
+
+    [Fact]
+    public void A_unit_that_died_after_the_attack_was_ordered_is_skipped_and_the_others_attack()
+    {
+        // The second Player's two soldiers stand beside the first Player's melee soldier and
+        // strike it down together; its ranged soldier stands a Cell further off.
+        var match = Battle.Create(
+            first: plain =>
+            [
+                new StartingUnit(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, Second, -2, 0)),
+                new StartingUnit(UnitKind.RangedSoldier, TestArmies.BesideHome(plain, Second, -2, 1)),
+            ],
+            second: plain =>
+            [
+                new StartingUnit(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, Second, -2, -1)),
+                new StartingUnit(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, Second, -2, -2)),
+            ]);
+        var units = match.State.UnitsOf(First).Where(unit => unit.Kind != UnitKind.Villager).ToList();
+        var melee = units[0];
+        var archer = units[1];
+        var townCenter = Battle.TownCenter(match, Second).Id;
+
+        // The order is given while the melee soldier still stands, and reaches the match after it fell.
+        var command = new AttackCommand(First, [melee.Id, archer.Id], townCenter);
+        Battle.TickUntil(match, () => melee.HitPoints <= 0 || archer.HitPoints <= 0);
+        Assert.Null(Battle.Unit(match, melee.Id));
+        match.Enqueue(command);
+        match.Tick();
+
+        Assert.DoesNotContain(match.Events, matchEvent => matchEvent is CommandRejected);
+        Assert.Equal(townCenter, archer.Target);
     }
 
     [Fact]
