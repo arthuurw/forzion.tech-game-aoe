@@ -53,7 +53,7 @@ public enum RejectionReason
     /// <summary>The command orders an attack from units none of which can attack.</summary>
     UnitCannotAttack,
 
-    /// <summary>The command orders a gather from a unit that cannot gather: only Villagers gather.</summary>
+    /// <summary>The command orders a gather from units none of which can gather: only Villagers gather.</summary>
     UnitCannotGather,
 
     /// <summary>The command names a building that is not in the match, or no longer is.</summary>
