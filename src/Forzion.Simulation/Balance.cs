@@ -34,6 +34,13 @@ internal static class Balance
     /// <summary>The most a Villager carries at once.</summary>
     public const int VillagerCarryCapacity = 10;
 
+    /// <summary>
+    /// How far from a depleted source its Villagers look for another source of the same
+    /// Resource, in Cells. Reaches across a home clearing, so a Player's sources beside its
+    /// Town Center always find one another.
+    /// </summary>
+    public const int SourceSearchRadius = 15;
+
     /// <summary>Ticks a Villager spends gathering one unit of the given Resource.</summary>
     public static int GatherTicksPerUnit(ResourceKind kind) => kind switch
     {

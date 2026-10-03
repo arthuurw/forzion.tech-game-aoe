@@ -81,8 +81,9 @@ internal sealed class GatherSystem : ISystem
     }
 
     /// <summary>
-    /// Takes the source off the map. Its Villagers stop where they are, except those already
-    /// carrying a load away, which deliver it first.
+    /// Takes the source off the map. Its Villagers move on to the nearest source of the same
+    /// Resource within <see cref="Balance.SourceSearchRadius"/> of it, or stop and stand idle
+    /// when there is none. Those already carrying a load away deliver it first.
     /// </summary>
     private static void Deplete(TickContext context, ResourceSourceState source)
     {
@@ -91,6 +92,8 @@ internal sealed class GatherSystem : ISystem
         state.RemoveResourceSource(source);
         context.Emit(new ResourceSourceDepleted(source.Id));
 
+        var replacement = NearestSourceAround(state, source.Kind, source.Cell);
+
         foreach (var unit in state.Units)
         {
             if (unit.GatherSource != source.Id)
@@ -98,13 +101,45 @@ internal sealed class GatherSystem : ISystem
                 continue;
             }
 
-            unit.GatherSource = null;
+            unit.GatherSource = replacement?.Id;
 
-            if (unit.GatherPhase != GatherPhase.ToDropOff)
+            if (unit.GatherPhase == GatherPhase.ToDropOff)
+            {
+                continue;
+            }
+
+            if (replacement is null)
             {
                 StopGathering(state.Map, unit);
             }
+            else
+            {
+                GatherFrom(state.Map, unit, replacement);
+            }
         }
+    }
+
+    /// <summary>
+    /// The source of the Resource nearest to the Cell within <see cref="Balance.SourceSearchRadius"/>
+    /// of it, or null when there is none. Between sources equally near, the one with the lowest ID.
+    /// </summary>
+    private static ResourceSourceState? NearestSourceAround(MatchState state, ResourceKind kind, CellPosition cell)
+    {
+        ResourceSourceState? nearest = null;
+        var nearestDistance = (Balance.SourceSearchRadius * Balance.SourceSearchRadius) + 1;
+
+        foreach (var source in state.ResourceSources)
+        {
+            var distance = SquaredDistance(source.Cell, cell);
+
+            if (source.Kind == kind && distance < nearestDistance)
+            {
+                nearest = source;
+                nearestDistance = distance;
+            }
+        }
+
+        return nearest;
     }
 
     /// <summary>
