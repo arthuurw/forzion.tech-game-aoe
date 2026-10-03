@@ -8,6 +8,9 @@ internal static class Battle
     /// <summary>More ticks than any fight in the combat tests takes.</summary>
     public const int TickLimit = 20_000;
 
+    // Two Cells to either side of the Town Center's centre: free, and away from the Villagers' row.
+    private static readonly (int X, int Y)[] SiegeOffsets = [(-2, -1), (-2, 0), (-2, 1), (2, -1), (2, 0), (2, 1)];
+
     /// <summary>The middle one of the Player's starting Villagers, which stands beside the middle of the Town Center.</summary>
     public static UnitState MiddleVillager(Match match, PlayerId player) =>
         match.State.Units.Where(unit => unit.Owner == player && unit.Kind == UnitKind.Villager).ElementAt(1);
@@ -28,6 +31,31 @@ internal static class Battle
 
         return Match.Create(TestArmies.Config(seed, first?.Invoke(plain), second?.Invoke(plain)));
     }
+
+    /// <summary>
+    /// A match in which the first Player starts with melee soldiers on both flanks of the
+    /// second Player's Town Center, already ordered to attack it.
+    /// </summary>
+    public static Match Siege(ulong seed = 42)
+    {
+        var match = Create(
+            first: plain => SiegeOffsets
+                .Select(offset => new StartingUnit(
+                    UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, TestMatches.SecondPlayer, offset.X, offset.Y)))
+                .ToList(),
+            seed: seed);
+
+        match.Enqueue(new AttackCommand(
+            TestMatches.FirstPlayer,
+            Besiegers(match).Select(soldier => soldier.Id).ToList(),
+            TownCenter(match, TestMatches.SecondPlayer).Id));
+
+        return match;
+    }
+
+    /// <summary>The first Player's soldiers of a <see cref="Siege"/> still standing.</summary>
+    public static List<UnitState> Besiegers(Match match) =>
+        match.State.Units.Where(unit => unit.Owner == TestMatches.FirstPlayer && unit.Kind == UnitKind.MeleeSoldier).ToList();
 
     /// <summary>The unit of the match with the given ID, or null once it is gone.</summary>
     public static UnitState? Unit(Match match, EntityId id) => match.State.Units.FirstOrDefault(unit => unit.Id == id);

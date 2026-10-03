@@ -125,14 +125,33 @@ public sealed class MatchState
         return unit;
     }
 
-    /// <summary>Removes every unit left without hit points and returns their IDs in ascending order.</summary>
+    /// <summary>
+    /// Removes every unit and building left without hit points, freeing the Cells the
+    /// buildings occupied, and returns their IDs in ascending order.
+    /// </summary>
     internal List<EntityId> RemoveDestroyed()
     {
-        var destroyed = units.Where(unit => unit.HitPoints <= 0).Select(unit => unit.Id).ToList();
+        var destroyedUnits = units.Where(unit => unit.HitPoints <= 0).ToList();
+        var destroyedBuildings = buildings.Where(building => building.HitPoints <= 0).ToList();
+
+        foreach (var building in destroyedBuildings)
+        {
+            for (var y = building.Origin.Y; y < building.Origin.Y + building.Height; y++)
+            {
+                for (var x = building.Origin.X; x < building.Origin.X + building.Width; x++)
+                {
+                    Map[new CellPosition(x, y)] = CellKind.Free;
+                }
+            }
+        }
 
         units.RemoveAll(unit => unit.HitPoints <= 0);
+        buildings.RemoveAll(building => building.HitPoints <= 0);
 
-        return destroyed;
+        return destroyedUnits.Select(unit => unit.Id)
+            .Concat(destroyedBuildings.Select(building => building.Id))
+            .OrderBy(id => id.Value)
+            .ToList();
     }
 
     /// <summary>
