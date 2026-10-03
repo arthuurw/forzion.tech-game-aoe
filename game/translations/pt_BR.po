@@ -1,0 +1,58 @@
+# Textos do jogo em português do Brasil.
+# Cada msgid é a chave que o código usa; o msgstr é o texto mostrado na tela.
+# Outro idioma entra como outro arquivo .po com as mesmas chaves.
+msgid ""
+msgstr ""
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+# Avisos de ordem recusada, um por motivo de recusa da simulação.
+msgid "ORDER_REJECTED_UNKNOWN_PLAYER"
+msgstr "Ordem recusada: Jogador desconhecido."
+
+msgid "ORDER_REJECTED_DEFEATED_PLAYER"
+msgstr "Ordem recusada: você já foi derrotado."
+
+msgid "ORDER_REJECTED_UNKNOWN_UNIT"
+msgstr "Ordem recusada: a unidade não está mais no mapa."
+
+msgid "ORDER_REJECTED_UNIT_OF_ANOTHER_PLAYER"
+msgstr "Ordem recusada: essa unidade é de outro Jogador."
+
+msgid "ORDER_REJECTED_DESTINATION_OUTSIDE_MAP"
+msgstr "Ordem recusada: o destino fica fora do mapa."
+
+msgid "ORDER_REJECTED_UNKNOWN_RESOURCE_SOURCE"
+msgstr "Ordem recusada: a Fonte de Recurso não está mais no mapa."
+
+msgid "ORDER_REJECTED_UNKNOWN_TARGET"
+msgstr "Ordem recusada: o alvo não está mais no mapa."
+
+msgid "ORDER_REJECTED_OWN_TARGET"
+msgstr "Ordem recusada: não dá para atacar o que é seu."
+
+msgid "ORDER_REJECTED_UNIT_CANNOT_ATTACK"
+msgstr "Ordem recusada: só unidades militares atacam."
+
+msgid "ORDER_REJECTED_UNIT_CANNOT_GATHER"
+msgstr "Ordem recusada: só Aldeões coletam."
+
+msgid "ORDER_REJECTED_UNKNOWN_BUILDING"
+msgstr "Ordem recusada: a construção não está mais no mapa."
+
+msgid "ORDER_REJECTED_BUILDING_OF_ANOTHER_PLAYER"
+msgstr "Ordem recusada: essa construção é de outro Jogador."
+
+msgid "ORDER_REJECTED_BUILDING_ALREADY_COMPLETE"
+msgstr "Ordem recusada: essa construção já está pronta."
+
+msgid "ORDER_REJECTED_BUILDING_NOT_PLACEABLE"
+msgstr "Ordem recusada: essa construção não pode ser posicionada."
+
+msgid "ORDER_REJECTED_INVALID_PLACEMENT"
+msgstr "Ordem recusada: o local não está livre."
+
+msgid "ORDER_REJECTED_NOT_ENOUGH_RESOURCES"
+msgstr "Ordem recusada: faltam Recursos."
