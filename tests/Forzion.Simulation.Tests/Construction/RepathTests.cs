@@ -52,6 +52,24 @@ public class RepathTests
         Assert.Equal(source.Id, carrier.GatherSource);
     }
 
+    [Fact]
+    public void A_Villager_walking_to_its_source_whose_way_new_buildings_block_still_walks_up_to_it_and_gathers()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var state = match.State;
+        Site.Stockpile(match, TestMatches.FirstPlayer, 3 * Match.BuildingCost(BuildingKind.House).Wood);
+        var villager = Site.VillagersOf(match, TestMatches.FirstPlayer)[1];
+        var source = Gather.NearestSource(state, AwayFrom(state.Buildings[0]), ResourceKind.Wood);
+        match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
+        match.Tick();
+
+        PlaceHouses(match, HousesHemmingIn(match, villager, cell => Gather.Touch(cell, source.Cell)));
+        Gather.Until(match, () => villager.GatherPhase != GatherPhase.ToSource);
+
+        Assert.Equal(GatherPhase.Gathering, villager.GatherPhase);
+        Assert.True(Gather.Touch(villager.Position.Cell, source.Cell));
+    }
+
     /// <summary>A Cell some way out from the side of the building with the highest X.</summary>
     private static CellPosition AwayFrom(BuildingState building) =>
         new(building.Origin.X + building.Width + 5, building.Origin.Y + (building.Height / 2));

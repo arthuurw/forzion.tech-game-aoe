@@ -42,8 +42,18 @@ internal sealed class GatherSystem : ISystem
             return;
         }
 
+        WalkUpToSource(state, villager);
+    }
+
+    /// <summary>
+    /// Sends the Villager walking up to its source, to the Cell it can reach that is nearest
+    /// the source's in a straight line, as <see cref="Pathfinder.FindPath"/> picks it: a Cell
+    /// beside the source whenever one can be reached.
+    /// </summary>
+    public static void WalkUpToSource(MatchState state, UnitState villager)
+    {
         villager.GatherPhase = GatherPhase.ToSource;
-        MovementSystem.WalkTo(state.Map, villager, source.Cell);
+        MovementSystem.WalkTo(state.Map, villager, state.FindResourceSource(villager.GatherSource!.Value)!.Cell);
     }
 
     /// <summary>
