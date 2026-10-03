@@ -8,7 +8,8 @@ namespace Forzion.Simulation;
 /// <remarks>
 /// Hits are simultaneous: a unit struck down earlier in the tick still lands its own hit, so
 /// acting first in ID order is no advantage. Whatever is left without hit points is removed at
-/// the end of the tick's combat, in the same tick, and the units attacking it stop.
+/// the end of the tick's combat, in the same tick: the units attacking it stop, and the
+/// Villagers building a destroyed site stand idle.
 /// </remarks>
 internal sealed class CombatSystem : ISystem
 {
@@ -39,6 +40,7 @@ internal sealed class CombatSystem : ISystem
         foreach (var id in destroyed)
         {
             context.Emit(new EntityDestroyed(id));
+            ConstructionSystem.ReleaseBuilders(state, id);
         }
 
         foreach (var unit in state.Units)

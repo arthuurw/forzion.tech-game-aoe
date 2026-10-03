@@ -18,6 +18,22 @@ internal sealed class ConstructionSystem : ISystem
         MovementSystem.WalkTo(map, villager, site.NearestCellTo(villager.Position.Cell));
     }
 
+    /// <summary>
+    /// Releases the Villagers building a site that has left the match: they stop building and
+    /// stand idle on the Cell they are in, keeping whatever they carry.
+    /// </summary>
+    public static void ReleaseBuilders(MatchState state, EntityId site)
+    {
+        foreach (var unit in state.Units)
+        {
+            if (unit.ConstructionSite == site)
+            {
+                unit.StopBuilding();
+                MovementSystem.WalkTo(state.Map, unit, unit.Position.Cell);
+            }
+        }
+    }
+
     public void Run(TickContext context)
     {
         var state = context.State;
