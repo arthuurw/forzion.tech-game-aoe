@@ -40,8 +40,22 @@ public sealed class PlayerControl
         picker = new Picker(driver, sizes);
     }
 
-    /// <summary>The selected entities, in ascending ID order.</summary>
-    public IReadOnlyList<EntityId> Selected => selected;
+    /// <summary>
+    /// The selected entities, in ascending ID order. A selected unit that dies, or building
+    /// that is destroyed, leaves the selection for good.
+    /// </summary>
+    public IReadOnlyList<EntityId> Selected
+    {
+        get
+        {
+            var state = driver.Match.State;
+
+            selected.RemoveAll(id =>
+                !state.Units.Any(unit => unit.Id == id) && !state.Buildings.Any(building => building.Id == id));
+
+            return selected;
+        }
+    }
 
     /// <summary>
     /// Whether the mouse, pressed at one point and now at the other, makes a click rather than

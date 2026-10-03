@@ -290,6 +290,23 @@ public class PlayerControlTests
         Assert.Equal(site.Id, villager.ConstructionSite);
     }
 
+    [Fact]
+    public void A_selected_unit_that_dies_leaves_the_selection()
+    {
+        var control = NewControl(out var match, config: WithEnemySoldierAtHome());
+        var villagers = UnitsOf(match, FirstPlayer);
+        var (from, to) = BoxAround(villagers.Select(unit => unit.Position));
+        control.Select(from, to);
+        Assert.Equal(villagers.Select(unit => unit.Id), control.Selected);
+
+        while (UnitsOf(match, FirstPlayer).Count == villagers.Count)
+        {
+            Tick(match);
+        }
+
+        Assert.Equal(UnitsOf(match, FirstPlayer).Select(unit => unit.Id), control.Selected);
+    }
+
     /// <summary>
     /// Has the first Player's Villagers gather the Wood for a House, stops them, and places the
     /// House with no builder on the free spot nearest its Town Center. Returns the unfinished House.
@@ -342,23 +359,34 @@ public class PlayerControlTests
         return new PlayerControl(driver, FirstPlayer, camera ?? TopDown, Sizes);
     }
 
-    private static MatchConfig PlainConfig(IReadOnlyList<StartingUnit>? firstExtras = null)
+    private static MatchConfig PlainConfig(
+        IReadOnlyList<StartingUnit>? firstExtras = null, IReadOnlyList<StartingUnit>? secondExtras = null)
     {
         var faction = new FactionId(1);
 
-        return new MatchConfig(42, new MapConfig(64, 48), [new PlayerConfig(faction, firstExtras), new PlayerConfig(faction)]);
+        return new MatchConfig(
+            42, new MapConfig(64, 48), [new PlayerConfig(faction, firstExtras), new PlayerConfig(faction, secondExtras)]);
     }
 
+    /// <summary>The plain match, with the first Player starting with a melee soldier beside its Town Center.</summary>
+    private static MatchConfig WithSoldier() => PlainConfig(firstExtras: [new StartingUnit(UnitKind.MeleeSoldier, BesideFirstHome())]);
+
     /// <summary>
-    /// The plain match, with the first Player starting with a melee soldier two Cells left of
-    /// the centre of its Town Center: a free Cell, away from the Villagers' row.
+    /// The plain match, with the second Player starting with a melee soldier beside the first
+    /// Player's Town Center, close enough to the first Player's Villagers to attack them on its own.
     /// </summary>
-    private static MatchConfig WithSoldier()
+    private static MatchConfig WithEnemySoldierAtHome() =>
+        PlainConfig(secondExtras: [new StartingUnit(UnitKind.MeleeSoldier, BesideFirstHome())]);
+
+    /// <summary>
+    /// The Cell two left of the centre of the first Player's Town Center: free, and away from
+    /// the Villagers' row.
+    /// </summary>
+    private static CellPosition BesideFirstHome()
     {
         var townCenter = Match.Create(PlainConfig()).State.Buildings.First(building => building.Owner == FirstPlayer);
-        var cell = new CellPosition(townCenter.Origin.X + (townCenter.Width / 2) - 2, townCenter.Origin.Y + (townCenter.Height / 2));
 
-        return PlainConfig([new StartingUnit(UnitKind.MeleeSoldier, cell)]);
+        return new CellPosition(townCenter.Origin.X + (townCenter.Width / 2) - 2, townCenter.Origin.Y + (townCenter.Height / 2));
     }
 
     private static UnitState SoldierOf(Match match) =>
