@@ -25,6 +25,23 @@ internal static class Site
         Halt(match, villagers);
     }
 
+    /// <summary>
+    /// Gathers the Wood for a building of the given kind with the Player's Villagers, places it
+    /// near the Player's Town Center with the given builders and ticks once to apply the
+    /// placement. Returns the new construction site.
+    /// </summary>
+    public static BuildingState Place(Match match, PlayerId player, BuildingKind kind, IReadOnlyList<EntityId> builders)
+    {
+        var state = match.State;
+        var townCenter = state.Buildings.First(building => building.Owner == player && building.Kind == BuildingKind.TownCenter);
+        Stockpile(match, player, Match.BuildingCost(kind).Wood);
+        var origin = FreeOriginNear(state, townCenter.Origin, Match.BuildingSize(kind));
+        match.Enqueue(new PlaceBuildingCommand(player, kind, origin, builders));
+        match.Tick();
+
+        return state.Buildings[^1];
+    }
+
     /// <summary>Orders each of the units to the Cell it is in and ticks until all of them stand still.</summary>
     public static void Halt(Match match, IEnumerable<UnitState> units)
     {

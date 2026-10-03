@@ -10,7 +10,7 @@ public class BuildTests
     {
         var match = TestMatches.TwoPlayerMatch();
         var villager = Site.VillagersOf(match, TestMatches.FirstPlayer)[1];
-        var house = PlaceHouse(match, [villager.Id]);
+        var house = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.House, [villager.Id]);
 
         Assert.Equal(house.Id, villager.ConstructionSite);
 
@@ -42,7 +42,7 @@ public class BuildTests
     {
         var match = TestMatches.TwoPlayerMatch();
         var villagers = Site.VillagersOf(match, TestMatches.FirstPlayer);
-        var house = PlaceHouse(match, villagers.Select(villager => villager.Id).ToList());
+        var house = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.House, villagers.Select(villager => villager.Id).ToList());
         var ticks = 0;
         var mostAtOnce = 0;
 
@@ -68,7 +68,7 @@ public class BuildTests
     public void A_construction_site_no_Villager_builds_makes_no_progress()
     {
         var match = TestMatches.TwoPlayerMatch();
-        var house = PlaceHouse(match, []);
+        var house = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.House, []);
 
         for (var tick = 0; tick < 2 * house.BuildTime; tick++)
         {
@@ -77,19 +77,5 @@ public class BuildTests
 
         Assert.Equal(0, house.BuildProgress);
         Assert.False(house.IsComplete);
-    }
-
-    /// <summary>
-    /// Gathers the Wood for a House with the first Player's Villagers, places it near the Town
-    /// Center with the given builders and ticks once to apply the placement.
-    /// </summary>
-    private static BuildingState PlaceHouse(Match match, IReadOnlyList<EntityId> builders)
-    {
-        Site.Stockpile(match, TestMatches.FirstPlayer, Match.BuildingCost(BuildingKind.House).Wood);
-        var origin = Site.FreeOriginNear(match.State, match.State.Buildings[0].Origin, Match.BuildingSize(BuildingKind.House));
-        match.Enqueue(new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.House, origin, builders));
-        match.Tick();
-
-        return match.State.Buildings.Single(building => building.Kind == BuildingKind.House);
     }
 }
