@@ -213,7 +213,7 @@ Os primeiros anos da presença portuguesa, até a década de 1530, quando o pau-
 A colônia do açúcar. Os primeiros engenhos são da década de 1530; da segunda metade do século XVI em diante, a colônia se organiza em torno deles.
 
 **Rodeleiro** (`MeleeSoldier`, `FACTION_PORTUGUESE_MELEE_SOLDIER`):
-Infante de espada e rodela, o escudo redondo, das tropas portuguesas dos séculos XVI e XVII.
+Infante de espada e rodela, o escudo redondo, das tropas portuguesas dos séculos XVI e XVII. No Brasil, os rodeleiros cobriam os arcabuzeiros contra as flechas na conquista da Paraíba, em 1585; na guerra holandesa, a espada e rodela seguiu em uso.
 
 **Arcabuzeiro** (`RangedSoldier`, `FACTION_PORTUGUESE_RANGED_SOLDIER`):
 Infante armado de arcabuz, a arma de fogo portátil das expedições portuguesas do século XVI.
