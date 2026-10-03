@@ -67,17 +67,20 @@ public class ReplayTests
     // the resource sources, buildings and units in ID order, each unit followed by the number
     // of Cells in its path and those Cells, each value as eight little-endian bytes. When
     // paths joined the hash, the values were recomputed by a model of this layout that first
-    // reproduced the values recorded before. Combat added each building's hit points, each
-    // unit's hit points, target (0 for none) and attack progress, and then whether the match
-    // is over and its winner (0 for none); the values were recomputed the same way, by a model
-    // that reproduced the earlier values with the earlier layout and matched the match's own
-    // hash at every tick of the replays. CI runs this on Windows, Linux and macOS: every
-    // system must reach the same hash. A change that adds state to the hash changes these
-    // values on purpose and must record the new ones.
-    private const ulong ExpectedFinalHash = 7949405867538644025UL;
+    // reproduced the values recorded before. When the economy joined it (each Player's Food,
+    // Wood and Gold; each unit's gather source, gather phase, gather progress and load), the
+    // same was done again: a model that reproduced the previous values with the previous
+    // layout gave these with the new one. Combat then added each building's hit points, each
+    // unit's hit points, target (0 for none) and attack progress after its economy state, and
+    // whether the match is over and its winner (0 for none) at the end; the values were
+    // recomputed the same way, by a model that reproduced the previous values with the
+    // previous layout and matched the match's own hash at every tick of the replays. CI runs
+    // this on Windows, Linux and macOS: every system must reach the same hash. A change that
+    // adds state to the hash changes these values on purpose and must record the new ones.
+    private const ulong ExpectedFinalHash = 15702937559874084281UL;
 
     // Seed 3 is one whose first scattering of obstacles cuts the Players apart and is drawn again.
-    private const ulong ExpectedInitialHashOfSeed3 = 2303080621154255258UL;
+    private const ulong ExpectedInitialHashOfSeed3 = 6114057392898037786UL;
 
     [Fact]
     public void A_recorded_replay_reaches_the_recorded_final_hash()

@@ -42,6 +42,18 @@ public sealed class UnitState
     /// <summary>Whether the unit is walking somewhere.</summary>
     public bool IsMoving => path.Count > 0;
 
+    /// <summary>The resource source the Villager gathers from, or null when it has none.</summary>
+    public EntityId? GatherSource { get; internal set; }
+
+    /// <summary>What the Villager is doing towards gathering.</summary>
+    public GatherPhase GatherPhase { get; internal set; }
+
+    /// <summary>What the Villager carries.</summary>
+    public Load Load { get; internal set; }
+
+    /// <summary>Ticks spent gathering towards the next unit of Resource.</summary>
+    internal int GatherProgress { get; set; }
+
     /// <summary>Hit points the unit has when whole.</summary>
     public int MaxHitPoints => Balance.HitPoints(Kind);
 
@@ -69,6 +81,14 @@ public sealed class UnitState
     {
         path.Clear();
         path.AddRange(cells);
+    }
+
+    /// <summary>Takes the Villager off gathering. It keeps whatever it carries.</summary>
+    internal void StopGathering()
+    {
+        GatherSource = null;
+        GatherPhase = GatherPhase.None;
+        GatherProgress = 0;
     }
 
     /// <summary>Drops the unit's target and stops it where it is.</summary>
@@ -100,7 +120,15 @@ public sealed class UnitState
             hasher.Write(cell.Y);
         }
 
+        // A unit without a source writes 0, which no entity ID takes.
+        hasher.Write(GatherSource?.Value ?? 0);
+        hasher.Write((int)GatherPhase);
+        hasher.Write(GatherProgress);
+        hasher.Write((int)Load.Resource);
+        hasher.Write(Load.Amount);
         hasher.Write(HitPoints);
+
+        // Likewise a unit without a target.
         hasher.Write(Target?.Value ?? 0);
         hasher.Write(AttackProgress);
     }

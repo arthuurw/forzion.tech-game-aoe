@@ -16,4 +16,4 @@ RTS 3D sobre a história do Brasil. Simulação determinística em C# puro, rend
 
 - **Linguagem do domínio**: `GLOSSARY.md` define os termos e o nome em inglês de cada um. Código, comentários e commits usam o nome em inglês; documentação e textos do jogo usam o termo em português.
 - **Decisões de arquitetura**: `docs/adr/`. Ler antes de mexer no núcleo de simulação ou na fronteira dele com o Godot.
-- **Núcleo de simulação**: usa só `Fix64`, o gerador aleatório da partida e iteração em ordem de ID. Tipos do Godot, `float`/`double`, relógio do sistema e threads ficam na camada de apresentação.
+- **Padrões de código**: `CODING_STANDARDS.md`. Ler antes de escrever ou revisar código; é a fonte do eixo Standards do `/code-review`.

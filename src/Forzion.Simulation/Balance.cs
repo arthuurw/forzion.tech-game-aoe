@@ -59,6 +59,25 @@ internal static class Balance
             Damage: 4, Range: Fix64.FromInt(5), IntervalTicks: 30, PerceptionRadius: Fix64.FromInt(7)),
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
+
+    /// <summary>The most a Villager carries at once.</summary>
+    public const int VillagerCarryCapacity = 10;
+
+    /// <summary>
+    /// How far from a depleted source its Villagers look for another source of the same
+    /// Resource, in Cells. Reaches across a home clearing, so a Player's sources beside its
+    /// Town Center always find one another.
+    /// </summary>
+    public const int SourceSearchRadius = 15;
+
+    /// <summary>Ticks a Villager spends gathering one unit of the given Resource.</summary>
+    public static int GatherTicksPerUnit(ResourceKind kind) => kind switch
+    {
+        ResourceKind.Food => 10,
+        ResourceKind.Wood => 12,
+        ResourceKind.Gold => 16,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
 }
 
 /// <summary>How a unit fights.</summary>

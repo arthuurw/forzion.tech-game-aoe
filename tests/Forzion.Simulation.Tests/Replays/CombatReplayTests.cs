@@ -89,7 +89,7 @@ public class CombatReplayTests
     // own hash at every tick. CI runs this on Windows, Linux and macOS: every system must reach
     // the same hash, which is what holds combat (ranges, chases, hits, deaths and the end of
     // the match) to the same result everywhere.
-    private const ulong ExpectedFinalHash = 3355738942257518089UL;
+    private const ulong ExpectedFinalHash = 16929903614095056169UL;
 
     [Fact]
     public void A_recorded_replay_of_combat_reaches_the_recorded_final_hash()

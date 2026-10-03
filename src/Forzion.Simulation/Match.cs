@@ -20,6 +20,7 @@ public sealed class Match
     [
         new CombatSystem(),
         new MovementSystem(),
+        new GatherSystem(),
         new DefeatSystem(),
     ];
 
