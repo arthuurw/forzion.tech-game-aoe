@@ -46,7 +46,7 @@ Povo ou potência jogável, com unidades, construções e nomes de Era próprios
 _Avoid_: Civilização, raça, nação, tribo
 
 **Portugueses** (`Portuguese`):
-Facção da Coroa portuguesa e dos colonos que ela mandou ao Brasil. O nome exibido fica sob a chave `FACTION_PORTUGUESE`; suas Eras e unidades estão em [Nomes dos Portugueses](#nomes-dos-portugueses).
+Facção da Coroa portuguesa e dos colonos e moradores luso-brasileiros. O nome exibido fica sob a chave `FACTION_PORTUGUESE`; suas Eras e unidades estão em [Nomes dos Portugueses](#nomes-dos-portugueses).
 
 ## Progressão
 
