@@ -39,7 +39,7 @@ A origem é o ADR 0001: as regras do jogo vivem no núcleo, sem referência à e
 
 - **APR-1**: a camada Godot mostra o estado, conduz os ticks e transforma input em comandos. Nenhuma regra do jogo é decidida nela.
 - **APR-2**: a conversão de `Fix64` para ponto flutuante acontece só na apresentação.
-- **APR-3**: lógica de apresentação que não depende da engine (acumulador de ticks, fator de interpolação) fica em C# puro, coberta pelo projeto de testes.
+- **APR-3**: lógica de apresentação que não depende da engine (acumulador de ticks, fator de interpolação) fica em C# puro, numa biblioteca sem referência ao Godot (`src/Forzion.Presentation`), coberta por testes automatizados.
 
 ## Testes
 
