@@ -27,6 +27,11 @@ internal sealed record GeneratedMap(
 /// cuts one home off from the other is thrown away and drawn again; after
 /// <see cref="ScatterAttempts"/> failures the map is left open, which always connects them.
 /// </para>
+/// <para>
+/// A scattered source can still end up walled in by forest or water. Such sources are
+/// dropped once the scattering is kept, so every source left has a free Cell beside it that
+/// both homes reach.
+/// </para>
 /// </remarks>
 internal static class MapGenerator
 {
@@ -78,7 +83,7 @@ internal static class MapGenerator
             ScatterFarSources(map, random, home, sources, scattered);
             ScatterObstacles(map, random, home, scattered);
 
-            if (HomesAreConnected(map, home))
+            if (ReachableFrom(map, home).Contains(map.Mirror(home)))
             {
                 break;
             }
@@ -90,6 +95,8 @@ internal static class MapGenerator
 
             sources.RemoveRange(homeSources, sources.Count - homeSources);
         }
+
+        DropWalledInSources(map, home, sources);
 
         return new GeneratedMap(
             [home, map.Mirror(home)],
@@ -207,13 +214,12 @@ internal static class MapGenerator
         && Distance(cell, map.Mirror(home)) > ClearingRadius;
 
     /// <summary>
-    /// Whether free Cells that share a side link the two homes. The Town Centers are not on
-    /// the map yet, so the home Cells themselves are free; each sits in its open clearing, so
-    /// reaching the home Cell is reaching the clearing.
+    /// The free Cells linked to the home by free Cells that share a side. The Town Centers are
+    /// not on the map yet, so the home Cells themselves are free; each sits in its open
+    /// clearing, so reaching the home Cell is reaching the clearing.
     /// </summary>
-    private static bool HomesAreConnected(MapState map, CellPosition home)
+    private static HashSet<CellPosition> ReachableFrom(MapState map, CellPosition home)
     {
-        var target = map.Mirror(home);
         var reached = new HashSet<CellPosition> { home };
         var frontier = new Queue<CellPosition>();
 
@@ -221,19 +227,7 @@ internal static class MapGenerator
 
         while (frontier.Count > 0)
         {
-            var cell = frontier.Dequeue();
-
-            if (cell == target)
-            {
-                return true;
-            }
-
-            CellPosition[] neighbours =
-            [
-                new(cell.X + 1, cell.Y), new(cell.X - 1, cell.Y), new(cell.X, cell.Y + 1), new(cell.X, cell.Y - 1),
-            ];
-
-            foreach (var next in neighbours)
+            foreach (var next in SideNeighbours(frontier.Dequeue()))
             {
                 if (map.Contains(next) && map[next] == CellKind.Free && reached.Add(next))
                 {
@@ -242,8 +236,32 @@ internal static class MapGenerator
             }
         }
 
-        return false;
+        return reached;
     }
+
+    /// <summary>
+    /// Frees the Cells of the sources no Cell reachable from the homes touches and forgets
+    /// those sources. The homes are linked, so what one reaches the other reaches too, and on
+    /// a symmetric map that is symmetric as well: a source and its mirror go together.
+    /// </summary>
+    private static void DropWalledInSources(
+        MapState map, CellPosition home, List<(CellPosition Cell, ResourceKind Kind)> sources)
+    {
+        var reached = ReachableFrom(map, home);
+        var walledIn = sources.Where(source => !SideNeighbours(source.Cell).Any(reached.Contains)).ToHashSet();
+
+        foreach (var source in walledIn)
+        {
+            map[source.Cell] = CellKind.Free;
+        }
+
+        sources.RemoveAll(walledIn.Contains);
+    }
+
+    private static CellPosition[] SideNeighbours(CellPosition cell) =>
+    [
+        new(cell.X + 1, cell.Y), new(cell.X - 1, cell.Y), new(cell.X, cell.Y + 1), new(cell.X, cell.Y - 1),
+    ];
 
     private static void PlaceSourcePair(
         MapState map, CellPosition cell, ResourceKind kind, List<(CellPosition Cell, ResourceKind Kind)> sources)
