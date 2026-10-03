@@ -10,6 +10,9 @@ namespace Forzion.Game;
 /// </summary>
 public partial class MatchView : Node3D
 {
+    /// <summary>The Player controlled by the person at the screen.</summary>
+    public static readonly PlayerId HumanPlayer = new(1);
+
     private static readonly FactionId Portuguese = new(1);
 
     private readonly Placeholders placeholders = new();
