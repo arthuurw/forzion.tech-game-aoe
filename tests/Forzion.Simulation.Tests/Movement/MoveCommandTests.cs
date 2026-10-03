@@ -192,4 +192,88 @@ public class MoveCommandTests
 
         Assert.Equal(without.StateHash, withRejection.StateHash);
     }
+
+    [Fact]
+    public void A_unit_ordered_elsewhere_while_walking_goes_to_the_new_destination()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var villager = Walk.MiddleVillager(match);
+        var home = villager.Position.Cell;
+        match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], Walk.BehindTownCenter(match)));
+
+        // Far enough to be caught between two Cell centres, on its way around the building.
+        for (var tick = 0; tick < 33; tick++)
+        {
+            match.Tick();
+        }
+
+        Assert.True(villager.IsMoving);
+        Assert.NotEqual(MapPosition.CentreOf(villager.Position.Cell), villager.Position);
+
+        match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], home));
+        var visited = Walk.UntilStopped(match, villager);
+
+        Assert.Equal(MapPosition.CentreOf(home), villager.Position);
+        Assert.All(visited, cell => Assert.Equal(CellKind.Free, match.State.Map[cell]));
+    }
+
+    [Fact]
+    public void A_unit_ordered_to_the_Cell_it_is_crossing_settles_on_its_centre()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var villager = Walk.MiddleVillager(match);
+        match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], Walk.BehindTownCenter(match)));
+
+        for (var tick = 0; tick < 33; tick++)
+        {
+            match.Tick();
+        }
+
+        var crossing = villager.Position.Cell;
+        Assert.NotEqual(MapPosition.CentreOf(crossing), villager.Position);
+
+        match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], crossing));
+        Walk.UntilStopped(match, villager);
+
+        Assert.Equal(MapPosition.CentreOf(crossing), villager.Position);
+    }
+
+    [Fact]
+    public void A_unit_ordered_to_the_Cell_it_stands_on_does_not_move()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var villager = Walk.MiddleVillager(match);
+        var before = villager.Position;
+        match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], before.Cell));
+
+        match.Tick();
+
+        Assert.Empty(match.Events);
+        Assert.False(villager.IsMoving);
+        Assert.Equal(before, villager.Position);
+    }
+
+    [Fact]
+    public void A_walking_unit_reports_the_Cells_it_still_has_to_walk_through()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var villager = Walk.MiddleVillager(match);
+        var destination = Walk.BehindTownCenter(match);
+        match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], destination));
+
+        match.Tick();
+
+        var from = villager.Position.Cell;
+        Assert.Equal(8, villager.Path.Count);
+        Assert.Equal(destination, villager.Path[^1]);
+        Assert.All(villager.Path, cell =>
+        {
+            Assert.True(MapProbe.AreNeighbours(from, cell));
+            from = cell;
+        });
+
+        Walk.UntilStopped(match, villager);
+
+        Assert.Empty(villager.Path);
+    }
 }
