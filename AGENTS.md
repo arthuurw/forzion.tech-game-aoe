@@ -6,7 +6,7 @@ RTS 3D sobre a história do Brasil. Simulação determinística em C# puro, rend
 
 - **Specs**: escritas com o skill `/to-spec` e publicadas como issue no GitHub. Quando outro fluxo (por exemplo `superpowers:brainstorming`) chegar na etapa de escrever a spec, essa etapa é feita pelo `/to-spec`.
 - **Implementação**: feita com `/implement-spec` quando a spec tem tickets, ou com `/implement` para um trabalho único sem grafo de tickets.
-- **Commits**: pequenos e atômicos, um por mudança lógica. Cada commit compila e passa nos testes sozinho.
+- **Commits**: pequenos e atômicos, um por mudança lógica. Cada commit compila e passa nos testes sozinho. Mensagens em inglês, no padrão Conventional Commits (`feat:`, `fix:`, `test:`, `refactor:`, `docs:`, `chore:`, `ci:`).
 - **Revisão e PR**: terminada a implementação, rodar `/code-review` no branch. É o skill de dois eixos, Standards e Spec, descrito em https://www.aihero.dev/skills-code-review; nenhum outro revisor o substitui. Com a revisão limpa e os testes passando, abrir o pull request; com problemas, corrigir e revisar de novo antes de abrir.
 - **Merge**: o agente mescla o pull request na `main` quando o `/code-review` está limpo e o CI do pull request passou. Depois do merge, exclui os branches já mesclados, no repositório local e no GitHub.
 - **Branches**: cada tarefa é implementada em branch próprio. A `main` só recebe trabalho por merge de pull request.
