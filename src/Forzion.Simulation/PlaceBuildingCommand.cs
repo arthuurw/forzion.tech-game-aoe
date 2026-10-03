@@ -3,7 +3,8 @@ namespace Forzion.Simulation;
 /// <summary>
 /// Places a construction site of the Player: a building of the given kind whose footprint
 /// starts on <paramref name="Origin"/>. Its cost is paid in full at once, and its Cells are
-/// blocked from then on.
+/// blocked from then on. The builders walk up to the site and build it, stopping whatever
+/// gathering they were doing.
 /// </summary>
 /// <remarks>
 /// The command is rejected, placing nothing and paying nothing, when Players do not place
@@ -13,7 +14,9 @@ namespace Forzion.Simulation;
 /// </remarks>
 /// <param name="Kind">The kind of building to place.</param>
 /// <param name="Origin">The Cell of the footprint with the lowest X and Y.</param>
-public sealed record PlaceBuildingCommand(PlayerId Player, BuildingKind Kind, CellPosition Origin)
+/// <param name="Builders">The Villagers sent to build the site. May be empty.</param>
+public sealed record PlaceBuildingCommand(
+    PlayerId Player, BuildingKind Kind, CellPosition Origin, IReadOnlyList<EntityId> Builders)
     : Command(Player)
 {
     internal override void Execute(TickContext context, PlayerState issuer)
@@ -44,6 +47,11 @@ public sealed record PlaceBuildingCommand(PlayerId Player, BuildingKind Kind, Ce
         }
 
         issuer.Pay(cost);
-        context.State.AddBuilding(issuer.Id, Kind, Origin, size, size);
+        var site = context.State.AddBuilding(issuer.Id, Kind, Origin, size, size);
+
+        foreach (var id in Builders)
+        {
+            ConstructionSystem.Build(context.State.Map, context.State.FindUnit(id)!, site);
+        }
     }
 }

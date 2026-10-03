@@ -16,7 +16,7 @@ public class PlaceBuildingCommandTests
         var before = Enum.GetValues<ResourceKind>().Select(player.AmountOf).ToList();
         var origin = Site.FreeOriginNear(match.State, match.State.Buildings[0].Origin, Match.BuildingSize(BuildingKind.House));
         Assert.True(match.CanPlace(BuildingKind.House, origin));
-        match.Enqueue(new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.House, origin));
+        match.Enqueue(new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.House, origin, []));
 
         match.Tick();
 
@@ -43,7 +43,7 @@ public class PlaceBuildingCommandTests
         Site.Stockpile(withRejection, TestMatches.FirstPlayer, cost.Wood);
         Site.Stockpile(without, TestMatches.FirstPlayer, cost.Wood);
         var origin = Site.FreeOriginNear(withRejection.State, withRejection.State.Buildings[0].Origin, Match.BuildingSize(BuildingKind.Barracks));
-        var command = new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.Barracks, origin);
+        var command = new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.Barracks, origin, []);
         withRejection.Enqueue(command);
 
         withRejection.Tick();
@@ -63,7 +63,7 @@ public class PlaceBuildingCommandTests
         var withRejection = TestMatches.TwoPlayerMatch();
         var without = TestMatches.TwoPlayerMatch();
         var origin = Site.FreeOriginNear(withRejection.State, withRejection.State.Buildings[0].Origin, 3);
-        var command = new PlaceBuildingCommand(TestMatches.FirstPlayer, kind, origin);
+        var command = new PlaceBuildingCommand(TestMatches.FirstPlayer, kind, origin, []);
         withRejection.Enqueue(command);
 
         withRejection.Tick();
@@ -84,7 +84,7 @@ public class PlaceBuildingCommandTests
         var without = TestMatches.TwoPlayerMatch();
         var origin = InvalidOrigin(withRejection, spot);
         InvalidOrigin(without, spot);
-        var command = new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.House, origin);
+        var command = new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.House, origin, []);
         withRejection.Enqueue(command);
 
         Assert.False(withRejection.CanPlace(BuildingKind.House, origin));

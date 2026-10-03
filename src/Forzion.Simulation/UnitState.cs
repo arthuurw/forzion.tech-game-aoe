@@ -44,6 +44,12 @@ public sealed class UnitState
     /// <summary>What the Villager carries.</summary>
     public Load Load { get; internal set; }
 
+    /// <summary>
+    /// The construction site the Villager walks up to and builds, or null when it builds none.
+    /// It works only while standing still beside the site.
+    /// </summary>
+    public EntityId? ConstructionSite { get; internal set; }
+
     /// <summary>Ticks spent gathering towards the next unit of Resource.</summary>
     internal int GatherProgress { get; set; }
 
