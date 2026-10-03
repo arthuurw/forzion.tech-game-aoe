@@ -203,7 +203,9 @@ internal static class MapGenerator
                     scattered.Add(mirror);
                 }
 
-                // A step that would leave the map stays where it is.
+                // A step off the map is clamped rather than drawn again, so every step costs
+                // exactly one draw and the walk's length alone sets how far the random
+                // generator advances.
                 switch (random.NextInt(4))
                 {
                     case 0:
