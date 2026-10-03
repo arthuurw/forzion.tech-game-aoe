@@ -43,6 +43,12 @@ public sealed class MatchState
         {
             PlaceStartingEntities(player.Id, generated.Homes[player.Id.Value - 1]);
         }
+
+        // After every Player's usual start, so extra units never shift the IDs of the rest.
+        foreach (var player in players)
+        {
+            PlaceExtraUnits(player.Id, config.Players[player.Id.Value - 1].ExtraUnits ?? []);
+        }
     }
 
     /// <summary>Number of ticks simulated so far.</summary>
@@ -157,6 +163,21 @@ public sealed class MatchState
     }
 
     private EntityId NextEntityId() => new(++lastEntityId);
+
+    private void PlaceExtraUnits(PlayerId player, IReadOnlyList<StartingUnit> extraUnits)
+    {
+        foreach (var extra in extraUnits)
+        {
+            if (!Map.Contains(extra.Cell) || Map[extra.Cell] != CellKind.Free)
+            {
+                throw new ArgumentException(
+                    $"Player {player.Value} has an extra unit on {extra.Cell}, which is not a free Cell of the map.",
+                    "config");
+            }
+
+            AddUnit(player, extra.Kind, MapPosition.CentreOf(extra.Cell));
+        }
+    }
 
     /// <summary>What a Player starts the match with, around the Cell the map gave as home.</summary>
     private void PlaceStartingEntities(PlayerId player, CellPosition home)

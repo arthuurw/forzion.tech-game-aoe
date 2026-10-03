@@ -28,6 +28,8 @@ internal static class Balance
     public static Fix64 Speed(UnitKind kind) => kind switch
     {
         UnitKind.Villager => Fix64.FromInt(2),
+        UnitKind.MeleeSoldier => Fix64.FromInt(2),
+        UnitKind.RangedSoldier => Fix64.FromInt(2),
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 }

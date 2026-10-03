@@ -3,6 +3,12 @@ namespace Forzion.Simulation;
 public enum UnitKind
 {
     Villager = 0,
+
+    /// <summary>Military unit that fights at close quarters.</summary>
+    MeleeSoldier = 1,
+
+    /// <summary>Military unit that fights from a distance.</summary>
+    RangedSoldier = 2,
 }
 
 /// <summary>A unit. Units stand on free Cells and do not occupy them.</summary>
