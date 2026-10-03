@@ -38,6 +38,10 @@ _Avoid_: História, modo história
 Participante de uma partida, humano ou IA, que controla uma Facção.
 _Avoid_: Time, lado
 
+**IA** (`AI`):
+Jogador controlado pelo próprio jogo. Lê o estado da Partida e dá as mesmas ordens que um Jogador humano daria, seguindo um roteiro fixo (`AI Script`): coletar, erguer Casas e um Quartel, treinar, fazer o Avanço de Era e atacar o Centro inimigo quando o Exército chega a um tamanho. Joga com as mesmas regras e Custos e não vê nada que um humano não veja. Quais Jogadores são IA é dado da configuração da Partida.
+_Avoid_: Bot, computador, CPU
+
 **Facção** (`Faction`):
 Povo ou potência jogável, com unidades, construções e nomes de Era próprios. Povos indígenas e quilombolas são Facções com a mesma agência das europeias. As Eras de uma Facção, com o nome de cada uma e o que cada uma libera, são dados da Facção, e não regras.
 _Avoid_: Civilização, raça, nação, tribo
@@ -163,6 +167,10 @@ Unidade militar corpo a corpo mais forte, liberada pela Era II. É um tipo de un
 **Pontos de vida** (`Hit Points`):
 Quanto dano uma unidade ou construção ainda aguenta. Ao chegar a zero, ela sai do mapa no mesmo tick.
 _Avoid_: HP, saúde, energia
+
+**Exército** (`Army`):
+As unidades militares de um Jogador. Aldeões não fazem parte dele.
+_Avoid_: Tropa, força
 
 **Alvo** (`Target`):
 A unidade ou construção inimiga que uma unidade militar está atacando.
