@@ -70,6 +70,29 @@ internal sealed class GatherSystem : ISystem
         }
     }
 
+    /// <summary>
+    /// Sends the Villager walking to the free Cell beside a drop-off point of its Player that
+    /// has the shortest way to it, whichever point that is; between Cells equally far, the one
+    /// with the lowest index. A Player with no drop-off point leaves the Villager idle with its
+    /// load, and so does a way blocked to every Cell beside one, once <see cref="Deliver"/>
+    /// finds the Villager short of them.
+    /// </summary>
+    public static void CarryToDropOffPoint(MatchState state, UnitState villager)
+    {
+        var dropOffPoints = DropOffPointsOf(state, villager.Owner);
+
+        if (dropOffPoints.Count == 0)
+        {
+            StopGathering(state.Map, villager);
+
+            return;
+        }
+
+        villager.GatherPhase = GatherPhase.ToDropOffPoint;
+        MovementSystem.WalkToNearest(
+            state.Map, villager, cell => dropOffPoints.Any(building => building.IsBeside(cell)));
+    }
+
     public void Run(TickContext context)
     {
         var state = context.State;
@@ -220,29 +243,6 @@ internal sealed class GatherSystem : ISystem
     {
         villager.StopGathering();
         MovementSystem.WalkTo(map, villager, villager.Position.Cell);
-    }
-
-    /// <summary>
-    /// Sends the Villager walking to the free Cell beside a drop-off point of its Player that
-    /// has the shortest way to it, whichever point that is; between Cells equally far, the one
-    /// with the lowest index. A Player with no drop-off point leaves the Villager idle with its
-    /// load, and so does a way blocked to every Cell beside one, once <see cref="Deliver"/>
-    /// finds the Villager short of them.
-    /// </summary>
-    private static void CarryToDropOffPoint(MatchState state, UnitState villager)
-    {
-        var dropOffPoints = DropOffPointsOf(state, villager.Owner);
-
-        if (dropOffPoints.Count == 0)
-        {
-            StopGathering(state.Map, villager);
-
-            return;
-        }
-
-        villager.GatherPhase = GatherPhase.ToDropOffPoint;
-        MovementSystem.WalkToNearest(
-            state.Map, villager, cell => dropOffPoints.Any(building => building.IsBeside(cell)));
     }
 
     /// <summary>
