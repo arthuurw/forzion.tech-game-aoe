@@ -97,4 +97,7 @@ public enum RejectionReason
 
     /// <summary>Training the unit would take the Player's population past its population limit.</summary>
     PopulationLimitReached,
+
+    /// <summary>The command names a building that trains no units: only the Town Center and the Barracks do.</summary>
+    BuildingCannotTrain,
 }

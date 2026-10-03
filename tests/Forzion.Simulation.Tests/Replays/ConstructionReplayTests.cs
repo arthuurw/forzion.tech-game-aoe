@@ -82,7 +82,8 @@ public class ConstructionReplayTests
     // and macOS: every system must reach the same hash.
     // When training joined the hash, the model reproduced the value before from the same final
     // state with the layout before, and gave this one with training state added.
-    private const ulong ExpectedFinalHash = 13752553051043202627UL;
+    // Likewise when the rally point joined it.
+    private const ulong ExpectedFinalHash = 1348516145706742691UL;
 
     [Fact]
     public void A_recorded_replay_of_construction_reaches_the_recorded_final_hash()

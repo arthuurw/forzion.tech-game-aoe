@@ -71,3 +71,6 @@ msgstr "Ordem recusada: essa unidade não está mais na fila de treino."
 
 msgid "ORDER_REJECTED_POPULATION_LIMIT_REACHED"
 msgstr "Ordem recusada: a população chegou ao limite. Construa mais Casas."
+
+msgid "ORDER_REJECTED_BUILDING_CANNOT_TRAIN"
+msgstr "Ordem recusada: essa construção não treina unidades."

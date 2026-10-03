@@ -160,6 +160,16 @@ internal static class Balance
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
+    /// <summary>Whether buildings of the given kind train units.</summary>
+    public static bool Trains(BuildingKind kind) => kind switch
+    {
+        BuildingKind.TownCenter => true,
+        BuildingKind.House => false,
+        BuildingKind.Storehouse => false,
+        BuildingKind.Barracks => true,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
     /// <summary>The kind of building that trains units of the given kind.</summary>
     public static BuildingKind TrainedAt(UnitKind kind) => kind switch
     {

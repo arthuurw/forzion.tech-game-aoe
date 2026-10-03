@@ -87,6 +87,12 @@ public sealed class BuildingState
     /// </summary>
     public int TrainingProgress { get; internal set; }
 
+    /// <summary>
+    /// The Cell the units the building trains walk to on their own once trained, or null when
+    /// they stand where they appear.
+    /// </summary>
+    public CellPosition? RallyPoint { get; internal set; }
+
     /// <summary>Puts a unit of the given kind at the end of the training queue.</summary>
     internal void QueueTraining(UnitKind kind) => trainingQueue.Add(kind);
 
@@ -180,5 +186,9 @@ public sealed class BuildingState
         }
 
         hasher.Write(TrainingProgress);
+
+        // A building without a rally point writes false and the Cell (0, 0).
+        hasher.Write(RallyPoint is not null);
+        hasher.Write(RallyPoint ?? new CellPosition(0, 0));
     }
 }

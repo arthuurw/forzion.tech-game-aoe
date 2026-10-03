@@ -88,7 +88,10 @@ public class ReplayTests
     // order) and its training progress after its build progress; once more the model reproduced the
     // value before from the same final state with the layout before, gave this one and matched the
     // match's own hash at every tick of the replays.
-    private const ulong ExpectedFinalHash = 8076079877008595233UL;
+    // The rally point then followed the training progress, as whether the building has one and its
+    // Cell ((0, 0) for none); the model again reproduced the value before with the layout before,
+    // gave this one and matched the match's own hash at every tick of the replays.
+    private const ulong ExpectedFinalHash = 16204813214023181089UL;
 
     // Seed 3 is one whose first scattering of obstacles cuts the Players apart and is drawn again.
     // When walled-in sources began to be dropped, the value was recomputed by the same model of
@@ -99,7 +102,8 @@ public class ReplayTests
     // gave the value before with them taken out of each Player's stock, and this one with them in.
     // With training in the hash, the model reproduced the value before with the layout before and
     // gave this one.
-    private const ulong ExpectedInitialHashOfSeed3 = 6472734197254535297UL;
+    // Likewise with the rally point.
+    private const ulong ExpectedInitialHashOfSeed3 = 14288579479582643681UL;
 
     [Fact]
     public void A_recorded_replay_reaches_the_recorded_final_hash()
