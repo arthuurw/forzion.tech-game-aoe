@@ -494,6 +494,7 @@ export_presets.cfg
 
 # Godot .NET
 .mono/
+*.csproj.old
 data_*/
 *.tmp
 
