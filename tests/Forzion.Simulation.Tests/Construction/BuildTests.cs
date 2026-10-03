@@ -38,6 +38,33 @@ public class BuildTests
     }
 
     [Fact]
+    public void Villagers_building_the_same_site_add_their_work_and_complete_it_sooner()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var villagers = Site.VillagersOf(match, TestMatches.FirstPlayer);
+        var house = PlaceHouse(match, villagers.Select(villager => villager.Id).ToList());
+        var ticks = 0;
+        var mostAtOnce = 0;
+
+        while (!house.IsComplete)
+        {
+            Assert.True(ticks < Gather.TickLimit);
+            var before = house.BuildProgress;
+            match.Tick();
+            ticks++;
+
+            // Each Villager standing beside the site adds one tick of work.
+            var working = villagers.Count(villager => !villager.IsMoving && Gather.Touches(house, villager.Position.Cell));
+            mostAtOnce = Math.Max(mostAtOnce, working);
+            Assert.Equal(Math.Min(before + working, house.BuildTime), house.BuildProgress);
+        }
+
+        Assert.Equal(villagers.Count, mostAtOnce);
+        Assert.True(ticks < house.BuildTime / 2);
+        Assert.All(villagers, villager => Assert.Null(villager.ConstructionSite));
+    }
+
+    [Fact]
     public void A_construction_site_no_Villager_builds_makes_no_progress()
     {
         var match = TestMatches.TwoPlayerMatch();
