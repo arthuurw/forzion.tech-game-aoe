@@ -122,9 +122,7 @@ public class StartingEntitiesTests
     [Fact]
     public void A_match_with_a_single_Player_has_only_that_Players_entities()
     {
-        var config = new MatchConfig(1, new MapConfig(64, 48), [new PlayerConfig(TestMatches.FirstFaction)]);
-
-        var state = Match.Create(config).State;
+        var state = Match.Create(TestMatches.SinglePlayerConfig()).State;
 
         Assert.Single(state.Buildings);
         Assert.All(state.Units, unit => Assert.Equal(TestMatches.FirstPlayer, unit.Owner));

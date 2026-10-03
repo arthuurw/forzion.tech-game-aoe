@@ -37,7 +37,7 @@ public class MatchCreationTests
     [Fact]
     public void The_map_has_the_configured_size()
     {
-        var match = Match.Create(new MatchConfig(1, new MapConfig(64, 48), [new PlayerConfig(new FactionId(1))]));
+        var match = Match.Create(TestMatches.SinglePlayerConfig());
 
         Assert.Equal(64, match.State.Map.Width);
         Assert.Equal(48, match.State.Map.Height);

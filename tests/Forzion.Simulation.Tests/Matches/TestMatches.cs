@@ -14,6 +14,10 @@ internal static class TestMatches
 
     public static Match TwoPlayerMatch(ulong seed = 42) => Match.Create(TwoPlayerConfig(seed));
 
+    /// <summary>A match of the first Player alone, on the same map size as <see cref="TwoPlayerConfig"/>.</summary>
+    public static MatchConfig SinglePlayerConfig(ulong seed = 1) =>
+        new(seed, new MapConfig(64, 48), [new PlayerConfig(FirstFaction)]);
+
     /// <summary>The Player's units, in ascending ID order.</summary>
     public static IEnumerable<UnitState> UnitsOf(this MatchState state, PlayerId player) =>
         state.Units.Where(unit => unit.Owner == player);

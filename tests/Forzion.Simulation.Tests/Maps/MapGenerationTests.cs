@@ -143,8 +143,5 @@ public class MapGenerationTests
     }
 
     private static Match TwoPlayerMatch(int width, int height, ulong seed) =>
-        Match.Create(new MatchConfig(
-            seed,
-            new MapConfig(width, height),
-            [new PlayerConfig(TestMatches.FirstFaction), new PlayerConfig(TestMatches.FirstFaction)]));
+        Match.Create(TestMatches.TwoPlayerConfig(seed) with { Map = new MapConfig(width, height) });
 }
