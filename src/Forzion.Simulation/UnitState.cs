@@ -53,6 +53,12 @@ public sealed class UnitState
     public Load Load { get; internal set; }
 
     /// <summary>
+    /// The construction site the Villager walks up to and builds, or null when it builds none.
+    /// It works only while standing still beside the site.
+    /// </summary>
+    public EntityId? ConstructionSite { get; internal set; }
+
+    /// <summary>
     /// Ticks the Villager has spent beside its source towards the next unit of Resource. It
     /// goes back to zero when that unit is taken and whenever the Villager is given a new
     /// gather order or stops gathering.
@@ -107,6 +113,9 @@ public sealed class UnitState
     /// <summary>Stops the unit where it is, even between two Cell centres.</summary>
     internal void Stop() => path.Clear();
 
+    /// <summary>Takes the Villager off building. The site keeps the work already put into it.</summary>
+    internal void StopBuilding() => ConstructionSite = null;
+
     /// <summary>Drops the next Cell of the path: the unit has reached its centre.</summary>
     internal void ReachWaypoint() => path.RemoveAt(0);
 
@@ -135,5 +144,8 @@ public sealed class UnitState
         // Likewise a unit without a target.
         hasher.Write(Target?.Value ?? 0);
         hasher.Write(AttackProgress);
+
+        // Likewise a unit without a construction site.
+        hasher.Write(ConstructionSite?.Value ?? 0);
     }
 }

@@ -74,18 +74,22 @@ public class ReplayTests
     // unit's hit points, target (0 for none) and attack progress after its economy state, and
     // whether the match is over and its winner (0 for none) at the end; the values were
     // recomputed the same way, by a model that reproduced the previous values with the
-    // previous layout and matched the match's own hash at every tick of the replays. CI runs
-    // this on Windows, Linux and macOS: every system must reach the same hash. A change that
-    // adds state to the hash changes these values on purpose and must record the new ones.
-    private const ulong ExpectedFinalHash = 15702937559874084281UL;
+    // previous layout and matched the match's own hash at every tick of the replays.
+    // Construction then added each building's build progress after its hit points and each
+    // unit's construction site (0 for none) after its combat state; once more a model that
+    // reproduced the previous values from the same states with the layout before gave these
+    // and matched the match's own hash at every tick of the replays. CI runs this on Windows,
+    // Linux and macOS: every system must reach the same hash. A change that adds state to the
+    // hash changes these values on purpose and must record the new ones.
+    private const ulong ExpectedFinalHash = 12054671976028062113UL;
 
     // Seed 3 is one whose first scattering of obstacles cuts the Players apart and is drawn again.
     // When walled-in sources began to be dropped, the value was recomputed by the same model of
     // the layout, which first reproduced the value recorded before from the state of the old
     // generator; the two states differ only by one walled-in source pair, freed. With combat
-    // in the hash the value was recomputed again by the model, which reproduced that value
-    // with the layout before combat.
-    private const ulong ExpectedInitialHashOfSeed3 = 8351480309910215033UL;
+    // in the hash, and again with construction, the value was recomputed by the model, which
+    // reproduced the value before with the layout before.
+    private const ulong ExpectedInitialHashOfSeed3 = 12016439931857490753UL;
 
     [Fact]
     public void A_recorded_replay_reaches_the_recorded_final_hash()

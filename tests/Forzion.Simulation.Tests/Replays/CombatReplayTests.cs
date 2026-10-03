@@ -86,10 +86,12 @@ public class CombatReplayTests
 
     // The fight itself comes from this implementation; an independent model of the hash layout
     // (see ReplayTests) confirmed this is the hash of the final state, and matched the match's
-    // own hash at every tick. CI runs this on Windows, Linux and macOS: every system must reach
-    // the same hash, which is what holds combat (ranges, chases, hits, deaths and the end of
-    // the match) to the same result everywhere.
-    private const ulong ExpectedFinalHash = 16929903614095056169UL;
+    // own hash at every tick. When construction joined the hash, the model gave the value
+    // before from the same final state with the layout before, and this one with construction
+    // state added. CI runs this on Windows, Linux and macOS: every system must reach the same
+    // hash, which is what holds combat (ranges, chases, hits, deaths and the end of the match)
+    // to the same result everywhere.
+    private const ulong ExpectedFinalHash = 4674101849192471189UL;
 
     [Fact]
     public void A_recorded_replay_of_combat_reaches_the_recorded_final_hash()

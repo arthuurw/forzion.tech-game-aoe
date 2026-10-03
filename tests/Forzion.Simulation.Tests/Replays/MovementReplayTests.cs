@@ -65,10 +65,10 @@ public class MovementReplayTests
 
     // The walks themselves come from this implementation; what an independent model of the
     // hash layout confirmed is that this is the hash of the final state as the public
-    // interface shows it, paths, economy and combat state included. CI runs this on Windows,
-    // Linux and macOS: every system must reach the same hash, which is what holds fixed-point
-    // movement and pathfinding to the same result everywhere.
-    private const ulong ExpectedFinalHash = 5818327656736049521UL;
+    // interface shows it, paths, economy, combat and construction state included. CI runs this
+    // on Windows, Linux and macOS: every system must reach the same hash, which is what holds
+    // fixed-point movement and pathfinding to the same result everywhere.
+    private const ulong ExpectedFinalHash = 2836565732608488657UL;
 
     [Fact]
     public void A_recorded_replay_of_moves_reaches_the_recorded_final_hash()

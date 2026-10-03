@@ -18,7 +18,8 @@ public abstract record Command(PlayerId Player)
 /// Sends units of the Player walking to a Cell. Each unit finds its own way around obstacles,
 /// resource sources and buildings and stops on the centre of the Cell, or of the nearest Cell
 /// it can reach when the destination itself cannot be reached. A Villager that was gathering
-/// stops gathering and keeps its load. Moving calls off any attack the units were making.
+/// stops gathering and keeps its load; one that was building stops building. Moving calls
+/// off any attack the units were making.
 /// </summary>
 /// <remarks>
 /// The command is rejected as a whole, moving none of its units, when the destination is
@@ -53,6 +54,7 @@ public sealed record MoveCommand(PlayerId Player, IReadOnlyList<EntityId> Units,
         {
             unit.StopGathering();
             unit.StopAttacking();
+            unit.StopBuilding();
             MovementSystem.WalkTo(state.Map, unit, Destination);
         }
     }

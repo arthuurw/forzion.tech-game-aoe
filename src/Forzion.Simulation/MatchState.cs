@@ -82,6 +82,14 @@ public sealed class MatchState
         Winner = winner;
     }
 
+    /// <summary>
+    /// How many units the Player may have at once: what its complete buildings provide, the
+    /// Town Center a base and each House more. Construction sites provide nothing.
+    /// </summary>
+    public int PopulationLimitOf(PlayerId player) => buildings
+        .Where(building => building.Owner == player && building.IsComplete)
+        .Sum(building => Balance.PopulationProvided(building.Kind));
+
     /// <summary>The Player with the given ID, or null when the match has no such Player.</summary>
     internal PlayerState? FindPlayer(PlayerId id) =>
         id.Value >= 1 && id.Value <= players.Count ? players[id.Value - 1] : null;
@@ -135,6 +143,33 @@ public sealed class MatchState
         buildings.Add(building);
 
         return building;
+    }
+
+    /// <summary>
+    /// Whether every Cell of the footprint a building of the given kind would have from
+    /// <paramref name="origin"/> is inside the map, free and has no unit standing on it.
+    /// </summary>
+    internal bool CanPlace(BuildingKind kind, CellPosition origin)
+    {
+        var size = Balance.BuildingSize(kind);
+
+        for (var y = origin.Y; y < origin.Y + size; y++)
+        {
+            for (var x = origin.X; x < origin.X + size; x++)
+            {
+                var cell = new CellPosition(x, y);
+
+                if (!Map.IsFree(cell))
+                {
+                    return false;
+                }
+            }
+        }
+
+        // A unit inside the footprint would be walled in by it.
+        return !units.Any(unit =>
+            unit.Position.Cell.X >= origin.X && unit.Position.Cell.X < origin.X + size
+            && unit.Position.Cell.Y >= origin.Y && unit.Position.Cell.Y < origin.Y + size);
     }
 
     /// <summary>Adds a unit. IDs only grow, so appending keeps the collection in ID order.</summary>
@@ -241,12 +276,14 @@ public sealed class MatchState
     {
         var reach = Balance.TownCenterSize / 2;
 
-        AddBuilding(
+        var townCenter = AddBuilding(
             player,
             BuildingKind.TownCenter,
             new CellPosition(home.X - reach, home.Y - reach),
             Balance.TownCenterSize,
             Balance.TownCenterSize);
+
+        townCenter.BuildProgress = townCenter.BuildTime;
 
         // The Villagers line up on the row just outside the Town Center, on the side facing
         // the centre of the map, so that the two Players' lines mirror each other.
@@ -286,6 +323,19 @@ public sealed class PlayerState
     public int AmountOf(ResourceKind kind) => resources[(int)kind];
 
     internal void Receive(ResourceKind kind, int amount) => resources[(int)kind] += amount;
+
+    /// <summary>Whether the Player has at least the cost in each Resource.</summary>
+    internal bool CanAfford(Cost cost) =>
+        Enum.GetValues<ResourceKind>().All(kind => AmountOf(kind) >= cost.AmountOf(kind));
+
+    /// <summary>Takes the cost from the Player, who must be able to afford it.</summary>
+    internal void Pay(Cost cost)
+    {
+        foreach (var kind in Enum.GetValues<ResourceKind>())
+        {
+            resources[(int)kind] -= cost.AmountOf(kind);
+        }
+    }
 
     internal void WriteTo(StateHasher hasher)
     {

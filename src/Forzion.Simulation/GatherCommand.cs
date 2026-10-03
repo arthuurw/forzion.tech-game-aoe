@@ -3,7 +3,7 @@ namespace Forzion.Simulation;
 /// <summary>
 /// Sends Villagers of the Player to gather from a resource source. Each Villager walks up to
 /// the source and gathers from it until told otherwise, carrying its load to a drop-off point
-/// whenever it is full.
+/// whenever it is full. A Villager that was building stops building.
 /// </summary>
 /// <remarks>
 /// The command is rejected as a whole, sending none of its units, when the source is not in

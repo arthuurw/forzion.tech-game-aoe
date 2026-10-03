@@ -21,6 +21,7 @@ public sealed class Match
         new CombatSystem(),
         new MovementSystem(),
         new GatherSystem(),
+        new ConstructionSystem(),
         new DefeatSystem(),
     ];
 
@@ -38,6 +39,23 @@ public sealed class Match
     /// Cells wide or high.
     /// </exception>
     public static Match Create(MatchConfig config) => new(config);
+
+    /// <summary>What placing a building of the given kind costs, paid in full when it is placed.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">Players do not place buildings of that kind.</exception>
+    public static Cost BuildingCost(BuildingKind kind) => Balance.BuildingCost(kind);
+
+    /// <summary>Side of the square footprint of a building of the given kind, in Cells.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">The kind is not a <see cref="BuildingKind"/>.</exception>
+    public static int BuildingSize(BuildingKind kind) => Balance.BuildingSize(kind);
+
+    /// <summary>
+    /// Whether a building of the given kind fits with its footprint starting on
+    /// <paramref name="origin"/>: every Cell inside the map, free and with no unit standing on
+    /// it. Cost is not considered. A placement that fits now may not fit by the tick that
+    /// applies it.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The kind is not a <see cref="BuildingKind"/>.</exception>
+    public bool CanPlace(BuildingKind kind, CellPosition origin) => State.CanPlace(kind, origin);
 
     /// <summary>
     /// The state of the match, read-only from outside. It is the same object for the whole
