@@ -14,6 +14,7 @@ public partial class DemoOrders : Node
     private double untilNextOrder = 1;
     private bool towardsCentre = true;
 
+    /// <summary>The match whose units the demo walks.</summary>
     [Export]
     public MatchView MatchView { get; set; } = null!;
 

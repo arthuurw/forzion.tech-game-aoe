@@ -47,8 +47,8 @@ public class MatchDriverTests
         // A Villager walks 2 Cells per second, 0.1 Cell per tick: half a tick into the next
         // tick it is drawn 0.05 Cell past where it stood before the last tick, towards where
         // it stands now.
-        var fromBefore = (X: drawn.X - beforeLastTick.X.ToDouble(), Y: drawn.Y - beforeLastTick.Y.ToDouble());
-        var toAfter = (X: afterLastTick.X.ToDouble() - drawn.X, Y: afterLastTick.Y.ToDouble() - drawn.Y);
+        var fromBefore = new MapPoint(drawn.X - beforeLastTick.X.ToDouble(), drawn.Y - beforeLastTick.Y.ToDouble());
+        var toAfter = new MapPoint(afterLastTick.X.ToDouble() - drawn.X, afterLastTick.Y.ToDouble() - drawn.Y);
 
         Assert.Equal(0.05, Math.Sqrt((fromBefore.X * fromBefore.X) + (fromBefore.Y * fromBefore.Y)), precision: 3);
         Assert.Equal(fromBefore.X, toAfter.X, precision: 3);

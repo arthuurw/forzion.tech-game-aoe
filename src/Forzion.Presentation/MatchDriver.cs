@@ -11,6 +11,8 @@ public sealed class MatchDriver
     private readonly TickClock clock;
     private readonly Dictionary<EntityId, MapPoint> positionsBeforeLastTick = [];
 
+    /// <param name="match">The match to drive. From here on only <see cref="Advance"/> ticks it, or the interpolation goes wrong.</param>
+    /// <param name="clock">The clock that decides when ticks are due.</param>
     public MatchDriver(Match match, TickClock clock)
     {
         ArgumentNullException.ThrowIfNull(match);
@@ -20,6 +22,7 @@ public sealed class MatchDriver
         this.clock = clock;
     }
 
+    /// <summary>The match being driven: read its state and enqueue commands on it, but leave ticking to <see cref="Advance"/>.</summary>
     public Match Match { get; }
 
     /// <summary>

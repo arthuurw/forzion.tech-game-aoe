@@ -25,14 +25,18 @@ public partial class MatchView : Node3D
     [Export]
     public ulong Seed { get; set; } = 1;
 
+    /// <summary>Width of the map in Cells.</summary>
     [Export]
     public int MapWidth { get; set; } = 64;
 
+    /// <summary>Height of the map in Cells.</summary>
     [Export]
     public int MapHeight { get; set; } = 48;
 
+    /// <summary>Drives the match's ticks. Set in <see cref="_Ready"/>, so nodes that read it must come after this one in the scene.</summary>
     public MatchDriver Driver { get; private set; } = null!;
 
+    /// <summary>The running match: read its state and enqueue commands on it; this node ticks it.</summary>
     public Match Match => Driver.Match;
 
     public override void _Ready()

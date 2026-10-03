@@ -72,6 +72,7 @@ public sealed class Placeholders
         return terrain;
     }
 
+    /// <summary>A shape for the source, placed on its Cell: a red sphere for Food, a brown trunk for Wood, a yellow block for Gold.</summary>
     public Node3D ResourceSource(ResourceSourceState source)
     {
         var (mesh, height) = source.Kind switch
@@ -90,6 +91,7 @@ public sealed class Placeholders
         };
     }
 
+    /// <summary>A box in the owner's colour covering the building's footprint, placed on it.</summary>
     public Node3D Building(BuildingState building)
     {
         // A small gap keeps neighbouring footprints apart on screen.
@@ -103,6 +105,7 @@ public sealed class Placeholders
         };
     }
 
+    /// <summary>A capsule in the owner's colour. It is not placed: units move, so the caller places it every frame.</summary>
     public Node3D Unit(UnitState unit) => new MeshInstance3D
     {
         Name = $"{unit.Kind}{unit.Id.Value}",

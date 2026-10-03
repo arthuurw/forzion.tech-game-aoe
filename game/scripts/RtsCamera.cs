@@ -36,6 +36,7 @@ public partial class RtsCamera : Node3D
     [Export]
     public float MaxDistance { get; set; } = 60;
 
+    /// <summary>Distance from the ground point when the match starts, in world units.</summary>
     [Export]
     public float StartDistance { get; set; } = 24;
 
