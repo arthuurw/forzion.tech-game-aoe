@@ -4,8 +4,9 @@ using Forzion.Simulation.Tests.Matches;
 namespace Forzion.Simulation.Tests.Replays;
 
 /// <summary>
-/// A whole match of two AI Players, from the first tick to the end. The configuration is all
-/// it takes: the AIs give their own commands, so the replay has none to send.
+/// Whole matches with AI Players, from the first tick to the end: two AI Players, and an AI
+/// Player against one who does nothing. The configuration is all it takes: the AIs give their
+/// own commands, so the replay has none to send.
 /// </summary>
 public class AiReplayTests
 {
@@ -13,6 +14,9 @@ public class AiReplayTests
 
     // The tick the match ends in: the replay runs exactly to the end.
     private const int Ticks = 4701;
+
+    // The tick the match of an AI Player against one who does nothing ends in, from the same seed.
+    private const int TicksAgainstIdlePlayer = 4563;
 
     private static MatchConfig Config() => AiMatches.Config(firstIsAi: true, secondIsAi: true, Seed);
 
@@ -23,6 +27,28 @@ public class AiReplayTests
         var second = Replay.Run(Config(), [], Ticks);
 
         Assert.Equal(first, second);
+    }
+
+    [Fact]
+    public void The_same_seed_gives_the_same_hash_at_every_tick_of_a_match_of_an_AI_Player_against_one_who_does_nothing()
+    {
+        var config = AiMatches.Config(firstIsAi: false, secondIsAi: true, Seed);
+
+        var first = Replay.Run(config, [], TicksAgainstIdlePlayer);
+        var second = Replay.Run(config, [], TicksAgainstIdlePlayer);
+
+        Assert.Equal(first, second);
+    }
+
+    [Fact]
+    public void The_match_of_an_AI_Player_against_one_who_does_nothing_ends_in_its_last_tick_won_by_the_AI()
+    {
+        var match = Match.Create(AiMatches.Config(firstIsAi: false, secondIsAi: true, Seed));
+
+        var ticks = AiMatches.TickUntil(match, () => match.State.IsOver, TicksAgainstIdlePlayer);
+
+        Assert.Equal(TicksAgainstIdlePlayer, ticks);
+        Assert.Equal(TestMatches.SecondPlayer, match.State.Winner);
     }
 
     [Fact]
