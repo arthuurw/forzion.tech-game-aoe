@@ -50,27 +50,16 @@ public class AiReplayTests
         Assert.Equal(ExpectedEndAgainstIdlePlayer, end);
     }
 
-    // The AIs' play comes from this implementation and its behaviour is checked by the tests
-    // of the AI; what the independent model of the hash layout (see ReplayTests) confirmed is
-    // that this is the hash of the final state as the public interface shows it, and it
-    // matched the match's own hash at every tick of this replay. CI runs this on Windows,
-    // Linux and macOS: every system must reach the same hash, which is what holds the AI's
-    // decisions and its draws from the match's generator to the same result everywhere. This
-    // is the base for the replays of a whole match. When a Villager whose way a new building
-    // blocks began to choose its job's destination again, the AIs' Villagers walked otherwise and
-    // the value was recorded again: the layout stayed the same, and the model gave this one and
-    // matched the match's own hash at every tick. The match still ends in the same tick.
-    // When the AIs met main's rules (gatherers and builders walking to the Cell beside their
-    // target with the shortest way to it, idle soldiers attacking enemy buildings, Villagers
-    // waiting with their job for a way), no code that writes the hash changed, so the layout
-    // stayed the same; the match now ends ten ticks sooner, still won by the second Player
-    // with both in Age II, and this is its final hash.
-    // When the heavy soldier began to walk 3 Cells per second instead of 2, the layout stayed
-    // the same: the model reproduced the previous hash with the previous speed, gave this one and
-    // matched the match's own hash at every tick. The match now ends twenty ticks later, still
-    // won by the second Player with both in Age II.
-    // A change of rules that changes how the AIs play may move the end of the match: the tick,
-    // winner and hash are recorded together, so a failure here shows all three as they now are.
+    // How the match of two AI Players ends: won by the second Player, with both in Age II. The
+    // AIs' play comes from this implementation and its behaviour is checked by the tests of the
+    // AI and by the Age check below. The hash is validated by the independent model of the hash
+    // layout (see ReplayTests), which reproduces the values recorded before, gives this one from
+    // the final state as the public interface shows it, and matches the match's own hash at every
+    // tick of this replay. CI runs this on Windows, Linux and macOS: every system must reach the
+    // same end, which is what holds the AIs' decisions and their draws from the match's generator
+    // to the same result everywhere. The tick, winner and hash are recorded together because a
+    // change of rules that changes how the AIs play moves all three: a failure here shows them as
+    // they now are, to be recorded again once the model confirms the new hash.
     private static readonly ReplayEnd ExpectedEnd = new(4721, TestMatches.SecondPlayer, 12206050394229018223UL);
 
     [Fact]
