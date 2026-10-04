@@ -22,10 +22,12 @@ public sealed class Placeholders
     private static readonly Color GoldYellow = new(0.95f, 0.78f, 0.2f);
     private static readonly Color Neutral = new(0.6f, 0.6f, 0.6f);
 
+    // Violet and orange: neither is the blue of Water, the greens of the ground and Forests,
+    // nor the red of Food, the brown of Wood and the yellow of Gold.
     private static readonly Color[] PlayerColours =
     [
-        new(0.2f, 0.45f, 0.95f),
-        new(0.9f, 0.25f, 0.2f),
+        new(0.6f, 0.3f, 0.9f),
+        new(0.95f, 0.5f, 0.1f),
     ];
 
     private readonly Dictionary<Color, StandardMaterial3D> materials = [];
