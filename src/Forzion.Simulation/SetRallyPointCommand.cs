@@ -22,7 +22,7 @@ public sealed record SetRallyPointCommand(PlayerId Player, EntityId Building, Ce
             return;
         }
 
-        if (ProductionBuilding.Find(context, this, issuer, Building) is not { } building)
+        if (OwnCompleteBuilding.FindOrReject(context, this, issuer, Building) is not { } building)
         {
             return;
         }

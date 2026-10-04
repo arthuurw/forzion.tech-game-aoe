@@ -19,7 +19,7 @@ public sealed record TrainCommand(PlayerId Player, EntityId Building, UnitKind K
 {
     internal override void Execute(TickContext context, PlayerState issuer)
     {
-        if (ProductionBuilding.Find(context, this, issuer, Building) is not { } building)
+        if (OwnCompleteBuilding.FindOrReject(context, this, issuer, Building) is not { } building)
         {
             return;
         }
