@@ -1,5 +1,5 @@
 using Forzion.Simulation;
-using static Forzion.Presentation.Tests.HudMatches;
+using static Forzion.Presentation.Tests.TestMatches;
 
 namespace Forzion.Presentation.Tests;
 
@@ -8,7 +8,7 @@ public class PlayerStatusTests
     [Fact]
     public void The_status_shows_the_Resources_and_population_of_the_Player_and_not_of_another()
     {
-        var match = Portuguese();
+        var match = Match.Create(PlainConfig());
         match.Enqueue(new TrainCommand(FirstPlayer, TownCenterOf(match, FirstPlayer).Id, UnitKind.Villager));
         match.Tick();
         var player = match.State.Players[0];
@@ -27,7 +27,7 @@ public class PlayerStatusTests
     [Fact]
     public void The_status_names_the_Faction_and_its_name_for_the_Age_of_the_Player()
     {
-        var match = Portuguese();
+        var match = Match.Create(PlainConfig());
 
         var status = PlayerStatus.Of(match.State, FirstPlayer);
 

@@ -1,5 +1,5 @@
 using Forzion.Simulation;
-using static Forzion.Presentation.Tests.HudMatches;
+using static Forzion.Presentation.Tests.TestMatches;
 
 namespace Forzion.Presentation.Tests;
 
@@ -8,7 +8,7 @@ public class WorldBarsTests
     [Fact]
     public void Whole_units_and_complete_buildings_get_no_bar()
     {
-        var match = Portuguese();
+        var match = Match.Create(PlainConfig());
 
         Assert.Empty(WorldBars.Of(match.State, []));
     }
@@ -16,7 +16,7 @@ public class WorldBarsTests
     [Fact]
     public void A_selected_whole_unit_gets_a_full_hit_point_bar()
     {
-        var match = Portuguese();
+        var match = Match.Create(PlainConfig());
         var villager = match.State.Units.First(unit => unit.Owner == FirstPlayer);
 
         var bar = Assert.Single(WorldBars.Of(match.State, [villager.Id]));
@@ -27,7 +27,7 @@ public class WorldBarsTests
     [Fact]
     public void A_selected_entity_no_longer_in_the_match_gets_no_bar()
     {
-        var match = Portuguese();
+        var match = Match.Create(PlainConfig());
 
         Assert.Empty(WorldBars.Of(match.State, [new EntityId(9_999)]));
     }
@@ -60,7 +60,7 @@ public class WorldBarsTests
     [Fact]
     public void A_construction_site_gets_a_bar_filled_with_how_far_its_construction_has_gone()
     {
-        var match = Portuguese();
+        var match = Match.Create(PlainConfig());
         var origin = FreeOriginNearFirstHome(match, BuildingKind.House);
         match.Enqueue(new PlaceBuildingCommand(FirstPlayer, BuildingKind.House, origin, [UnitsOf(match, FirstPlayer)[0].Id]));
         match.Tick();

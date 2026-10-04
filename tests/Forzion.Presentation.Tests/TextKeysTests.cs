@@ -7,8 +7,8 @@ public class TextKeysTests
     [Fact]
     public void A_unit_is_named_by_its_Faction_or_else_by_its_generic_name()
     {
-        Assert.Equal("TEST_VILLAGER", TextKeys.NameOf(HudMatches.ThreeAges, UnitKind.Villager));
-        Assert.Equal("UNIT_MELEE_SOLDIER", TextKeys.NameOf(HudMatches.ThreeAges, UnitKind.MeleeSoldier));
+        Assert.Equal("TEST_VILLAGER", TextKeys.NameOf(TestMatches.ThreeAges, UnitKind.Villager));
+        Assert.Equal("UNIT_MELEE_SOLDIER", TextKeys.NameOf(TestMatches.ThreeAges, UnitKind.MeleeSoldier));
     }
 
     // A kind added to the simulation without a text fails here instead of showing a bare key

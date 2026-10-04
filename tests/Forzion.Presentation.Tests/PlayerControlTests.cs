@@ -419,9 +419,7 @@ public class PlayerControlTests
     public void Advancing_the_Age_with_the_Town_Center_selected_starts_the_Age_Advance()
     {
         // The made-up Faction's Age Advance is free: the Portuguese one costs more than a Player starts with.
-        var faction = HudMatches.ThreeAges;
-        var config = PlainConfig() with { Players = [new PlayerConfig(faction.Id), new PlayerConfig(faction.Id)], Factions = [faction] };
-        var control = NewControl(out var match, config: config);
+        var control = NewControl(out var match, config: ThreeAgesConfig());
         var townCenter = SelectFirstTownCenter(control, match);
 
         control.AdvanceAge();

@@ -1,6 +1,6 @@
 using System.Reflection;
 using Forzion.Simulation;
-using static Forzion.Presentation.Tests.HudMatches;
+using static Forzion.Presentation.Tests.TestMatches;
 
 namespace Forzion.Presentation.Tests;
 
