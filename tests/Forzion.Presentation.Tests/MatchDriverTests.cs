@@ -20,6 +20,22 @@ public class MatchDriverTests
     }
 
     [Fact]
+    public void Units_standing_on_one_Cell_are_drawn_apart_around_it()
+    {
+        var cell = BesideFirstHome();
+        var stacked = new StartingUnit(UnitKind.Villager, cell);
+        var driver = NewDriver(out var match, PlainConfig(firstExtras: [stacked, stacked, stacked]));
+        var centre = MapPosition.CentreOf(cell);
+
+        var drawn = match.State.Units.Where(unit => unit.Position == centre).Select(driver.PositionOf).ToList();
+
+        // Half a Cell apart: as far as two unit placeholders are wide, so none hides another.
+        Assert.Equal(3, drawn.Count);
+        Assert.All(Pairs(drawn), pair => Assert.True(Distance(pair.First, pair.Second) >= 0.5 - 1e-9));
+        Assert.All(drawn, point => Assert.True(Distance(point, new MapPoint(centre.X.ToDouble(), centre.Y.ToDouble())) <= 0.5));
+    }
+
+    [Fact]
     public void Advancing_runs_the_ticks_that_are_due()
     {
         var driver = NewDriver(out var match);
@@ -80,4 +96,9 @@ public class MatchDriverTests
     }
 
     private static UnitState FirstVillager(Match match) => match.State.Units.First(unit => unit.Owner == FirstPlayer);
+
+    private static double Distance(MapPoint from, MapPoint to) => Math.Sqrt(Math.Pow(to.X - from.X, 2) + Math.Pow(to.Y - from.Y, 2));
+
+    private static IEnumerable<(MapPoint First, MapPoint Second)> Pairs(List<MapPoint> points) =>
+        points.SelectMany((first, index) => points.Skip(index + 1).Select(second => (first, second)));
 }

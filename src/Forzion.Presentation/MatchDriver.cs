@@ -8,9 +8,14 @@ namespace Forzion.Presentation;
 /// </summary>
 public sealed class MatchDriver
 {
+    /// <summary>How far apart, in Cells, units standing on one Cell are drawn: as wide as two of their placeholders.</summary>
+    private const double StackSpacing = 0.5;
+
     private readonly Match match;
     private readonly TickClock clock;
     private readonly Dictionary<EntityId, MapPoint> positionsBeforeLastTick = [];
+    private readonly Dictionary<EntityId, MapPoint> stackOffsets = [];
+    private int? stackOffsetsTick;
 
     /// <param name="match">The match to drive. From here on only <see cref="Advance"/> ticks it, or the interpolation goes wrong.</param>
     /// <param name="clock">The clock that decides when ticks are due.</param>
@@ -58,23 +63,71 @@ public sealed class MatchDriver
     /// towards the next tick. Drawing one tick behind the simulation is what keeps the motion
     /// smooth at any frame rate.
     /// </summary>
+    /// <remarks>
+    /// Units do not block one another, so several may stand still on one Cell. Those are drawn
+    /// apart, on a ring around the Cell's centre, so each stays visible and can be clicked.
+    /// </remarks>
     public MapPoint PositionOf(UnitState unit)
     {
         ArgumentNullException.ThrowIfNull(unit);
 
         var current = ToPoint(unit.Position);
+        var offset = StackOffsetOf(unit);
 
         // A unit created by the last tick has no earlier position: it is drawn where it stands.
         if (!positionsBeforeLastTick.TryGetValue(unit.Id, out var previous))
         {
-            return current;
+            return new MapPoint(current.X + offset.X, current.Y + offset.Y);
         }
 
         var factor = clock.InterpolationFactor;
 
         return new MapPoint(
-            previous.X + ((current.X - previous.X) * factor),
-            previous.Y + ((current.Y - previous.Y) * factor));
+            previous.X + ((current.X - previous.X) * factor) + offset.X,
+            previous.Y + ((current.Y - previous.Y) * factor) + offset.Y);
+    }
+
+    /// <summary>
+    /// How far from where it stands the unit is drawn to keep it apart from the other units
+    /// standing still on its Cell; nothing for a unit alone there or walking.
+    /// </summary>
+    private MapPoint StackOffsetOf(UnitState unit)
+    {
+        // Positions change only on a tick, so the offsets are worked out once per tick.
+        if (stackOffsetsTick != match.State.Tick)
+        {
+            SpreadStacks();
+            stackOffsetsTick = match.State.Tick;
+        }
+
+        return stackOffsets.GetValueOrDefault(unit.Id);
+    }
+
+    /// <summary>
+    /// Places the units standing still on each Cell evenly on a ring around its centre, in
+    /// ascending ID order, the ring just wide enough to keep neighbours
+    /// <see cref="StackSpacing"/> apart.
+    /// </summary>
+    private void SpreadStacks()
+    {
+        stackOffsets.Clear();
+
+        var stacks = match.State.Units
+            .Where(unit => !unit.IsMoving)
+            .GroupBy(unit => unit.Position.Cell)
+            .Where(stack => stack.Count() > 1);
+
+        foreach (var stack in stacks)
+        {
+            var units = stack.ToList();
+            var step = 2 * Math.PI / units.Count;
+            var radius = StackSpacing / 2 / Math.Sin(step / 2);
+
+            for (var index = 0; index < units.Count; index++)
+            {
+                stackOffsets[units[index].Id] = new MapPoint(radius * Math.Cos(step * index), radius * Math.Sin(step * index));
+            }
+        }
     }
 
     private void RememberPositions()

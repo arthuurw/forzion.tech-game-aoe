@@ -45,6 +45,22 @@ public class PlayerControlTests
     }
 
     [Fact]
+    public void Clicking_where_each_unit_standing_on_one_Cell_is_drawn_selects_that_unit()
+    {
+        var stacked = new StartingUnit(UnitKind.MeleeSoldier, BesideFirstHome());
+        var control = NewControl(out var match, config: PlainConfig(firstExtras: [stacked, stacked, stacked]));
+        var soldiers = match.State.Units.Where(unit => unit.Kind == UnitKind.MeleeSoldier).ToList();
+
+        foreach (var soldier in soldiers)
+        {
+            var drawnAt = Over(driver.PositionOf(soldier));
+            control.Select(drawnAt, drawnAt);
+
+            Assert.Equal([soldier.Id], control.Selected);
+        }
+    }
+
+    [Fact]
     public void Clicking_bare_ground_clears_the_selection()
     {
         var control = NewControl(out var match);
