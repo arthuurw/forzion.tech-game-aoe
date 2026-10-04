@@ -35,7 +35,7 @@ internal sealed class GatherSystem : ISystem
         villager.GatherProgress = 0;
 
         // Taking more on top of a full load would carry past capacity and never deliver.
-        if (villager.Load.Resource == source.Kind && villager.Load.Amount >= Balance.VillagerCarryCapacity)
+        if (villager.Load.Resource == source.Kind && villager.Load.IsFull)
         {
             CarryToDropOffPoint(state, villager);
 
@@ -172,7 +172,7 @@ internal sealed class GatherSystem : ISystem
         var carried = villager.Load.Resource == source.Kind ? villager.Load.Amount : 0;
         villager.Load = new Load(source.Kind, carried + 1);
 
-        if (villager.Load.Amount == Balance.VillagerCarryCapacity)
+        if (villager.Load.IsFull)
         {
             CarryToDropOffPoint(state, villager);
         }
