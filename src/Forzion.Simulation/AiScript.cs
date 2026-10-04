@@ -494,7 +494,7 @@ internal sealed class AiScript
     /// Whether the unit is a Villager the AI gives a new job: an Idle one, standing still with
     /// no job, or one Waiting with a job it cannot reach, a source or a construction site with
     /// no way to it. A Waiting Villager is not Idle, but the AI does not leave it to wait until
-    /// a way opens.
+    /// a way opens; it gives it a new job once it has walked as near to the old one as it can.
     /// </summary>
     private bool NeedsNewJob(UnitState unit) =>
         unit.CanGather

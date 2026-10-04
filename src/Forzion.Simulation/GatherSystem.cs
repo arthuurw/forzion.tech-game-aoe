@@ -53,7 +53,7 @@ internal sealed class GatherSystem : ISystem
     /// Sends the Villager walking up to its source, to the free Cell beside it that has the
     /// shortest way to it; between Cells equally far, the one with the lowest index. A Villager
     /// that cannot reach any Cell beside the source walks to the Cell it can reach nearest to
-    /// the source's and waits there, keeping its source, until a way opens.
+    /// the source's Cell and waits there, keeping its source, until a way opens.
     /// </summary>
     public static void WalkUpToSource(MapState map, UnitState villager, ResourceSourceState source)
     {
@@ -114,7 +114,9 @@ internal sealed class GatherSystem : ISystem
     /// with the lowest index. A Player with no drop-off point leaves the Villager idle with its
     /// load. A Villager that cannot reach any Cell beside one walks to the Cell it can reach
     /// nearest to the centre of the drop-off point nearest to it in a straight line, and waits
-    /// there with its load until a way opens.
+    /// there with its load until a way opens. That point is chosen again from wherever the
+    /// Villager stands each time it looks for a way, so it may walk near one point and then on
+    /// near another; each such walk ends nearer a drop-off point than it began.
     /// </summary>
     public static void CarryToDropOffPoint(MatchState state, UnitState villager)
     {
