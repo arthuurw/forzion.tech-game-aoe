@@ -30,9 +30,7 @@ internal sealed class GatherSystem : ISystem
     /// </summary>
     public static void GatherFrom(MatchState state, UnitState villager, ResourceSourceState source)
     {
-        villager.StopBuilding();
-        villager.GatherSource = source.Id;
-        villager.GatherProgress = 0;
+        villager.StartGathering(source.Id);
 
         // Taking more on top of a full load would carry past capacity and never deliver.
         if (villager.Load.Resource == source.Kind && villager.Load.IsFull)
@@ -94,7 +92,7 @@ internal sealed class GatherSystem : ISystem
 
         if (dropOffPoints.Count == 0)
         {
-            StopGathering(state.Map, villager);
+            StandIdle(state.Map, villager);
 
             return;
         }
@@ -151,7 +149,7 @@ internal sealed class GatherSystem : ISystem
         }
         else
         {
-            StopGathering(state.Map, villager);
+            StandIdle(state.Map, villager);
         }
     }
 
@@ -159,14 +157,11 @@ internal sealed class GatherSystem : ISystem
     {
         var state = context.State;
 
-        villager.GatherProgress++;
-
-        if (villager.GatherProgress < Balance.Of(source.Kind).GatherTicksPerUnit)
+        if (!villager.GatherTick(Balance.Of(source.Kind).GatherTicksPerUnit))
         {
             return;
         }
 
-        villager.GatherProgress = 0;
         source.Amount--;
         // A load holds a single Resource: whatever else the Villager carried is dropped.
         var carried = villager.Load.Resource == source.Kind ? villager.Load.Amount : 0;
@@ -204,7 +199,7 @@ internal sealed class GatherSystem : ISystem
                 continue;
             }
 
-            unit.GatherSource = replacement?.Id;
+            unit.ReplaceSource(replacement?.Id);
 
             if (unit.GatherPhase == GatherPhase.ToDropOffPoint)
             {
@@ -213,7 +208,7 @@ internal sealed class GatherSystem : ISystem
 
             if (replacement is null)
             {
-                StopGathering(state.Map, unit);
+                StandIdle(state.Map, unit);
             }
             else
             {
@@ -249,7 +244,7 @@ internal sealed class GatherSystem : ISystem
     /// The Villager stops gathering and stands idle on the Cell it is in, keeping whatever it
     /// carries.
     /// </summary>
-    private static void StopGathering(MapState map, UnitState villager)
+    private static void StandIdle(MapState map, UnitState villager)
     {
         villager.StopGathering();
         MovementSystem.WalkTo(map, villager, villager.Position.Cell);
@@ -266,7 +261,7 @@ internal sealed class GatherSystem : ISystem
 
         if (!IsBesideDropOffPoint(state, villager.Owner, cell))
         {
-            StopGathering(state.Map, villager);
+            StandIdle(state.Map, villager);
 
             return;
         }
@@ -280,7 +275,7 @@ internal sealed class GatherSystem : ISystem
         }
         else
         {
-            StopGathering(state.Map, villager);
+            StandIdle(state.Map, villager);
         }
     }
 

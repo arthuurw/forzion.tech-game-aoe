@@ -13,8 +13,7 @@ internal sealed class ConstructionSystem : ISystem
     /// </summary>
     public static void Build(MapState map, UnitState villager, BuildingState site)
     {
-        villager.StopGathering();
-        villager.ConstructionSite = site.Id;
+        villager.StartBuilding(site.Id);
         WalkUpTo(map, villager, site);
     }
 

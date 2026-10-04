@@ -44,7 +44,7 @@ public sealed class UnitState
     public bool IsMoving => path.Count > 0;
 
     /// <summary>The resource source the Villager gathers from, or null when it has none.</summary>
-    public EntityId? GatherSource { get; internal set; }
+    public EntityId? GatherSource { get; private set; }
 
     /// <summary>What the Villager is doing towards gathering.</summary>
     public GatherPhase GatherPhase { get; internal set; }
@@ -56,14 +56,14 @@ public sealed class UnitState
     /// The construction site the Villager walks up to and builds, or null when it builds none.
     /// It works only while standing still beside the site.
     /// </summary>
-    public EntityId? ConstructionSite { get; internal set; }
+    public EntityId? ConstructionSite { get; private set; }
 
     /// <summary>
     /// Ticks the Villager has spent beside its source towards the next unit of Resource. It
     /// goes back to zero when that unit is taken and whenever the Villager is given a new
     /// gather order or stops gathering.
     /// </summary>
-    public int GatherProgress { get; internal set; }
+    public int GatherProgress { get; private set; }
 
     /// <summary>Hit points the unit has when whole.</summary>
     public int MaxHitPoints => Balance.Of(Kind).HitPoints;
@@ -101,6 +101,62 @@ public sealed class UnitState
     {
         path.Clear();
         path.AddRange(cells);
+    }
+
+    /// <summary>
+    /// Sets the Villager to gather from the source, the next unit of Resource to be taken
+    /// afresh. It stops building; a unit does one job at a time.
+    /// </summary>
+    internal void StartGathering(EntityId source)
+    {
+        ConstructionSite = null;
+        GatherSource = source;
+        GatherProgress = 0;
+    }
+
+    /// <summary>
+    /// Gives the Villager another source, or none, without changing where it is in the gather
+    /// cycle: a Villager carrying its load away goes on to deliver it.
+    /// </summary>
+    internal void ReplaceSource(EntityId? source) => GatherSource = source;
+
+    /// <summary>
+    /// Counts one more tick spent beside the source and says whether it completes a unit of
+    /// Resource, which takes <paramref name="ticksPerUnit"/> ticks; the count then starts again.
+    /// </summary>
+    internal bool GatherTick(int ticksPerUnit)
+    {
+        GatherProgress++;
+
+        if (GatherProgress < ticksPerUnit)
+        {
+            return false;
+        }
+
+        GatherProgress = 0;
+
+        return true;
+    }
+
+    /// <summary>
+    /// Sets the Villager to build the site. It stops gathering, keeping whatever it carries; a
+    /// unit does one job at a time.
+    /// </summary>
+    internal void StartBuilding(EntityId site)
+    {
+        StopGathering();
+        ConstructionSite = site;
+    }
+
+    /// <summary>
+    /// Takes the unit off whatever job it has, gathering, building or attacking, and stops it
+    /// where it is. It keeps whatever it carries.
+    /// </summary>
+    internal void ClearJob()
+    {
+        StopGathering();
+        StopAttacking();
+        StopBuilding();
     }
 
     /// <summary>Takes the Villager off gathering. It keeps whatever it carries.</summary>

@@ -52,9 +52,7 @@ public sealed record MoveCommand(PlayerId Player, IReadOnlyList<EntityId> Units,
 
         foreach (var unit in units)
         {
-            unit.StopGathering();
-            unit.StopAttacking();
-            unit.StopBuilding();
+            unit.ClearJob();
             MovementSystem.WalkTo(state.Map, unit, Destination);
         }
     }
