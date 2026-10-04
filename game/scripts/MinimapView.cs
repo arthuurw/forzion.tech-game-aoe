@@ -12,8 +12,10 @@ namespace Forzion.Game;
 /// node only draws and forwards the mouse.
 /// </summary>
 /// <remarks>
-/// The mouse passes through to the map unless the left button was pressed on the minimap, so
-/// a selection box dragged from the map over the minimap still grows and ends there.
+/// Every other button pressed over the minimap stops there, so a right click on it orders
+/// nothing to the place of the map it hides. Moving the mouse and letting go of the left
+/// button pass through to the map unless the left button was pressed on the minimap, so a
+/// selection box dragged from the map over the minimap still grows and ends there.
 /// </remarks>
 public partial class MinimapView : Control
 {
@@ -95,6 +97,9 @@ public partial class MinimapView : Control
                 break;
             case InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: false } when movingCamera:
                 movingCamera = false;
+                AcceptEvent();
+                break;
+            case InputEventMouseButton { ButtonIndex: not MouseButton.Left }:
                 AcceptEvent();
                 break;
         }
