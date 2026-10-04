@@ -67,6 +67,25 @@ public class BuildTests
     }
 
     [Fact]
+    public void A_Villager_sent_to_a_site_whose_side_nearest_to_it_is_walled_off_walks_round_to_another_side_and_builds_it()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var builder = Site.VillagersOf(match, TestMatches.FirstPlayer)[1];
+        Site.Stockpile(match, TestMatches.FirstPlayer, Match.BuildingCost(BuildingKind.House).Wood);
+        var origin = Site.OriginWalledOffOnItsNearSide(match, builder);
+        match.Enqueue(new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.House, origin, [builder.Id]));
+        match.Tick();
+        var site = match.State.Buildings[^1];
+
+        Walk.UntilStopped(match, builder);
+        match.Tick();
+
+        Assert.Equal(site.Id, builder.ConstructionSite);
+        Assert.True(Gather.Touches(site, builder.Position.Cell));
+        Assert.True(site.BuildProgress > 0);
+    }
+
+    [Fact]
     public void A_Villager_sent_to_a_site_it_cannot_reach_stops_short_of_it_and_stands_idle()
     {
         // A map with free Cells fenced in by obstacles.

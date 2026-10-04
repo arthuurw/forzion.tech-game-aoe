@@ -1,4 +1,5 @@
 using Forzion.Simulation.Tests.Economy;
+using Forzion.Simulation.Tests.Maps;
 using Forzion.Simulation.Tests.Matches;
 using Forzion.Simulation.Tests.Movement;
 
@@ -98,6 +99,64 @@ internal static class Site
                 yield return new CellPosition(x, y);
             }
         }
+    }
+
+    /// <summary>
+    /// The origin nearest to the unit of a House that can be placed now and whose side nearest
+    /// to the unit is walled off: once the House stands, the unit can still walk to a Cell beside
+    /// it, but every Cell it can walk to that is nearest in a straight line to the Cell of the
+    /// footprint nearest to the unit lies away from the footprint.
+    /// </summary>
+    public static CellPosition OriginWalledOffOnItsNearSide(Match match, UnitState unit)
+    {
+        var map = match.State.Map;
+        var size = Match.BuildingSize(BuildingKind.House);
+        var start = unit.Position.Cell;
+
+        return MapProbe.AllCells(map)
+            .Where(origin => match.CanPlace(BuildingKind.House, origin))
+            .OrderBy(origin => Walk.SquaredDistance(origin, start))
+            .ThenBy(origin => origin.Y)
+            .ThenBy(origin => origin.X)
+            .First(origin =>
+            {
+                var footprint = Square(origin, size).ToHashSet();
+                var nearSide = new CellPosition(
+                    Math.Clamp(start.X, origin.X, origin.X + size - 1),
+                    Math.Clamp(start.Y, origin.Y, origin.Y + size - 1));
+                var reachable = ReachableAround(map, start, footprint);
+                var nearest = reachable.Min(cell => Walk.SquaredDistance(cell, nearSide));
+
+                return reachable.Any(cell => IsBeside(footprint, cell))
+                    && !reachable.Any(cell => Walk.SquaredDistance(cell, nearSide) == nearest && IsBeside(footprint, cell));
+            });
+    }
+
+    /// <summary>Whether the Cell touches one of the footprint's Cells, by a side or by a corner, without being one of them.</summary>
+    private static bool IsBeside(HashSet<CellPosition> footprint, CellPosition cell) =>
+        !footprint.Contains(cell) && footprint.Any(other => Gather.Touch(cell, other));
+
+    /// <summary>
+    /// The Cells a unit on <paramref name="start"/> can walk to, moving between free Cells that
+    /// share a side, once the <paramref name="blocked"/> Cells are taken as well.
+    /// </summary>
+    private static HashSet<CellPosition> ReachableAround(MapState map, CellPosition start, HashSet<CellPosition> blocked)
+    {
+        var reached = new HashSet<CellPosition> { start };
+        var frontier = new Queue<CellPosition>([start]);
+
+        while (frontier.Count > 0)
+        {
+            foreach (var next in MapProbe.NeighboursOf(map, frontier.Dequeue()))
+            {
+                if (map[next] == CellKind.Free && !blocked.Contains(next) && reached.Add(next))
+                {
+                    frontier.Enqueue(next);
+                }
+            }
+        }
+
+        return reached;
     }
 
     private static bool IsUnder(CellPosition cell, CellPosition origin, int side) =>

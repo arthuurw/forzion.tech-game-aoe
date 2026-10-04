@@ -19,12 +19,13 @@ internal sealed class ConstructionSystem : ISystem
     }
 
     /// <summary>
-    /// Sends the Villager walking up to the site, to the Cell it can reach that is nearest in
-    /// a straight line to the Cell of the footprint nearest to where it stands, as
-    /// <see cref="Pathfinder.FindPath"/> picks it.
+    /// Sends the Villager walking up to the site, to the free Cell beside it that has the
+    /// shortest way to it, whichever side that is; between Cells equally far, the one with the
+    /// lowest index. A Villager that cannot reach any Cell beside the site stays where it is,
+    /// and <see cref="Run"/> then finds it short of the site.
     /// </summary>
     public static void WalkUpTo(MapState map, UnitState villager, BuildingState site) =>
-        MovementSystem.WalkTo(map, villager, site.NearestCellTo(villager.Position.Cell));
+        MovementSystem.WalkToNearest(map, villager, site.IsBeside);
 
     /// <summary>
     /// Releases the Villagers building a site that has left the match: they stop building and
