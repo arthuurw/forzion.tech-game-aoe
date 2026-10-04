@@ -106,8 +106,7 @@ internal sealed class CombatSystem : ISystem
 
     private static void Fight(MatchState state, UnitState unit, EntityId target, AttackStats attack)
     {
-        var targetUnit = state.FindUnit(target);
-        var targetBuilding = targetUnit is null ? state.FindBuilding(target) : null;
+        var (targetUnit, targetBuilding) = state.FindUnitOrBuilding(target);
         var distance = targetUnit is not null
             ? Distance(unit.Position, targetUnit.Position)
             : Distance(unit.Position, targetBuilding!);

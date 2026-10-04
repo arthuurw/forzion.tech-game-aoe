@@ -100,6 +100,14 @@ public sealed class MatchState
     /// <summary>The building with the given ID, or null when the match has no such building.</summary>
     internal BuildingState? FindBuilding(EntityId id) => buildings.Find(building => building.Id == id);
 
+    /// <summary>
+    /// The unit or the building with the given ID: one of the two, the other null, or both
+    /// null when the match has no such unit or building. Units and buildings share one
+    /// sequence of IDs, so no ID names one of each.
+    /// </summary>
+    public (UnitState? Unit, BuildingState? Building) FindUnitOrBuilding(EntityId id) =>
+        FindUnit(id) is { } unit ? (unit, null) : (null, FindBuilding(id));
+
     /// <summary>The resource source with the given ID, or null when the match has no such source.</summary>
     internal ResourceSourceState? FindResourceSource(EntityId id) => resourceSources.Find(source => source.Id == id);
 
