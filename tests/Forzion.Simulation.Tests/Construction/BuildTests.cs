@@ -87,22 +87,30 @@ public class BuildTests
     }
 
     [Fact]
-    public void A_Villager_sent_to_a_site_it_cannot_reach_stays_where_it_is_and_keeps_the_site()
+    public void A_Villager_sent_to_a_site_it_cannot_reach_walks_to_the_reachable_Cell_nearest_to_it_and_waits_keeping_the_site()
     {
         // A map with free Cells fenced in by obstacles.
         var match = TestMatches.TwoPlayerMatch(seed: 1);
         var villager = Site.VillagersOf(match, TestMatches.FirstPlayer)[1];
         Site.Stockpile(match, TestMatches.FirstPlayer, Match.BuildingCost(BuildingKind.House).Wood);
-        var reachable = MapProbe.ReachableFrom(match.State.Map, villager.Position.Cell);
+        var start = villager.Position.Cell;
+        var reachable = MapProbe.ReachableFrom(match.State.Map, start);
         var size = Match.BuildingSize(BuildingKind.House);
         var origin = MapProbe.AllCells(match.State.Map).First(cell =>
             match.CanPlace(BuildingKind.House, cell)
             && !MapProbe.Square(new CellPosition(cell.X - 1, cell.Y - 1), size + 2).Any(reachable.Contains));
+        var centre = new CellPosition(origin.X + (size / 2), origin.Y + (size / 2));
         match.Enqueue(new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.House, origin, [villager.Id]));
         match.Tick();
         var house = match.State.Buildings[^1];
 
         Walk.UntilStopped(match, villager);
+
+        // It heads for the site's centre Cell, as a walk to a Cell it cannot reach does.
+        Assert.Equal(
+            reachable.Min(cell => Walk.SquaredDistance(cell, centre)),
+            Walk.SquaredDistance(villager.Position.Cell, centre));
+        Assert.True(Walk.SquaredDistance(villager.Position.Cell, centre) < Walk.SquaredDistance(start, centre));
 
         for (var tick = 0; tick < 200; tick++)
         {

@@ -20,11 +20,16 @@ internal sealed class ConstructionSystem : ISystem
     /// <summary>
     /// Sends the Villager walking up to the site, to the free Cell beside it that has the
     /// shortest way to it, whichever side that is; between Cells equally far, the one with the
-    /// lowest index. A Villager that cannot reach any Cell beside the site stays where it is
-    /// and waits, keeping the site, until a way opens.
+    /// lowest index. A Villager that cannot reach any Cell beside the site walks to the Cell it
+    /// can reach nearest to the site's centre and waits there, keeping the site, until a way
+    /// opens.
     /// </summary>
-    public static void WalkUpToSite(MapState map, UnitState villager, BuildingState site) =>
-        MovementSystem.WalkToNearest(map, villager, site.IsBeside);
+    public static void WalkUpToSite(MapState map, UnitState villager, BuildingState site)
+    {
+        // The centre, not the side nearest to the Villager: every new way it looks for then aims
+        // at the same Cell, wherever it stands by then.
+        MovementSystem.WalkToNearestOrTowards(map, villager, site.IsBeside, site.Footprint.Centre);
+    }
 
     /// <summary>
     /// Sends the Villager up to the site it builds again, choosing again where it walks as it
