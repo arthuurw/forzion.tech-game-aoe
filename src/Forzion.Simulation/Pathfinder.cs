@@ -31,73 +31,14 @@ internal static class Pathfinder
     /// </summary>
     public static List<CellPosition> FindPath(MapState map, CellPosition start, CellPosition destination)
     {
-        var startIndex = map.IndexOf(start);
         var destinationIndex = map.IndexOf(destination);
-        var costs = new int[map.CellCount];
-        var previous = new int[costs.Length];
-        var closed = new bool[costs.Length];
-
-        // Ordered by estimated total cost, then by estimated cost still to go, then by Cell
-        // index: a total order, so the Cell taken next never depends on how the queue
-        // settles ties.
-        var open = new PriorityQueue<int, (int Total, int ToGo, int Index)>();
-
-        Array.Fill(costs, int.MaxValue);
-        costs[startIndex] = 0;
-        open.Enqueue(startIndex, (Estimate(start, destination), Estimate(start, destination), startIndex));
-
-        while (open.TryDequeue(out var index, out _))
-        {
-            if (closed[index])
-            {
-                continue;
-            }
-
-            closed[index] = true;
-
-            if (index == destinationIndex)
-            {
-                break;
-            }
-
-            var cell = map.CellAt(index);
-
-            foreach (var step in CellStep.All)
-            {
-                var next = step.From(cell);
-
-                if (!CanStep(map, cell, step))
-                {
-                    continue;
-                }
-
-                var nextIndex = map.IndexOf(next);
-                var cost = costs[index] + (step.IsDiagonal ? DiagonalCost : StraightCost);
-
-                if (!closed[nextIndex] && cost < costs[nextIndex])
-                {
-                    var toGo = Estimate(next, destination);
-
-                    costs[nextIndex] = cost;
-                    previous[nextIndex] = index;
-                    open.Enqueue(nextIndex, (cost + toGo, toGo, nextIndex));
-                }
-            }
-        }
+        var search = Search(map, start, index => index == destinationIndex, cell => Estimate(cell, destination));
 
         // The search ended either on the destination or with every Cell that can be reached
         // closed, and then the walk goes to the nearest of those.
-        var target = closed[destinationIndex] ? destinationIndex : NearestClosed(map, closed, costs, destination);
-        var path = new List<CellPosition>();
+        var target = search.Goal ?? NearestClosed(map, search, destination);
 
-        for (var index = target; index != startIndex; index = previous[index])
-        {
-            path.Add(map.CellAt(index));
-        }
-
-        path.Reverse();
-
-        return path;
+        return search.PathTo(map, target);
     }
 
     /// <summary>
@@ -109,72 +50,11 @@ internal static class Pathfinder
     /// </summary>
     public static List<CellPosition> FindPathToNearest(MapState map, CellPosition start, Func<CellPosition, bool> isGoal)
     {
-        var startIndex = map.IndexOf(start);
-        var costs = new int[map.CellCount];
-        var previous = new int[costs.Length];
-        var closed = new bool[costs.Length];
-        var goal = -1;
+        // No estimate guides the search, the goals may lie anywhere: the A* is then Dijkstra's
+        // search and the goal taken first is the nearest one.
+        var search = Search(map, start, index => isGoal(map.CellAt(index)), _ => 0);
 
-        // Ordered by cost so far, then by Cell index: a total order, so the goal taken first
-        // is the nearest one and never depends on how the queue settles ties. No estimate
-        // guides the search: the goals may lie anywhere.
-        var open = new PriorityQueue<int, (int Cost, int Index)>();
-
-        Array.Fill(costs, int.MaxValue);
-        costs[startIndex] = 0;
-        open.Enqueue(startIndex, (0, startIndex));
-
-        while (open.TryDequeue(out var index, out _))
-        {
-            if (closed[index])
-            {
-                continue;
-            }
-
-            closed[index] = true;
-            var cell = map.CellAt(index);
-
-            if (isGoal(cell))
-            {
-                goal = index;
-
-                break;
-            }
-
-            foreach (var step in CellStep.All)
-            {
-                if (!CanStep(map, cell, step))
-                {
-                    continue;
-                }
-
-                var nextIndex = map.IndexOf(step.From(cell));
-                var cost = costs[index] + (step.IsDiagonal ? DiagonalCost : StraightCost);
-
-                if (!closed[nextIndex] && cost < costs[nextIndex])
-                {
-                    costs[nextIndex] = cost;
-                    previous[nextIndex] = index;
-                    open.Enqueue(nextIndex, (cost, nextIndex));
-                }
-            }
-        }
-
-        var path = new List<CellPosition>();
-
-        if (goal == -1)
-        {
-            return path;
-        }
-
-        for (var index = goal; index != startIndex; index = previous[index])
-        {
-            path.Add(map.CellAt(index));
-        }
-
-        path.Reverse();
-
-        return path;
+        return search.Goal is { } goal ? search.PathTo(map, goal) : [];
     }
 
     /// <summary>
@@ -191,27 +71,89 @@ internal static class Pathfinder
     }
 
     /// <summary>
-    /// The closed Cell nearest to the destination in a straight line. Between Cells equally
-    /// near, the one with the shortest way to it and then the one with the lowest index.
+    /// A* from <paramref name="start"/> until it closes a Cell <paramref name="isGoal"/> holds
+    /// for, or until it has closed every Cell that can be reached. <paramref name="estimate"/>
+    /// must never overestimate the cost still to go.
     /// </summary>
-    private static int NearestClosed(MapState map, bool[] closed, int[] costs, CellPosition destination)
+    private static SearchResult Search(MapState map, CellPosition start, Func<int, bool> isGoal, Func<CellPosition, int> estimate)
     {
-        var nearest = -1;
-        var nearestDistance = long.MaxValue;
+        var startIndex = map.IndexOf(start);
+        var costs = new int[map.CellCount];
+        var previous = new int[costs.Length];
+        var closed = new bool[costs.Length];
+        int? goal = null;
 
-        for (var index = 0; index < closed.Length; index++)
+        // Ordered by estimated total cost, then by estimated cost still to go, then by Cell
+        // index: a total order, so the Cell taken next never depends on how the queue
+        // settles ties.
+        var open = new PriorityQueue<int, (int Total, int ToGo, int Index)>();
+
+        Array.Fill(costs, int.MaxValue);
+        costs[startIndex] = 0;
+        open.Enqueue(startIndex, (estimate(start), estimate(start), startIndex));
+
+        while (open.TryDequeue(out var index, out _))
         {
-            if (!closed[index])
+            if (closed[index])
             {
                 continue;
             }
 
-            var cell = map.CellAt(index);
-            long deltaX = cell.X - destination.X;
-            long deltaY = cell.Y - destination.Y;
-            var distance = (deltaX * deltaX) + (deltaY * deltaY);
+            closed[index] = true;
 
-            if (distance < nearestDistance || (distance == nearestDistance && costs[index] < costs[nearest]))
+            if (isGoal(index))
+            {
+                goal = index;
+
+                break;
+            }
+
+            var cell = map.CellAt(index);
+
+            foreach (var step in CellStep.All)
+            {
+                if (!CanStep(map, cell, step))
+                {
+                    continue;
+                }
+
+                var next = step.From(cell);
+                var nextIndex = map.IndexOf(next);
+                var cost = costs[index] + (step.IsDiagonal ? DiagonalCost : StraightCost);
+
+                if (!closed[nextIndex] && cost < costs[nextIndex])
+                {
+                    var toGo = estimate(next);
+
+                    costs[nextIndex] = cost;
+                    previous[nextIndex] = index;
+                    open.Enqueue(nextIndex, (cost + toGo, toGo, nextIndex));
+                }
+            }
+        }
+
+        return new SearchResult(startIndex, costs, previous, closed, goal);
+    }
+
+    /// <summary>
+    /// The closed Cell nearest to the destination in a straight line. Between Cells equally
+    /// near, the one with the shortest way to it and then the one with the lowest index.
+    /// </summary>
+    private static int NearestClosed(MapState map, SearchResult search, CellPosition destination)
+    {
+        var nearest = -1;
+        var nearestDistance = int.MaxValue;
+
+        for (var index = 0; index < search.Closed.Length; index++)
+        {
+            if (!search.Closed[index])
+            {
+                continue;
+            }
+
+            var distance = map.CellAt(index).SquaredDistanceTo(destination);
+
+            if (distance < nearestDistance || (distance == nearestDistance && search.Costs[index] < search.Costs[nearest]))
             {
                 nearest = index;
                 nearestDistance = distance;
@@ -232,5 +174,24 @@ internal static class Pathfinder
         var deltaY = Math.Abs(from.Y - to.Y);
 
         return (DiagonalCost * Math.Min(deltaX, deltaY)) + (StraightCost * Math.Abs(deltaX - deltaY));
+    }
+
+    /// <summary>What a search found: the cost of the way to every Cell it reached, the Cell each was reached from, which it closed, and the goal it stopped on, if any.</summary>
+    private sealed record SearchResult(int StartIndex, int[] Costs, int[] Previous, bool[] Closed, int? Goal)
+    {
+        /// <summary>The Cells from the start (not included) to the target (included), following the way the search reached it.</summary>
+        public List<CellPosition> PathTo(MapState map, int target)
+        {
+            var path = new List<CellPosition>();
+
+            for (var index = target; index != StartIndex; index = Previous[index])
+            {
+                path.Add(map.CellAt(index));
+            }
+
+            path.Reverse();
+
+            return path;
+        }
     }
 }

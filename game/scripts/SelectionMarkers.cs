@@ -49,10 +49,10 @@ public partial class SelectionMarkers : Node3D
 
     public override void _Process(double delta)
     {
-        var state = MatchView.Match.State;
+        var state = MatchView.State;
         shown.Clear();
 
-        foreach (var id in SelectionInput.Control.Selected)
+        foreach (var id in SelectionInput.PlayerControl.Selected)
         {
             var placed = PlaceRing(id, state);
 
@@ -116,8 +116,7 @@ public partial class SelectionMarkers : Node3D
     /// <summary>Puts the entity's ring around it; false when the entity is no longer in the match.</summary>
     private bool PlaceRing(EntityId id, MatchState state)
     {
-        var unit = state.Units.FirstOrDefault(unit => unit.Id == id);
-        var building = unit is null ? state.Buildings.FirstOrDefault(building => building.Id == id) : null;
+        var (unit, building) = state.FindUnitOrBuilding(id);
 
         if (unit is null && building is null)
         {

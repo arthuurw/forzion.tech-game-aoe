@@ -20,11 +20,12 @@ public class ConstructionReplayTests
     /// </summary>
     private static ScheduledCommand[] Commands()
     {
-        var state = TestMatches.TwoPlayerMatch(Seed).State;
+        var match = TestMatches.TwoPlayerMatch(Seed);
+        var state = match.State;
         var first = state.UnitsOf(TestMatches.FirstPlayer).Select(unit => unit.Id).ToList();
         var second = state.UnitsOf(TestMatches.SecondPlayer).ToList();
-        var firstWood = Gather.NearestSource(state, state.Units[1].Position.Cell, ResourceKind.Wood);
-        var secondWood = Gather.NearestSource(state, second[1].Position.Cell, ResourceKind.Wood);
+        var firstWood = Gather.NearestSource(state, TestMatches.MiddleVillager(match).Position.Cell, ResourceKind.Wood);
+        var secondWood = Gather.NearestSource(state, TestMatches.MiddleVillager(match, TestMatches.SecondPlayer).Position.Cell, ResourceKind.Wood);
         var house = Site.FreeOriginNear(state, state.Buildings[0].Origin, Match.BuildingSize(BuildingKind.House));
         var storehouse = Site.FreeOriginNear(state, secondWood.Cell, Match.BuildingSize(BuildingKind.Storehouse));
         var barracks = Site.FreeOriginNear(state, firstWood.Cell, Match.BuildingSize(BuildingKind.Barracks));
@@ -87,7 +88,11 @@ public class ConstructionReplayTests
     // When whether each Player is an AI joined the hash, after its Faction's data, the model
     // reproduced the value before from the same final state with the layout before, gave this
     // one with the flag added and matched the match's own hash at every tick.
-    private const ulong ExpectedFinalHash = 10242539458957935743UL;
+    // When main's gatherers and builders, walking to the Cell beside their target with the
+    // shortest way to it, met the AI flag here, no code that writes the hash changed: the
+    // layout is the one above, and this value is the outcome of both behaviours, each covered
+    // by its own behaviour tests.
+    private const ulong ExpectedFinalHash = 6714712860845232372UL;
 
     [Fact]
     public void A_recorded_replay_of_construction_reaches_the_recorded_final_hash()

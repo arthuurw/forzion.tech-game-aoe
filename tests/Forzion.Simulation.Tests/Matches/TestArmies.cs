@@ -6,13 +6,29 @@ namespace Forzion.Simulation.Tests.Matches;
 /// </summary>
 internal static class TestArmies
 {
-    /// <summary>The two-Player configuration of <see cref="TestMatches"/>, with extra units for either Player.</summary>
-    public static MatchConfig Config(
-        ulong seed = 42, IReadOnlyList<StartingUnit>? first = null, IReadOnlyList<StartingUnit>? second = null) =>
-        new(
-            seed,
-            new MapConfig(64, 48),
-            [new PlayerConfig(TestMatches.FirstFaction, first ?? []), new PlayerConfig(TestMatches.FirstFaction, second ?? [])]);
+    /// <summary>
+    /// The two-Player match, with the first Player starting with a melee soldier two Cells left
+    /// of the centre of its Town Center.
+    /// </summary>
+    public static Match MatchWithSoldier() =>
+        Match.Create(TestMatches.TwoPlayerConfig(
+            first: [new StartingUnit(UnitKind.MeleeSoldier, BesideHome(TestMatches.TwoPlayerMatch(), TestMatches.FirstPlayer, -2, 0))]));
+
+    /// <summary>
+    /// Sends the unit walking to the Cell six to the left of it, ticks once to set it on its way
+    /// and returns the last Cell of its path: a unit busy with an order of its own.
+    /// </summary>
+    public static CellPosition WalkAway(Match match, UnitState unit)
+    {
+        match.Enqueue(new MoveCommand(unit.Owner, [unit.Id], new CellPosition(unit.Position.Cell.X - 6, unit.Position.Cell.Y)));
+        match.Tick();
+
+        return unit.Path[^1];
+    }
+
+    /// <summary>The Player's only melee soldier.</summary>
+    public static UnitState SoldierOf(this MatchState state, PlayerId player) =>
+        state.UnitsOf(player).Single(unit => unit.Kind == UnitKind.MeleeSoldier);
 
     /// <summary>
     /// The Cell offset by (<paramref name="x"/>, <paramref name="y"/>) from the centre of the

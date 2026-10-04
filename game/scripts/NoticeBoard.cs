@@ -52,7 +52,7 @@ public partial class NoticeBoard : CanvasLayer
             AddNotice(Tr(key), RejectionColour);
         }
 
-        foreach (var ageKey in HudTexts.AgesReachedBy(events, MatchView.Match.State, MatchView.HumanPlayer))
+        foreach (var ageKey in HudTexts.AgesReachedBy(events, MatchView.State, MatchView.HumanPlayer))
         {
             AddNotice(string.Format(CultureInfo.InvariantCulture, Tr(HudTexts.AgeReached), Tr(ageKey)), AgeColour);
         }

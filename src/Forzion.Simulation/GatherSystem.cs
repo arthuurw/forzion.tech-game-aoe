@@ -26,34 +26,62 @@ internal sealed class GatherSystem : ISystem
     /// <summary>
     /// Sends the Villager walking up to the source to gather from it. A load of the source's
     /// Resource is kept, and when it is already full the Villager delivers it first. It stops
-    /// building.
+    /// building. A Villager already gathering from that very source goes on as it was, keeping
+    /// its progress towards the next unit.
     /// </summary>
     public static void GatherFrom(MatchState state, UnitState villager, ResourceSourceState source)
     {
-        villager.StopBuilding();
-        villager.GatherSource = source.Id;
-        villager.GatherProgress = 0;
+        if (villager.GatherSource == source.Id && villager.GatherPhase == GatherPhase.Gathering)
+        {
+            return;
+        }
+
+        villager.StartGathering(source.Id);
 
         // Taking more on top of a full load would carry past capacity and never deliver.
-        if (villager.Load.Resource == source.Kind && villager.Load.Amount >= Balance.VillagerCarryCapacity)
+        if (villager.Load.Resource == source.Kind && villager.Load.IsFull)
         {
             CarryToDropOffPoint(state, villager);
 
             return;
         }
 
-        WalkUpToSource(state, villager);
+        WalkUpToSource(state.Map, villager, source);
     }
 
     /// <summary>
-    /// Sends the Villager walking up to its source, to the Cell it can reach that is nearest
-    /// the source's in a straight line, as <see cref="Pathfinder.FindPath"/> picks it: a Cell
-    /// beside the source whenever one can be reached.
+    /// Sends the Villager walking up to its source, to the free Cell beside it that has the
+    /// shortest way to it; between Cells equally far, the one with the lowest index. A Villager
+    /// that cannot reach any Cell beside the source stays where it is and waits, keeping its
+    /// source, until a way opens.
     /// </summary>
-    public static void WalkUpToSource(MatchState state, UnitState villager)
+    public static void WalkUpToSource(MapState map, UnitState villager, ResourceSourceState source)
     {
         villager.GatherPhase = GatherPhase.ToSource;
-        MovementSystem.WalkTo(state.Map, villager, state.FindResourceSource(villager.GatherSource!.Value)!.Cell);
+        MovementSystem.WalkToNearest(map, villager, source.IsBeside);
+    }
+
+    /// <summary>
+    /// Sends the Villager on the leg of the gather cycle it is walking, choosing again where it
+    /// walks as it did when it set out: up to its source, or to a drop-off point with its load.
+    /// False, changing nothing, when it walks no such leg.
+    /// </summary>
+    public static bool ChooseWayAgain(MatchState state, UnitState villager)
+    {
+        switch (villager.GatherPhase)
+        {
+            case GatherPhase.None:
+            case GatherPhase.Gathering:
+                return false;
+            case GatherPhase.ToSource:
+                WalkUpToSource(state.Map, villager, state.FindResourceSource(villager.GatherSource!.Value)!);
+                return true;
+            case GatherPhase.ToDropOffPoint:
+                CarryToDropOffPoint(state, villager);
+                return true;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(villager), villager.GatherPhase, "Unknown gather phase.");
+        }
     }
 
     /// <summary>
@@ -73,7 +101,7 @@ internal sealed class GatherSystem : ISystem
             // A carrier whose load filled beside a drop-off point waits there, with no path, for the next tick.
             var destination = unit.IsMoving ? unit.Path[^1] : unit.Position.Cell;
 
-            if (!DropOffPointsOf(state, unit.Owner).Any(building => building.IsBeside(destination)))
+            if (!IsBesideDropOffPoint(state, unit.Owner, destination))
             {
                 CarryToDropOffPoint(state, unit);
             }
@@ -84,8 +112,8 @@ internal sealed class GatherSystem : ISystem
     /// Sends the Villager walking to the free Cell beside a drop-off point of its Player that
     /// has the shortest way to it, whichever point that is; between Cells equally far, the one
     /// with the lowest index. A Player with no drop-off point leaves the Villager idle with its
-    /// load, and so does a way blocked to every Cell beside one, once <see cref="Deliver"/>
-    /// finds the Villager short of them.
+    /// load. A Villager that cannot reach any Cell beside one stays where it is and waits with
+    /// its load until a way opens.
     /// </summary>
     public static void CarryToDropOffPoint(MatchState state, UnitState villager)
     {
@@ -93,7 +121,7 @@ internal sealed class GatherSystem : ISystem
 
         if (dropOffPoints.Count == 0)
         {
-            StopGathering(state.Map, villager);
+            StandIdle(state.Map, villager);
 
             return;
         }
@@ -138,20 +166,13 @@ internal sealed class GatherSystem : ISystem
 
     /// <summary>
     /// The Villager has walked as far as it can towards its source: beside it, it starts
-    /// gathering; short of it, the source cannot be reached and the Villager stands idle.
+    /// gathering; short of it, the source cannot be reached and the Villager waits.
     /// </summary>
     private static void ReachSource(MatchState state, UnitState villager)
     {
-        var source = state.FindResourceSource(villager.GatherSource!.Value)!;
-        var cell = villager.Position.Cell;
-
-        if (Math.Abs(cell.X - source.Cell.X) <= 1 && Math.Abs(cell.Y - source.Cell.Y) <= 1)
+        if (state.FindResourceSource(villager.GatherSource!.Value)!.IsBeside(villager.Position.Cell))
         {
             villager.GatherPhase = GatherPhase.Gathering;
-        }
-        else
-        {
-            StopGathering(state.Map, villager);
         }
     }
 
@@ -159,20 +180,17 @@ internal sealed class GatherSystem : ISystem
     {
         var state = context.State;
 
-        villager.GatherProgress++;
-
-        if (villager.GatherProgress < Balance.GatherTicksPerUnit(source.Kind))
+        if (!villager.GatherTick(Balance.Of(source.Kind).GatherTicksPerUnit))
         {
             return;
         }
 
-        villager.GatherProgress = 0;
         source.Amount--;
         // A load holds a single Resource: whatever else the Villager carried is dropped.
         var carried = villager.Load.Resource == source.Kind ? villager.Load.Amount : 0;
         villager.Load = new Load(source.Kind, carried + 1);
 
-        if (villager.Load.Amount == Balance.VillagerCarryCapacity)
+        if (villager.Load.IsFull)
         {
             CarryToDropOffPoint(state, villager);
         }
@@ -193,6 +211,7 @@ internal sealed class GatherSystem : ISystem
         var state = context.State;
 
         state.RemoveResourceSource(source);
+        context.NoteWaysMayHaveOpened();
         context.Emit(new ResourceSourceDepleted(source.Id));
 
         var replacement = NearestSourceAround(state, source.Kind, source.Cell);
@@ -204,7 +223,7 @@ internal sealed class GatherSystem : ISystem
                 continue;
             }
 
-            unit.GatherSource = replacement?.Id;
+            unit.ReplaceSource(replacement?.Id);
 
             if (unit.GatherPhase == GatherPhase.ToDropOffPoint)
             {
@@ -213,7 +232,7 @@ internal sealed class GatherSystem : ISystem
 
             if (replacement is null)
             {
-                StopGathering(state.Map, unit);
+                StandIdle(state.Map, unit);
             }
             else
             {
@@ -233,7 +252,7 @@ internal sealed class GatherSystem : ISystem
 
         foreach (var source in state.ResourceSources)
         {
-            var distance = SquaredDistance(source.Cell, cell);
+            var distance = source.Cell.SquaredDistanceTo(cell);
 
             if (source.Kind == kind && distance < nearestDistance)
             {
@@ -249,7 +268,7 @@ internal sealed class GatherSystem : ISystem
     /// The Villager stops gathering and stands idle on the Cell it is in, keeping whatever it
     /// carries.
     /// </summary>
-    private static void StopGathering(MapState map, UnitState villager)
+    private static void StandIdle(MapState map, UnitState villager)
     {
         villager.StopGathering();
         MovementSystem.WalkTo(map, villager, villager.Position.Cell);
@@ -258,16 +277,12 @@ internal sealed class GatherSystem : ISystem
     /// <summary>
     /// The Villager has walked as far as it can towards a drop-off point: beside one of its
     /// Player's, it hands its load over and goes back to its source, or stands idle when it
-    /// has none left; short of any, it stands idle with its load.
+    /// has none left; short of any, it waits with its load.
     /// </summary>
     private static void Deliver(MatchState state, UnitState villager)
     {
-        var cell = villager.Position.Cell;
-
-        if (!DropOffPointsOf(state, villager.Owner).Any(building => building.IsBeside(cell)))
+        if (!IsBesideDropOffPoint(state, villager.Owner, villager.Position.Cell))
         {
-            StopGathering(state.Map, villager);
-
             return;
         }
 
@@ -280,14 +295,15 @@ internal sealed class GatherSystem : ISystem
         }
         else
         {
-            StopGathering(state.Map, villager);
+            StandIdle(state.Map, villager);
         }
     }
+
+    /// <summary>Whether the Cell lies beside one of the Player's drop-off points.</summary>
+    private static bool IsBesideDropOffPoint(MatchState state, PlayerId owner, CellPosition cell) =>
+        DropOffPointsOf(state, owner).Any(building => building.IsBeside(cell));
 
     /// <summary>The Player's drop-off points, in ascending ID order.</summary>
     private static List<BuildingState> DropOffPointsOf(MatchState state, PlayerId owner) =>
         state.Buildings.Where(building => building.Owner == owner && building.IsDropOffPoint).ToList();
-
-    private static int SquaredDistance(CellPosition a, CellPosition b) =>
-        ((a.X - b.X) * (a.X - b.X)) + ((a.Y - b.Y) * (a.Y - b.Y));
 }

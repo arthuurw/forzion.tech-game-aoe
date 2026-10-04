@@ -23,7 +23,7 @@ internal static class Train
 
         var villagers = Site.VillagersOf(match, player).Select(villager => villager.Id).ToList();
         var building = Site.Place(match, player, kind, villagers);
-        Gather.Until(match, () => building.IsComplete);
+        TestMatches.TickUntil(match, () => building.IsComplete);
 
         return building;
     }

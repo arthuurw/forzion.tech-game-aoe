@@ -135,7 +135,7 @@ internal sealed class AiScript
     /// </summary>
     private bool Place(BuildingKind kind, CellPosition centre, int reach, IReadOnlyList<UnitState> candidates)
     {
-        var cost = Balance.BuildingCost(kind);
+        var cost = Match.BuildingCost(kind);
 
         // Checked before the place is drawn, so a Player saving up does not use up draws.
         if (candidates.Count == 0 || !CanSpend(cost) || DrawOrigin(kind, centre, reach) is not { } origin)
@@ -152,7 +152,7 @@ internal sealed class AiScript
 
         Spend(cost);
         busy.UnionWith(builders);
-        placed.Add((kind, origin, Balance.BuildingSize(kind)));
+        placed.Add((kind, origin, Balance.Of(kind).Size));
         commands.Add(new PlaceBuildingCommand(player.Id, kind, origin, builders));
 
         return true;
@@ -168,7 +168,7 @@ internal sealed class AiScript
     /// </summary>
     private CellPosition? DrawOrigin(BuildingKind kind, CellPosition centre, int reach)
     {
-        var size = Balance.BuildingSize(kind);
+        var size = Balance.Of(kind).Size;
         var origins = new List<(CellPosition Origin, int Distance)>();
 
         // Row by row, from the lowest: ascending Cell index, which the stable sort below keeps among equals.
@@ -300,7 +300,7 @@ internal sealed class AiScript
     private List<UnitKind> AffordableSoldiersOfTheLatestAge() => Enumerable.Range(1, player.Age)
         .Reverse()
         .Select(age => player.Faction.Ages[age - 1].Units
-            .Where(kind => Balance.Attack(kind) is not null && CanSpend(Balance.UnitCost(kind), savings))
+            .Where(kind => Balance.Of(kind).Attack is not null && CanSpend(Balance.Of(kind).Cost, savings))
             .Order()
             .ToList())
         .FirstOrDefault(soldiers => soldiers.Count > 0) ?? [];
@@ -337,7 +337,7 @@ internal sealed class AiScript
     /// </summary>
     private void Train(BuildingState building, UnitKind kind)
     {
-        if (state.PopulationOf(player.Id) >= state.PopulationLimitOf(player.Id) || !Spend(Balance.UnitCost(kind)))
+        if (state.PopulationOf(player.Id) >= state.PopulationLimitOf(player.Id) || !Spend(Balance.Of(kind).Cost))
         {
             return;
         }
@@ -466,7 +466,7 @@ internal sealed class AiScript
     /// </summary>
     private int DropOffDistance(CellPosition cell) => state.Buildings
         .Where(building => building.Owner == player.Id && building.Kind is BuildingKind.TownCenter or BuildingKind.Storehouse)
-        .Select(building => KingDistance(cell, building.NearestCellTo(cell)))
+        .Select(building => cell.KingDistanceTo(building.Footprint.NearestCellTo(cell)))
         .DefaultIfEmpty(int.MaxValue)
         .Min();
 

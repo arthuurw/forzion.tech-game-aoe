@@ -18,8 +18,8 @@ public sealed record BuildCommand(PlayerId Player, IReadOnlyList<EntityId> Units
 {
     internal override void Execute(TickContext context, PlayerState issuer)
     {
-        var units = OrderedUnits.Find(
-            context, this, issuer, Units, unit => unit.Kind == UnitKind.Villager, RejectionReason.UnitCannotBuild);
+        var units = CommandedUnits.Find(
+            context, this, issuer, Units, unit => unit.CanBuild, RejectionReason.UnitCannotBuild);
 
         if (units is null)
         {

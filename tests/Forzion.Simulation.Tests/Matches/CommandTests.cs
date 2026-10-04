@@ -8,7 +8,7 @@ public class CommandTests
     public void An_enqueued_command_changes_nothing_until_the_next_tick()
     {
         var match = TestMatches.TwoPlayerMatch();
-        var villager = Walk.MiddleVillager(match);
+        var villager = TestMatches.MiddleVillager(match);
         var hashBefore = match.StateHash;
 
         match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], Walk.BehindTownCenter(match)));
@@ -22,7 +22,7 @@ public class CommandTests
     public void An_enqueued_command_is_applied_by_the_next_tick()
     {
         var match = TestMatches.TwoPlayerMatch();
-        var villager = Walk.MiddleVillager(match);
+        var villager = TestMatches.MiddleVillager(match);
         var command = OutsideTheMap(match, TestMatches.FirstPlayer);
         match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], Walk.BehindTownCenter(match)));
         match.Enqueue(command);
@@ -65,7 +65,7 @@ public class CommandTests
         var withCommand = TestMatches.TwoPlayerMatch();
         var without = TestMatches.TwoPlayerMatch();
         withCommand.Enqueue(new MoveCommand(
-            TestMatches.FirstPlayer, [Walk.MiddleVillager(withCommand).Id], Walk.BehindTownCenter(withCommand)));
+            TestMatches.FirstPlayer, [TestMatches.MiddleVillager(withCommand).Id], Walk.BehindTownCenter(withCommand)));
 
         withCommand.Tick();
         without.Tick();
@@ -77,12 +77,12 @@ public class CommandTests
     public void A_command_from_a_Player_that_is_not_in_the_match_is_rejected()
     {
         var match = TestMatches.TwoPlayerMatch();
-        var command = new MoveCommand(new PlayerId(3), [Walk.MiddleVillager(match).Id], Walk.BehindTownCenter(match));
+        var command = new MoveCommand(new PlayerId(3), [TestMatches.MiddleVillager(match).Id], Walk.BehindTownCenter(match));
         match.Enqueue(command);
         match.Tick();
 
         Assert.Equal([new CommandRejected(command, RejectionReason.UnknownPlayer)], match.Events);
-        Assert.False(Walk.MiddleVillager(match).IsMoving);
+        Assert.False(TestMatches.MiddleVillager(match).IsMoving);
     }
 
     [Fact]
@@ -91,7 +91,7 @@ public class CommandTests
         var withRejection = TestMatches.TwoPlayerMatch();
         var without = TestMatches.TwoPlayerMatch();
         withRejection.Enqueue(new MoveCommand(
-            new PlayerId(3), [Walk.MiddleVillager(withRejection).Id], Walk.BehindTownCenter(withRejection)));
+            new PlayerId(3), [TestMatches.MiddleVillager(withRejection).Id], Walk.BehindTownCenter(withRejection)));
 
         withRejection.Tick();
         without.Tick();

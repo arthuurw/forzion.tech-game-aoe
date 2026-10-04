@@ -12,7 +12,7 @@ public class AiReplayTests
     private const ulong Seed = 2026;
 
     // The tick the match ends in: the replay runs exactly to the end.
-    private const int Ticks = 4711;
+    private const int Ticks = 4701;
 
     private static MatchConfig Config() => AiMatches.Config(firstIsAi: true, secondIsAi: true, Seed);
 
@@ -47,7 +47,12 @@ public class AiReplayTests
     // blocks began to choose its job's destination again, the AIs' Villagers walked otherwise and
     // the value was recorded again: the layout stayed the same, and the model gave this one and
     // matched the match's own hash at every tick. The match still ends in the same tick.
-    private const ulong ExpectedFinalHash = 1636717598385792004UL;
+    // When the AIs met main's rules (gatherers and builders walking to the Cell beside their
+    // target with the shortest way to it, idle soldiers attacking enemy buildings, Villagers
+    // waiting with their job for a way), no code that writes the hash changed, so the layout
+    // stayed the same; the match now ends ten ticks sooner, still won by the second Player
+    // with both in Age II, and this is its final hash.
+    private const ulong ExpectedFinalHash = 9066363392942231356UL;
 
     [Fact]
     public void A_recorded_match_of_two_AI_Players_reaches_the_recorded_final_hash()

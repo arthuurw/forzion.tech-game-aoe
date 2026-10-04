@@ -45,7 +45,7 @@ public partial class Hud : CanvasLayer
     [Export]
     public SelectionInput SelectionInput { get; set; } = null!;
 
-    private PlayerControl Control => SelectionInput.Control;
+    private PlayerControl PlayerControl => SelectionInput.PlayerControl;
 
     public override void _Ready()
     {
@@ -68,9 +68,9 @@ public partial class Hud : CanvasLayer
 
     public override void _Process(double delta)
     {
-        ShowStatus(PlayerStatus.Of(MatchView.Match.State, MatchView.HumanPlayer));
+        ShowStatus(PlayerStatus.Of(MatchView.State, MatchView.HumanPlayer));
 
-        var panel = SelectionPanel.For(MatchView.Match.State, MatchView.HumanPlayer, Control.Selected);
+        var panel = SelectionPanel.For(MatchView.State, MatchView.HumanPlayer, PlayerControl.Selected);
         var layout = LayoutOf(panel);
 
         if (layout != shownLayout)
@@ -86,9 +86,9 @@ public partial class Hud : CanvasLayer
 
         bottom.Visible = bottomContent.GetChildCount() > 0;
 
-        placementHint.Visible = Control.PlacingBuilding is not null;
+        placementHint.Visible = PlayerControl.PlacingBuilding is not null;
 
-        if (Control.PlacingBuilding is { } placing)
+        if (PlayerControl.PlacingBuilding is { } placing)
         {
             placementHint.Text = Format(HudTexts.PlacementHint, Tr(TextKeys.NameOf(placing)));
         }
@@ -258,7 +258,7 @@ public partial class Hud : CanvasLayer
                 var kind = choice.Kind;
                 var button = ChoiceButton(Tr(choice.NameKey), choice.Cost, choice.LockedUntilAgeNameKey);
                 button.Name = $"Train{kind}";
-                button.Pressed += () => Control.Train(kind);
+                button.Pressed += () => PlayerControl.Train(kind);
                 row.AddChild(button);
             }
         }
@@ -282,7 +282,7 @@ public partial class Hud : CanvasLayer
                 Text = $"{Format(HudTexts.AdvanceTo, Tr(advance.AgeNameKey))}\n{CostText(advance.Cost)}",
                 SizeFlagsHorizontal = Godot.Control.SizeFlags.ShrinkBegin,
             };
-            button.Pressed += Control.AdvanceAge;
+            button.Pressed += PlayerControl.AdvanceAge;
 
             return button;
         }
@@ -322,7 +322,7 @@ public partial class Hud : CanvasLayer
                 CustomMinimumSize = new Vector2(96, 32),
                 ActionMode = BaseButton.ActionModeEnum.Press,
             };
-            button.Pressed += () => Control.CancelTraining(at);
+            button.Pressed += () => PlayerControl.CancelTraining(at);
             entry.AddChild(button);
 
             if (at == 0)
@@ -392,7 +392,7 @@ public partial class Hud : CanvasLayer
             var kind = choice.Kind;
             var button = ChoiceButton(Tr(choice.NameKey), choice.Cost, choice.LockedUntilAgeNameKey);
             button.Name = $"Build{kind}";
-            button.Pressed += () => Control.ChooseBuilding(kind);
+            button.Pressed += () => PlayerControl.ChooseBuilding(kind);
             row.AddChild(button);
         }
 

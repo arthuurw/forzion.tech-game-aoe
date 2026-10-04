@@ -47,66 +47,90 @@ internal static class Balance
     /// </summary>
     public const int ObstacleWalkSpread = 33;
 
-    /// <summary>How much of the given Resource each Player starts the match with.</summary>
-    public static int StartingAmount(ResourceKind kind) => kind switch
+    private static readonly UnitStats Villager = new(
+        Speed: Fix64.FromInt(2),
+        HitPoints: 25,
+        Attack: null,
+        Cost: new Cost(50, 0, 0),
+        TrainTime: 15 * Match.TicksPerSecond,
+        TrainedAt: BuildingKind.TownCenter);
+
+    private static readonly UnitStats MeleeSoldier = new(
+        Speed: Fix64.FromInt(2),
+        HitPoints: 45,
+        Attack: new AttackStats(Damage: 6, Range: Fix64.One, AttackInterval: 20, PerceptionRadius: Fix64.FromInt(6)),
+        Cost: new Cost(60, 0, 20),
+        TrainTime: 20 * Match.TicksPerSecond,
+        TrainedAt: BuildingKind.Barracks);
+
+    private static readonly UnitStats RangedSoldier = new(
+        Speed: Fix64.FromInt(2),
+        HitPoints: 30,
+        Attack: new AttackStats(Damage: 4, Range: Fix64.FromInt(5), AttackInterval: 30, PerceptionRadius: Fix64.FromInt(7)),
+        Cost: new Cost(0, 25, 45),
+        TrainTime: 18 * Match.TicksPerSecond,
+        TrainedAt: BuildingKind.Barracks);
+
+    private static readonly UnitStats HeavySoldier = new(
+        Speed: Fix64.FromInt(2),
+        HitPoints: 80,
+        Attack: new AttackStats(Damage: 10, Range: Fix64.One, AttackInterval: 20, PerceptionRadius: Fix64.FromInt(6)),
+        Cost: new Cost(70, 0, 30),
+        TrainTime: 25 * Match.TicksPerSecond,
+        TrainedAt: BuildingKind.Barracks);
+
+    private static readonly BuildingStats TownCenter = new(
+        Size: TownCenterSize, HitPoints: 600, Cost: null, BuildTime: 60 * Match.TicksPerSecond, PopulationProvided: 5, Trains: true);
+
+    private static readonly BuildingStats House = new(
+        Size: 2, HitPoints: 150, Cost: new Cost(0, 30, 0), BuildTime: 15 * Match.TicksPerSecond, PopulationProvided: 5, Trains: false);
+
+    private static readonly BuildingStats Storehouse = new(
+        Size: 2, HitPoints: 200, Cost: new Cost(0, 50, 0), BuildTime: 20 * Match.TicksPerSecond, PopulationProvided: 0, Trains: false);
+
+    private static readonly BuildingStats Barracks = new(
+        Size: 3, HitPoints: 300, Cost: new Cost(0, 100, 0), BuildTime: 30 * Match.TicksPerSecond, PopulationProvided: 0, Trains: true);
+
+    private static readonly ResourceStats Food = new(StartingAmount: 200, SourceAmount: 300, GatherTicksPerUnit: 10);
+
+    private static readonly ResourceStats Wood = new(StartingAmount: 200, SourceAmount: 300, GatherTicksPerUnit: 12);
+
+    private static readonly ResourceStats Gold = new(StartingAmount: 100, SourceAmount: 400, GatherTicksPerUnit: 16);
+
+    /// <summary>The balance values of a unit of the given kind.</summary>
+    public static UnitStats Of(UnitKind kind) => kind switch
     {
-        ResourceKind.Food => 200,
-        ResourceKind.Wood => 200,
-        ResourceKind.Gold => 100,
+        UnitKind.Villager => Villager,
+        UnitKind.MeleeSoldier => MeleeSoldier,
+        UnitKind.RangedSoldier => RangedSoldier,
+        UnitKind.HeavySoldier => HeavySoldier,
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
-    /// <summary>How much a new source of the given Resource holds.</summary>
-    public static int SourceAmount(ResourceKind kind) => kind switch
+    /// <summary>The balance values of a building of the given kind.</summary>
+    public static BuildingStats Of(BuildingKind kind) => kind switch
     {
-        ResourceKind.Food => 300,
-        ResourceKind.Wood => 300,
-        ResourceKind.Gold => 400,
+        BuildingKind.TownCenter => TownCenter,
+        BuildingKind.House => House,
+        BuildingKind.Storehouse => Storehouse,
+        BuildingKind.Barracks => Barracks,
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
-    /// <summary>How far a unit of the given kind walks, in Cells per second.</summary>
-    public static Fix64 Speed(UnitKind kind) => kind switch
+    /// <summary>The balance values of the given Resource.</summary>
+    public static ResourceStats Of(ResourceKind kind) => kind switch
     {
-        UnitKind.Villager => Fix64.FromInt(2),
-        UnitKind.MeleeSoldier => Fix64.FromInt(2),
-        UnitKind.RangedSoldier => Fix64.FromInt(2),
-        UnitKind.HeavySoldier => Fix64.FromInt(2),
+        ResourceKind.Food => Food,
+        ResourceKind.Wood => Wood,
+        ResourceKind.Gold => Gold,
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
-    /// <summary>Hit points of a unit of the given kind when it is whole.</summary>
-    public static int HitPoints(UnitKind kind) => kind switch
-    {
-        UnitKind.Villager => 25,
-        UnitKind.MeleeSoldier => 45,
-        UnitKind.RangedSoldier => 30,
-        UnitKind.HeavySoldier => 80,
-        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
-    };
+    /// <summary>What the Portuguese Age Advance to Age II costs.</summary>
+    public static readonly Cost SecondAgeAdvanceCost = new(300, 0, 100);
 
-    /// <summary>Hit points of a building of the given kind when it is whole.</summary>
-    public static int HitPoints(BuildingKind kind) => kind switch
-    {
-        BuildingKind.TownCenter => 600,
-        BuildingKind.House => 150,
-        BuildingKind.Storehouse => 200,
-        BuildingKind.Barracks => 300,
-        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
-    };
-
-    /// <summary>How a unit of the given kind fights, or null when it cannot attack.</summary>
-    public static AttackStats? Attack(UnitKind kind) => kind switch
-    {
-        UnitKind.Villager => null,
-        UnitKind.MeleeSoldier => new AttackStats(
-            Damage: 6, Range: Fix64.One, IntervalTicks: 20, PerceptionRadius: Fix64.FromInt(6)),
-        UnitKind.RangedSoldier => new AttackStats(
-            Damage: 4, Range: Fix64.FromInt(5), IntervalTicks: 30, PerceptionRadius: Fix64.FromInt(7)),
-        UnitKind.HeavySoldier => new AttackStats(
-            Damage: 10, Range: Fix64.One, IntervalTicks: 20, PerceptionRadius: Fix64.FromInt(6)),
-        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
-    };
+    /// <summary>Ticks the Portuguese Age Advance to Age II takes.</summary>
+    public const int SecondAgeAdvanceTime = 40 * Match.TicksPerSecond;
 
     /// <summary>The most a Villager carries at once.</summary>
     public const int VillagerCarryCapacity = 10;
@@ -117,107 +141,6 @@ internal static class Balance
     /// Town Center always find one another.
     /// </summary>
     public const int SourceSearchRadius = 15;
-
-    /// <summary>Side of the square footprint of a building of the given kind, in Cells.</summary>
-    public static int BuildingSize(BuildingKind kind) => kind switch
-    {
-        BuildingKind.TownCenter => TownCenterSize,
-        BuildingKind.House => 2,
-        BuildingKind.Storehouse => 2,
-        BuildingKind.Barracks => 3,
-        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
-    };
-
-    /// <summary>What placing a building of the given kind costs. Town Centers are not placed and have none.</summary>
-    public static Cost BuildingCost(BuildingKind kind) => kind switch
-    {
-        BuildingKind.TownCenter => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Town Centers are not placed."),
-        BuildingKind.House => new Cost(0, 30, 0),
-        BuildingKind.Storehouse => new Cost(0, 50, 0),
-        BuildingKind.Barracks => new Cost(0, 100, 0),
-        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
-    };
-
-    /// <summary>
-    /// Ticks of one Villager's work a building of the given kind takes to build. Villagers
-    /// building together each add their own work.
-    /// </summary>
-    public static int BuildTime(BuildingKind kind) => kind switch
-    {
-        BuildingKind.TownCenter => 60 * Match.TicksPerSecond,
-        BuildingKind.House => 15 * Match.TicksPerSecond,
-        BuildingKind.Storehouse => 20 * Match.TicksPerSecond,
-        BuildingKind.Barracks => 30 * Match.TicksPerSecond,
-        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
-    };
-
-    /// <summary>
-    /// How much a complete building of the given kind adds to its Player's population limit:
-    /// the Town Center gives the base and each House adds to it.
-    /// </summary>
-    public static int PopulationProvided(BuildingKind kind) => kind switch
-    {
-        BuildingKind.TownCenter => 5,
-        BuildingKind.House => 5,
-        BuildingKind.Storehouse => 0,
-        BuildingKind.Barracks => 0,
-        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
-    };
-
-    /// <summary>Whether buildings of the given kind train units.</summary>
-    public static bool Trains(BuildingKind kind) => kind switch
-    {
-        BuildingKind.TownCenter => true,
-        BuildingKind.House => false,
-        BuildingKind.Storehouse => false,
-        BuildingKind.Barracks => true,
-        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
-    };
-
-    /// <summary>The kind of building that trains units of the given kind.</summary>
-    public static BuildingKind TrainedAt(UnitKind kind) => kind switch
-    {
-        UnitKind.Villager => BuildingKind.TownCenter,
-        UnitKind.MeleeSoldier => BuildingKind.Barracks,
-        UnitKind.RangedSoldier => BuildingKind.Barracks,
-        UnitKind.HeavySoldier => BuildingKind.Barracks,
-        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
-    };
-
-    /// <summary>What training a unit of the given kind costs, paid in full when it joins a training queue.</summary>
-    public static Cost UnitCost(UnitKind kind) => kind switch
-    {
-        UnitKind.Villager => new Cost(50, 0, 0),
-        UnitKind.MeleeSoldier => new Cost(60, 0, 20),
-        UnitKind.RangedSoldier => new Cost(0, 25, 45),
-        UnitKind.HeavySoldier => new Cost(70, 0, 30),
-        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
-    };
-
-    /// <summary>Ticks a building spends training a unit of the given kind.</summary>
-    public static int TrainTime(UnitKind kind) => kind switch
-    {
-        UnitKind.Villager => 15 * Match.TicksPerSecond,
-        UnitKind.MeleeSoldier => 20 * Match.TicksPerSecond,
-        UnitKind.RangedSoldier => 18 * Match.TicksPerSecond,
-        UnitKind.HeavySoldier => 25 * Match.TicksPerSecond,
-        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
-    };
-
-    /// <summary>What the Portuguese Age Advance to Age II costs.</summary>
-    public static readonly Cost SecondAgeAdvanceCost = new(300, 0, 100);
-
-    /// <summary>Ticks the Portuguese Age Advance to Age II takes.</summary>
-    public const int SecondAgeAdvanceTime = 40 * Match.TicksPerSecond;
-
-    /// <summary>Ticks a Villager spends gathering one unit of the given Resource.</summary>
-    public static int GatherTicksPerUnit(ResourceKind kind) => kind switch
-    {
-        ResourceKind.Food => 10,
-        ResourceKind.Wood => 12,
-        ResourceKind.Gold => 16,
-        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
-    };
 
     /// <summary>
     /// The AI's share of Villagers for each Resource: an idle Villager goes to the Resource
@@ -291,12 +214,45 @@ internal static class Balance
     public const int AiPlacementChoices = 3;
 }
 
+/// <summary>The balance values of a kind of unit.</summary>
+/// <param name="Speed">How far the unit walks, in Cells per second.</param>
+/// <param name="HitPoints">Hit points of the unit when it is whole.</param>
+/// <param name="Attack">How the unit fights, or null when it cannot attack.</param>
+/// <param name="Cost">What training the unit costs, paid in full when it joins a training queue.</param>
+/// <param name="TrainTime">Ticks a building spends training the unit.</param>
+/// <param name="TrainedAt">The kind of building that trains the unit.</param>
+internal sealed record UnitStats(Fix64 Speed, int HitPoints, AttackStats? Attack, Cost Cost, int TrainTime, BuildingKind TrainedAt);
+
+/// <summary>The balance values of a kind of building.</summary>
+/// <param name="Size">Side of the building's square footprint, in Cells.</param>
+/// <param name="HitPoints">Hit points of the building when it is whole.</param>
+/// <param name="Cost">
+/// What placing the building costs, or null when Players do not place it: each Player starts
+/// with its Town Center and never places another.
+/// </param>
+/// <param name="BuildTime">
+/// Ticks of one Villager's work the building takes to build. Villagers building together each
+/// add their own work.
+/// </param>
+/// <param name="PopulationProvided">
+/// How much the complete building adds to its Player's population limit: the Town Center gives
+/// the base and each House adds to it.
+/// </param>
+/// <param name="Trains">Whether the complete building trains units.</param>
+internal sealed record BuildingStats(int Size, int HitPoints, Cost? Cost, int BuildTime, int PopulationProvided, bool Trains);
+
+/// <summary>The balance values of a Resource.</summary>
+/// <param name="StartingAmount">How much of the Resource each Player starts the match with.</param>
+/// <param name="SourceAmount">How much a new source of the Resource holds.</param>
+/// <param name="GatherTicksPerUnit">Ticks a Villager spends gathering one unit of the Resource.</param>
+internal sealed record ResourceStats(int StartingAmount, int SourceAmount, int GatherTicksPerUnit);
+
 /// <summary>How a unit fights.</summary>
 /// <param name="Damage">Hit points one hit takes from the target.</param>
 /// <param name="Range">
 /// Farthest the target may be for a hit, in Cells: from the attacker's position to the
 /// target's position, or to the nearest point of a building's footprint.
 /// </param>
-/// <param name="IntervalTicks">Ticks spent within range for each hit, which lands at the end of them.</param>
-/// <param name="PerceptionRadius">How far, in Cells, an idle unit notices an enemy unit and attacks it.</param>
-internal sealed record AttackStats(int Damage, Fix64 Range, int IntervalTicks, Fix64 PerceptionRadius);
+/// <param name="AttackInterval">Ticks spent within range for each hit, which lands at the end of them.</param>
+/// <param name="PerceptionRadius">How far, in Cells, an idle unit notices an enemy unit or building and attacks it.</param>
+internal sealed record AttackStats(int Damage, Fix64 Range, int AttackInterval, Fix64 PerceptionRadius);

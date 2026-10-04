@@ -1,7 +1,7 @@
 namespace Forzion.Simulation;
 
-/// <summary>The check shared by every command that gives an order to a list of units.</summary>
-internal static class OrderedUnits
+/// <summary>The check shared by every command that names a list of units to carry it out: the units it commands.</summary>
+internal static class CommandedUnits
 {
     /// <summary>
     /// The units <paramref name="ids"/> names, in the order named, or null once

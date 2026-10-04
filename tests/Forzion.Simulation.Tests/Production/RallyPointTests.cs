@@ -107,7 +107,7 @@ public class RallyPointTests
     private static UnitState TrainOne(Match match)
     {
         var count = match.State.Units.Count;
-        Gather.Until(match, () => match.State.Units.Count > count);
+        TestMatches.TickUntil(match, () => match.State.Units.Count > count);
 
         return match.State.Units[^1];
     }

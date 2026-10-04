@@ -41,19 +41,20 @@ public sealed class PlayerControl
     }
 
     /// <summary>
-    /// The selected entities, in ascending ID order. A selected unit that dies, or building
-    /// that is destroyed, leaves the selection for good.
+    /// The selected entities still in the match, in ascending ID order. A selected unit that
+    /// dies, or building that is destroyed, leaves the selection for good: the match never
+    /// gives its ID to another entity.
     /// </summary>
+    /// <remarks>Reading it changes nothing; the IDs of the gone stay behind until the next selection replaces them.</remarks>
     public IReadOnlyList<EntityId> Selected
     {
         get
         {
-            var state = driver.Match.State;
+            var state = driver.State;
 
-            selected.RemoveAll(id =>
-                !state.Units.Any(unit => unit.Id == id) && !state.Buildings.Any(building => building.Id == id));
-
-            return selected;
+            return selected
+                .Where(id => state.FindUnitOrBuilding(id) is not (null, null))
+                .ToList();
         }
     }
 
@@ -88,7 +89,8 @@ public sealed class PlayerControl
     /// Sends the selected units of the Player the order that fits what the mouse points at,
     /// as a command the next tick applies: gather from a resource source, attack a unit or
     /// building of another Player, build an unfinished building of the Player, otherwise walk
-    /// to the Cell under the mouse. With a building of the Player selected instead, the Cell
+    /// to the Cell under the mouse. Units none of which can attack walk up to an enemy instead
+    /// of being refused an attack. With a building of the Player selected instead, the Cell
     /// under the mouse becomes its rally point. Nothing is sent while nothing is selected. The
     /// command goes out even when the match will refuse it; the refusal comes back as a
     /// <see cref="CommandRejected"/> event.
@@ -101,16 +103,16 @@ public sealed class PlayerControl
         }
 
         var units = selected.Where(IsUnitOfPlayer).ToList();
-        var ground = CellUnder(sight.Ground);
+        var pick = picker.At(sight);
 
         if (units.Count == 0)
         {
-            SendToSelectedBuilding(building => new SetRallyPointCommand(player, building, ground));
+            SendToSelectedBuilding(building => new SetRallyPointCommand(player, building, pick.Ground));
 
             return;
         }
 
-        driver.Match.Enqueue(OrderFor(units, picker.At(sight), ground));
+        driver.Enqueue(OrderFor(units, pick));
     }
 
     /// <summary>
@@ -166,7 +168,7 @@ public sealed class PlayerControl
             (int)Math.Floor(sight.Ground.X - (size / 2.0) + 0.5),
             (int)Math.Floor(sight.Ground.Y - (size / 2.0) + 0.5));
 
-        return new BuildingPlacement(kind, origin, size, driver.Match.CanPlace(kind, origin));
+        return new BuildingPlacement(kind, origin, size, driver.CanPlace(kind, origin));
     }
 
     /// <summary>
@@ -184,13 +186,13 @@ public sealed class PlayerControl
         // The match sends the Villagers among the builders and leaves the others be.
         var builders = selected.Where(IsUnitOfPlayer).ToList();
 
-        driver.Match.Enqueue(new PlaceBuildingCommand(player, placement.Kind, placement.Origin, builders));
+        driver.Enqueue(new PlaceBuildingCommand(player, placement.Kind, placement.Origin, builders));
         PlacingBuilding = null;
     }
 
     private void SendToSelectedBuilding(Func<EntityId, Command> commandFor)
     {
-        var state = driver.Match.State;
+        var state = driver.State;
         var building = Selected
             .Where(id => state.Buildings.Any(each => each.Id == id && each.Owner == player))
             .Select(id => (EntityId?)id)
@@ -198,24 +200,25 @@ public sealed class PlayerControl
 
         if (building is { } id)
         {
-            driver.Match.Enqueue(commandFor(id));
+            driver.Enqueue(commandFor(id));
         }
     }
 
     /// <summary>The command a right-click on <paramref name="target"/> gives.</summary>
-    private Command OrderFor(IReadOnlyList<EntityId> units, object? target, CellPosition ground) => target switch
+    private Command OrderFor(IReadOnlyList<EntityId> units, Pick pick) => pick switch
     {
-        ResourceSourceState source => new GatherCommand(player, units, source.Id),
-        UnitState enemy when enemy.Owner != player => new AttackCommand(player, units, enemy.Id),
-        BuildingState enemy when enemy.Owner != player => new AttackCommand(player, units, enemy.Id),
-        BuildingState site when !site.IsComplete => new BuildCommand(player, units, site.Id),
-        _ => new MoveCommand(player, units, ground),
+        SourcePick { Source: var source } => new GatherCommand(player, units, source.Id),
+        UnitPick { Unit: var enemy } when enemy.Owner != player && AnyCanAttack(units) => new AttackCommand(player, units, enemy.Id),
+        BuildingPick { Building: var enemy } when enemy.Owner != player && AnyCanAttack(units) => new AttackCommand(player, units, enemy.Id),
+        BuildingPick { Building: var site } when site.Owner == player && !site.IsComplete => new BuildCommand(player, units, site.Id),
+        _ => new MoveCommand(player, units, pick.Ground),
     };
 
-    private bool IsUnitOfPlayer(EntityId id) =>
-        driver.Match.State.Units.Any(unit => unit.Id == id && unit.Owner == player);
+    private bool AnyCanAttack(IReadOnlyList<EntityId> units) =>
+        driver.State.Units.Any(unit => unit.CanAttack && units.Contains(unit.Id));
 
-    private static CellPosition CellUnder(MapPoint point) => new((int)Math.Floor(point.X), (int)Math.Floor(point.Y));
+    private bool IsUnitOfPlayer(EntityId id) =>
+        driver.State.Units.Any(unit => unit.Id == id && unit.Owner == player);
 
     private void SelectInBox(ScreenPoint corner, ScreenPoint opposite)
     {
@@ -253,10 +256,10 @@ public sealed class PlayerControl
         // Only what the Player owns can be selected: the selection is what the Player commands.
         switch (picker.At(sight.Value))
         {
-            case UnitState unit when unit.Owner == player:
+            case UnitPick { Unit: var unit } when unit.Owner == player:
                 selected.Add(unit.Id);
                 break;
-            case BuildingState building when building.Owner == player:
+            case BuildingPick { Building: var building } when building.Owner == player:
                 selected.Add(building.Id);
                 break;
         }

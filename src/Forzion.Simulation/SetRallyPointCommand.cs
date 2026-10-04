@@ -27,7 +27,7 @@ public sealed record SetRallyPointCommand(PlayerId Player, EntityId Building, Ce
             return;
         }
 
-        if (!Balance.Trains(building.Kind))
+        if (!Balance.Of(building.Kind).Trains)
         {
             context.Reject(this, RejectionReason.BuildingCannotTrain);
 

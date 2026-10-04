@@ -43,7 +43,7 @@ public sealed record MoveCommand(PlayerId Player, IReadOnlyList<EntityId> Units,
             return;
         }
 
-        var units = OrderedUnits.Find(context, this, issuer, Units);
+        var units = CommandedUnits.Find(context, this, issuer, Units);
 
         if (units is null)
         {
@@ -52,9 +52,7 @@ public sealed record MoveCommand(PlayerId Player, IReadOnlyList<EntityId> Units,
 
         foreach (var unit in units)
         {
-            unit.StopGathering();
-            unit.StopAttacking();
-            unit.StopBuilding();
+            unit.ClearJob();
             MovementSystem.WalkTo(state.Map, unit, Destination);
         }
     }

@@ -1,4 +1,5 @@
 using Forzion.Simulation.Tests.Economy;
+using Forzion.Simulation.Tests.Maps;
 using Forzion.Simulation.Tests.Matches;
 using Forzion.Simulation.Tests.Movement;
 
@@ -22,7 +23,7 @@ internal static class Site
         var source = Gather.NearestSource(state, villagers[1].Position.Cell, ResourceKind.Wood);
         match.Enqueue(new GatherCommand(player, villagers.Select(villager => villager.Id).ToList(), source.Id));
 
-        Gather.Until(match, () => state.Players[player.Value - 1].AmountOf(ResourceKind.Wood) >= wood);
+        TestMatches.TickUntil(match, () => state.Players[player.Value - 1].AmountOf(ResourceKind.Wood) >= wood);
         Halt(match, villagers);
     }
 
@@ -53,7 +54,7 @@ internal static class Site
             match.Enqueue(new MoveCommand(unit.Owner, [unit.Id], unit.Position.Cell));
         }
 
-        Gather.Until(match, () => halted.All(unit => !unit.IsMoving));
+        TestMatches.TickUntil(match, () => halted.All(unit => !unit.IsMoving));
     }
 
     /// <summary>
@@ -81,25 +82,44 @@ internal static class Site
             .ThenBy(origin => origin.X)
             .First(origin =>
             {
-                var ringed = new CellPosition(origin.X - 1, origin.Y - 1);
+                var ring = MapProbe.Square(new CellPosition(origin.X - 1, origin.Y - 1), side + 2).ToHashSet();
 
-                return Square(ringed, side + 2).All(cell => map[cell] == CellKind.Free)
-                    && !state.Units.Any(unit => IsUnder(unit.Position.Cell, ringed, side + 2));
+                return ring.All(cell => map[cell] == CellKind.Free)
+                    && !state.Units.Any(unit => ring.Contains(unit.Position.Cell));
             });
     }
 
-    /// <summary>The Cells of the square of the given side whose lowest corner is <paramref name="origin"/>.</summary>
-    public static IEnumerable<CellPosition> Square(CellPosition origin, int side)
+    /// <summary>
+    /// The origin nearest to the unit of a House that can be placed now and whose side nearest
+    /// to the unit is walled off: once the House stands, the unit can still walk to a Cell beside
+    /// it, but every Cell it can walk to that is nearest in a straight line to the Cell of the
+    /// footprint nearest to the unit lies away from the footprint.
+    /// </summary>
+    public static CellPosition OriginWalledOffOnItsNearSide(Match match, UnitState unit)
     {
-        for (var y = origin.Y; y < origin.Y + side; y++)
-        {
-            for (var x = origin.X; x < origin.X + side; x++)
-            {
-                yield return new CellPosition(x, y);
-            }
-        }
-    }
+        var map = match.State.Map;
+        var size = Match.BuildingSize(BuildingKind.House);
+        var start = unit.Position.Cell;
 
-    private static bool IsUnder(CellPosition cell, CellPosition origin, int side) =>
-        cell.X >= origin.X && cell.X < origin.X + side && cell.Y >= origin.Y && cell.Y < origin.Y + side;
+        return MapProbe.AllCells(map)
+            .Where(origin => match.CanPlace(BuildingKind.House, origin))
+            .OrderBy(origin => Walk.SquaredDistance(origin, start))
+            .ThenBy(origin => origin.Y)
+            .ThenBy(origin => origin.X)
+            .First(origin =>
+            {
+                var footprint = MapProbe.Square(origin, size).ToHashSet();
+                // Mirrors on purpose the aim the builders used before they looked for the nearest
+                // reachable Cell beside the site: the Cell of the footprint nearest to the unit.
+                // The simulation's own rule is internal (TST-1), so the test keeps its copy.
+                var nearSide = new CellPosition(
+                    Math.Clamp(start.X, origin.X, origin.X + size - 1),
+                    Math.Clamp(start.Y, origin.Y, origin.Y + size - 1));
+                var reachable = MapProbe.ReachableFrom(map, start, footprint);
+                var nearest = reachable.Min(cell => Walk.SquaredDistance(cell, nearSide));
+
+                return reachable.Any(cell => MapProbe.IsBeside(footprint, cell))
+                    && !reachable.Any(cell => Walk.SquaredDistance(cell, nearSide) == nearest && MapProbe.IsBeside(footprint, cell));
+            });
+    }
 }

@@ -13,22 +13,38 @@ internal sealed class ConstructionSystem : ISystem
     /// </summary>
     public static void Build(MapState map, UnitState villager, BuildingState site)
     {
-        villager.StopGathering();
-        villager.ConstructionSite = site.Id;
-        WalkUpTo(map, villager, site);
+        villager.StartBuilding(site.Id);
+        WalkUpToSite(map, villager, site);
     }
 
     /// <summary>
-    /// Sends the Villager walking up to the site, to the Cell it can reach that is nearest in
-    /// a straight line to the Cell of the footprint nearest to where it stands, as
-    /// <see cref="Pathfinder.FindPath"/> picks it.
+    /// Sends the Villager walking up to the site, to the free Cell beside it that has the
+    /// shortest way to it, whichever side that is; between Cells equally far, the one with the
+    /// lowest index. A Villager that cannot reach any Cell beside the site stays where it is
+    /// and waits, keeping the site, until a way opens.
     /// </summary>
-    public static void WalkUpTo(MapState map, UnitState villager, BuildingState site) =>
-        MovementSystem.WalkTo(map, villager, site.NearestCellTo(villager.Position.Cell));
+    public static void WalkUpToSite(MapState map, UnitState villager, BuildingState site) =>
+        MovementSystem.WalkToNearest(map, villager, site.IsBeside);
 
     /// <summary>
-    /// Releases the Villagers building a site that has left the match: they stop building and
-    /// stand idle on the Cell they are in, keeping whatever they carry.
+    /// Sends the Villager up to the site it builds again, choosing again where it walks as it
+    /// did when it set out. False, changing nothing, when it builds no site.
+    /// </summary>
+    public static bool ChooseWayAgain(MatchState state, UnitState villager)
+    {
+        if (villager.ConstructionSite is not { } site)
+        {
+            return false;
+        }
+
+        WalkUpToSite(state.Map, villager, state.FindBuilding(site)!);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Releases the Villagers building a site that is complete or has left the match: they
+    /// stop building and stand idle on the Cell they are in, keeping whatever they carry.
     /// </summary>
     public static void ReleaseBuilders(MatchState state, EntityId site)
     {
@@ -55,14 +71,10 @@ internal sealed class ConstructionSystem : ISystem
 
             var site = state.FindBuilding(id)!;
 
+            // Short of the site, the Villager walked as far as it could and waits for a way.
             if (site.IsBeside(unit.Position.Cell))
             {
                 Work(context, site);
-            }
-            else
-            {
-                // Walked as far as it could and still short of the site: it cannot be reached.
-                unit.StopBuilding();
             }
         }
     }
@@ -78,12 +90,11 @@ internal sealed class ConstructionSystem : ISystem
 
         context.Emit(new BuildingCompleted(site.Id));
 
-        foreach (var unit in context.State.Units)
+        if (site.IsDropOffPoint)
         {
-            if (unit.ConstructionSite == site.Id)
-            {
-                unit.StopBuilding();
-            }
+            context.NoteWaysMayHaveOpened();
         }
+
+        ReleaseBuilders(context.State, site.Id);
     }
 }
