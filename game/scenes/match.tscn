@@ -9,7 +9,7 @@
 [ext_resource type="Script" path="res://scripts/WorldBarsOverlay.cs" id="7_bars"]
 [ext_resource type="Script" path="res://scripts/Hud.cs" id="8_hud"]
 [ext_resource type="Script" path="res://scripts/MinimapView.cs" id="9_minimap"]
-[ext_resource type="Script" path="res://scripts/PauseMenu.cs" id="10_pause"]
+[ext_resource type="Script" path="res://scripts/PauseScreen.cs" id="10_pause"]
 [ext_resource type="Script" path="res://scripts/EndScreen.cs" id="11_end"]
 
 [sub_resource type="Environment" id="Environment_main"]
@@ -19,7 +19,7 @@ ambient_light_source = 2
 ambient_light_color = Color(0.85, 0.87, 0.9, 1)
 ambient_light_energy = 0.6
 
-[node name="Main" type="Node3D"]
+[node name="Match" type="Node3D"]
 
 [node name="MatchView" type="Node3D" parent="."]
 script = ExtResource("1_match")
@@ -39,7 +39,7 @@ MatchView = NodePath("../MatchView")
 current = true
 fov = 40.0
 
-[node name="PauseMenu" type="CanvasLayer" parent="." node_paths=PackedStringArray("MatchView")]
+[node name="PauseScreen" type="CanvasLayer" parent="." node_paths=PackedStringArray("MatchView")]
 layer = 4
 script = ExtResource("10_pause")
 MatchView = NodePath("../MatchView")
@@ -73,12 +73,12 @@ MatchView = NodePath("../../MatchView")
 SelectionInput = NodePath("../../SelectionInput")
 Camera = NodePath("../../CameraRig/Camera")
 
-[node name="Hud" type="CanvasLayer" parent="." node_paths=PackedStringArray("MatchView", "SelectionInput", "PauseMenu")]
+[node name="Hud" type="CanvasLayer" parent="." node_paths=PackedStringArray("MatchView", "SelectionInput", "PauseScreen")]
 layer = 2
 script = ExtResource("8_hud")
 MatchView = NodePath("../MatchView")
 SelectionInput = NodePath("../SelectionInput")
-PauseMenu = NodePath("../PauseMenu")
+PauseScreen = NodePath("../PauseScreen")
 
 [node name="Minimap" type="CanvasLayer" parent="."]
 layer = 2

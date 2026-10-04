@@ -47,9 +47,9 @@ public partial class Hud : CanvasLayer
     [Export]
     public SelectionInput SelectionInput { get; set; } = null!;
 
-    /// <summary>The pause that the top bar's pause button opens.</summary>
+    /// <summary>The pause screen that the top bar's pause button opens.</summary>
     [Export]
-    public PauseMenu PauseMenu { get; set; } = null!;
+    public PauseScreen PauseScreen { get; set; } = null!;
 
     private PlayerControl PlayerControl => SelectionInput.PlayerControl;
 
@@ -132,7 +132,7 @@ public partial class Hud : CanvasLayer
         row.AddChild(age);
 
         var pause = new Button { Name = "Pause", Text = Tr(HudTexts.Pause), FocusMode = Godot.Control.FocusModeEnum.None };
-        pause.Pressed += PauseMenu.Pause;
+        pause.Pressed += PauseScreen.Pause;
         row.AddChild(pause);
 
         return bar;

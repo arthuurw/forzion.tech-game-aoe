@@ -4,9 +4,9 @@ using Godot;
 namespace Forzion.Game;
 
 /// <summary>
-/// The pause: the match stops, through <see cref="MatchDriver.IsPaused"/>, under a veil with a
-/// button to go on and one to leave for the main menu. The camera still moves meanwhile. A
-/// match that is over no longer pauses: the end screen has taken over.
+/// The pause screen: the match stops, through <see cref="MatchDriver.IsPaused"/>, under a
+/// veil with a button to go on and one to leave for the main menu. The camera still moves
+/// meanwhile. A match that is over no longer pauses: the end screen has taken over.
 /// </summary>
 /// <remarks>
 /// The <c>pause</c> action of the project's input map toggles it: Escape, P or the Pause key.
@@ -14,7 +14,7 @@ namespace Forzion.Game;
 /// before <see cref="SelectionInput"/>, so Escape first gives up a building being placed and
 /// pauses only when nothing is being placed.
 /// </remarks>
-public partial class PauseMenu : CanvasLayer
+public partial class PauseScreen : CanvasLayer
 {
     private ColorRect veil = null!;
     private Button resume = null!;
