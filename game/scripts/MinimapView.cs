@@ -6,11 +6,15 @@ namespace Forzion.Game;
 
 /// <summary>
 /// The minimap in the bottom right corner of the screen: the terrain, the resource sources,
-/// and the buildings and units of every Player in the Player's colour. Clicking it, or
-/// dragging over it with the left button held, moves the camera to that place. Where each
+/// and the buildings and units of every Player in the Player's colour. Clicking it moves the
+/// camera to that place, and dragging on from the click takes the camera along. Where each
 /// thing goes in the box and which place a click means comes from <see cref="Minimap"/>; this
 /// node only draws and forwards the mouse.
 /// </summary>
+/// <remarks>
+/// The mouse passes through to the map unless the left button was pressed on the minimap, so
+/// a selection box dragged from the map over the minimap still grows and ends there.
+/// </remarks>
 public partial class MinimapView : Control
 {
     /// <summary>Width of the minimap's frame, in pixels; it is as tall as the HUD's bottom panel.</summary>
@@ -29,6 +33,10 @@ public partial class MinimapView : Control
     private Minimap minimap = null!;
     private ImageTexture terrain = null!;
 
+    // Whether the left button went down on the minimap and is still held: only then does the
+    // mouse move the camera.
+    private bool movingCamera;
+
     /// <summary>The match the minimap shows.</summary>
     [Export]
     public MatchView MatchView { get; set; } = null!;
@@ -41,7 +49,7 @@ public partial class MinimapView : Control
 
     public override void _Ready()
     {
-        MouseFilter = MouseFilterEnum.Stop;
+        MouseFilter = MouseFilterEnum.Pass;
         SetAnchorsAndOffsetsPreset(LayoutPreset.BottomRight);
         OffsetLeft = -FrameWidth;
         OffsetTop = -Hud.PanelHeight;
@@ -87,15 +95,27 @@ public partial class MinimapView : Control
 
     public override void _GuiInput(InputEvent @event)
     {
-        var dragging = @event is InputEventMouseMotion { ButtonMask: MouseButtonMask.Left };
-        var clicked = @event is InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true };
-
-        if ((dragging || clicked) && @event is InputEventMouse mouse)
+        switch (@event)
         {
-            var inBox = mouse.Position - BoxCorner;
-            CameraRig.CentreOn(minimap.ToMap(new ScreenPoint(inBox.X, inBox.Y)));
-            AcceptEvent();
+            case InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } click:
+                movingCamera = true;
+                CentreCameraOn(click.Position);
+                break;
+            case InputEventMouseMotion motion when movingCamera:
+                CentreCameraOn(motion.Position);
+                break;
+            case InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: false } when movingCamera:
+                movingCamera = false;
+                AcceptEvent();
+                break;
         }
+    }
+
+    private void CentreCameraOn(Vector2 position)
+    {
+        var inBox = position - BoxCorner;
+        CameraRig.CentreOn(minimap.ToMap(new ScreenPoint(inBox.X, inBox.Y)));
+        AcceptEvent();
     }
 
     /// <summary>The terrain, one pixel per Cell: forests and water on the ground. What stands on a Cell is drawn over it.</summary>
