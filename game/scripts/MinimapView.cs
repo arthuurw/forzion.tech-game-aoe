@@ -17,14 +17,6 @@ namespace Forzion.Game;
 /// </remarks>
 public partial class MinimapView : Control
 {
-    /// <summary>Width of the minimap's frame, in pixels; it is as tall as the HUD's bottom panel.</summary>
-    public const int FrameWidth = BoxWidth + (2 * Margin);
-
-    // A 64 by 48 map fills the box at 4 pixels per Cell.
-    private const int BoxWidth = 256;
-    private const int BoxHeight = 192;
-    private const int Margin = (Hud.PanelHeight - BoxHeight) / 2;
-
     private static readonly Color Outline = new(0, 0, 0, 0.8f);
 
     private Minimap minimap = null!;
@@ -42,19 +34,19 @@ public partial class MinimapView : Control
     [Export]
     public RtsCamera CameraRig { get; set; } = null!;
 
-    private static Vector2 BoxCorner => new(Margin, Margin);
+    private static Vector2 BoxCorner => new(HudLayout.MinimapMargin, HudLayout.MinimapMargin);
 
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Pass;
         SetAnchorsAndOffsetsPreset(LayoutPreset.BottomRight);
-        OffsetLeft = -FrameWidth;
-        OffsetTop = -Hud.PanelHeight;
+        OffsetLeft = -HudLayout.MinimapWidth;
+        OffsetTop = -HudLayout.BottomHeight;
         OffsetRight = 0;
         OffsetBottom = 0;
 
         var map = MatchView.State.Map;
-        minimap = new Minimap(map, BoxWidth, BoxHeight);
+        minimap = new Minimap(map, HudLayout.MinimapBoxWidth, HudLayout.MinimapBoxHeight);
         terrain = TerrainOf(map);
     }
 

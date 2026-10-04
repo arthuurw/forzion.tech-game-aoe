@@ -13,9 +13,6 @@ namespace Forzion.Game;
 /// </summary>
 public partial class Hud : CanvasLayer
 {
-    /// <summary>Height of the panel at the bottom of the screen, in pixels.</summary>
-    public const int PanelHeight = 210;
-
     private const int MostUnitsShown = 24;
 
     private static readonly Color HintColour = new(0.8f, 0.85f, 0.95f);
@@ -63,8 +60,8 @@ public partial class Hud : CanvasLayer
         placementHint.Name = "PlacementHint";
         placementHint.HorizontalAlignment = HorizontalAlignment.Center;
         placementHint.SetAnchorsAndOffsetsPreset(Godot.Control.LayoutPreset.BottomWide);
-        placementHint.OffsetTop = -PanelHeight - 40;
-        placementHint.OffsetBottom = -PanelHeight - 8;
+        placementHint.OffsetTop = -HudLayout.BottomHeight - 40;
+        placementHint.OffsetBottom = -HudLayout.BottomHeight - 8;
         placementHint.MouseFilter = Godot.Control.MouseFilterEnum.Ignore;
         root.AddChild(placementHint);
     }
@@ -140,10 +137,10 @@ public partial class Hud : CanvasLayer
         bottom = new PanelContainer { Name = "SelectionPanel", MouseFilter = Godot.Control.MouseFilterEnum.Stop };
         bottom.AddThemeStyleboxOverride("panel", PanelStyle());
         bottom.SetAnchorsAndOffsetsPreset(Godot.Control.LayoutPreset.BottomWide);
-        bottom.OffsetTop = -PanelHeight;
+        bottom.OffsetTop = -HudLayout.BottomHeight;
 
         // The minimap takes the bottom right corner.
-        bottom.OffsetRight = -MinimapView.FrameWidth;
+        bottom.OffsetRight = -HudLayout.MinimapWidth;
 
         bottomContent = new HBoxContainer { Name = "Content" };
         bottomContent.AddThemeConstantOverride("separation", 24);
