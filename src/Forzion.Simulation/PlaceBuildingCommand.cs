@@ -58,7 +58,7 @@ public sealed record PlaceBuildingCommand(
 
         issuer.Pay(cost);
         var site = context.State.AddBuilding(issuer.Id, Kind, Origin);
-        MovementSystem.Reroute(context.State);
+        Rerouting.AfterBlocking(context.State);
 
         foreach (var builder in builders)
         {

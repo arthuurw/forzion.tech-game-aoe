@@ -27,6 +27,22 @@ internal sealed class ConstructionSystem : ISystem
         MovementSystem.WalkToNearest(map, villager, site.IsBeside);
 
     /// <summary>
+    /// Sends the Villager up to the site it builds again, choosing again where it walks as it
+    /// did when it set out. False, changing nothing, when it builds no site.
+    /// </summary>
+    public static bool ChooseWayAgain(MatchState state, UnitState villager)
+    {
+        if (villager.ConstructionSite is not { } site)
+        {
+            return false;
+        }
+
+        WalkUpToSite(state.Map, villager, state.FindBuilding(site)!);
+
+        return true;
+    }
+
+    /// <summary>
     /// Releases the Villagers building a site that is complete or has left the match: they
     /// stop building and stand idle on the Cell they are in, keeping whatever they carry.
     /// </summary>

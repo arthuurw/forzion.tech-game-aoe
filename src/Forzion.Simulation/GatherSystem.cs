@@ -56,6 +56,29 @@ internal sealed class GatherSystem : ISystem
     }
 
     /// <summary>
+    /// Sends the Villager on the leg of the gather cycle it is walking, choosing again where it
+    /// walks as it did when it set out: up to its source, or to a drop-off point with its load.
+    /// False, changing nothing, when it walks no such leg.
+    /// </summary>
+    public static bool ChooseWayAgain(MatchState state, UnitState villager)
+    {
+        switch (villager.GatherPhase)
+        {
+            case GatherPhase.None:
+            case GatherPhase.Gathering:
+                return false;
+            case GatherPhase.ToSource:
+                WalkUpToSource(state.Map, villager, state.FindResourceSource(villager.GatherSource!.Value)!);
+                return true;
+            case GatherPhase.ToDropOffPoint:
+                CarryToDropOffPoint(state, villager);
+                return true;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(villager), villager.GatherPhase, "Unknown gather phase.");
+        }
+    }
+
+    /// <summary>
     /// Sends every Villager carrying its load to a drop-off point that has left the match, on
     /// its way there or already waiting beside it, to the nearest one its Player still has, or
     /// leaves it idle with its load when there is none. It keeps its source.
