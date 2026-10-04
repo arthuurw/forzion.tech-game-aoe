@@ -5,18 +5,21 @@ using Godot;
 namespace Forzion.Game;
 
 /// <summary>
-/// Tells the person at the screen when the match refuses one of their orders: a line of text
-/// near the top of the screen that fades after a few seconds. The texts come from the
-/// project's translations (<c>translations/pt_BR.po</c>), looked up by the keys
-/// <see cref="RejectionNotices"/> names.
+/// Tells the person at the screen when the match refuses one of their orders and when their
+/// Player reaches a new Age: a line of text near the top of the screen that fades after a few
+/// seconds. The texts come from the project's translations (<c>translations/pt_BR.po</c>),
+/// looked up by the keys <see cref="RejectionNotices"/> and <see cref="HudTexts"/> name.
 /// </summary>
-public partial class RejectionNoticeBoard : CanvasLayer
+public partial class NoticeBoard : CanvasLayer
 {
     private const int MostShown = 4;
 
+    private static readonly Color RejectionColour = new(1, 0.85f, 0.4f);
+    private static readonly Color AgeColour = new(0.6f, 0.9f, 1);
+
     private VBoxContainer lines = null!;
 
-    /// <summary>The match whose refusals are reported.</summary>
+    /// <summary>The match whose refusals and Ages are reported.</summary>
     [Export]
     public MatchView MatchView { get; set; } = null!;
 
@@ -32,7 +35,7 @@ public partial class RejectionNoticeBoard : CanvasLayer
             MouseFilter = Control.MouseFilterEnum.Ignore,
         };
         lines.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.CenterTop);
-        lines.Position = new Vector2(lines.Position.X, 64);
+        lines.Position = new Vector2(lines.Position.X, 52);
         lines.GrowHorizontal = Control.GrowDirection.Both;
         AddChild(lines);
 
@@ -45,11 +48,16 @@ public partial class RejectionNoticeBoard : CanvasLayer
     {
         foreach (var key in RejectionNotices.MessageKeysFor(events, MatchView.HumanPlayer))
         {
-            AddNotice(Tr(key));
+            AddNotice(Tr(key), RejectionColour);
+        }
+
+        foreach (var ageKey in HudTexts.AgesReachedBy(events, MatchView.State, MatchView.HumanPlayer))
+        {
+            AddNotice(HudTexts.Format(key => Tr(key), HudTexts.AgeReached, Tr(ageKey)), AgeColour);
         }
     }
 
-    private void AddNotice(string text)
+    private void AddNotice(string text, Color colour)
     {
         // The oldest notice gives way when too many pile up.
         if (lines.GetChildCount() >= MostShown)
@@ -66,7 +74,7 @@ public partial class RejectionNoticeBoard : CanvasLayer
             MouseFilter = Control.MouseFilterEnum.Ignore,
         };
         label.AddThemeFontSizeOverride("font_size", 22);
-        label.AddThemeColorOverride("font_color", new Color(1, 0.85f, 0.4f));
+        label.AddThemeColorOverride("font_color", colour);
         label.AddThemeColorOverride("font_outline_color", new Color(0, 0, 0));
         label.AddThemeConstantOverride("outline_size", 6);
         lines.AddChild(label);

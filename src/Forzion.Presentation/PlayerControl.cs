@@ -3,8 +3,8 @@ using Forzion.Simulation;
 namespace Forzion.Presentation;
 
 /// <summary>
-/// What the person at the screen does with the mouse, turned into a selection of their
-/// Player's entities and into commands for the simulation. It decides no game rule
+/// What the person at the screen does with the mouse and the HUD's buttons, turned into a
+/// selection of their Player's entities and into commands for the simulation. It decides no game rule
 /// (ADR 0001): whether a command is valid is for the match to say when it applies it.
 /// </summary>
 public sealed class PlayerControl
@@ -90,21 +90,127 @@ public sealed class PlayerControl
     /// as a command the next tick applies: gather from a resource source, attack a unit or
     /// building of another Player, build an unfinished building of the Player, otherwise walk
     /// to the Cell under the mouse. Units none of which can attack walk up to an enemy instead
-    /// of being refused an attack. Nothing is sent while no unit is selected. The command goes
-    /// out even when the match will refuse it; the refusal comes back as a
+    /// of being refused an attack. With a complete building of the Player that trains units
+    /// selected instead, the Cell under the mouse becomes its rally point; any other building
+    /// selected, such as a House or a construction site, takes no order from the right button
+    /// and nothing is sent. Nothing is sent while nothing is selected. A unit order goes out
+    /// even when the match will refuse it; the refusal comes back as a
     /// <see cref="CommandRejected"/> event.
     /// </summary>
     public void OrderAt(ScreenPoint point)
     {
-        var sight = sightThrough(point);
-        var units = selected.Where(IsUnitOfPlayer).ToList();
-
-        if (sight is null || units.Count == 0)
+        if (sightThrough(point) is not { } sight)
         {
             return;
         }
 
-        driver.Enqueue(OrderFor(units, picker.At(sight.Value)));
+        var units = selected.Where(IsUnitOfPlayer).ToList();
+        var pick = picker.At(sight);
+
+        if (units.Count == 0)
+        {
+            // A right-click on the map with a building that has no rally point selected is no
+            // order at all, so it brings no refusal notice either.
+            if (SelectedBuilding() is { IsComplete: true } building && Match.Trains(building.Kind))
+            {
+                driver.Enqueue(new SetRallyPointCommand(player, building.Id, pick.Ground));
+            }
+
+            return;
+        }
+
+        driver.Enqueue(OrderFor(units, pick));
+    }
+
+    /// <summary>
+    /// The kind of building the person has chosen to place and is now pointing where, or null
+    /// while no building is being placed.
+    /// </summary>
+    public BuildingKind? PlacingBuilding { get; private set; }
+
+    /// <summary>
+    /// Puts a unit of the given kind at the end of the training queue of the selected building.
+    /// Nothing is sent while no building of the Player is selected.
+    /// </summary>
+    public void Train(UnitKind kind) => SendToSelectedBuilding(building => new TrainCommand(player, building, kind));
+
+    /// <summary>
+    /// Takes the unit at <paramref name="position"/> off the training queue of the selected
+    /// building: 0 for the one in training. Nothing is sent while no building of the Player is selected.
+    /// </summary>
+    public void CancelTraining(int position) =>
+        SendToSelectedBuilding(building => new CancelTrainingCommand(player, building, position));
+
+    /// <summary>
+    /// Orders the Age Advance at the selected building, the Town Center. Nothing is sent while
+    /// no building of the Player is selected.
+    /// </summary>
+    public void AdvanceAge() => SendToSelectedBuilding(building => new AgeAdvanceCommand(player, building));
+
+    /// <summary>
+    /// Starts placing a building of the given kind: from now on <see cref="PlacementAt"/> tells
+    /// where it would go, until <see cref="PlaceAt"/> places it or <see cref="CancelPlacement"/> gives up.
+    /// </summary>
+    public void ChooseBuilding(BuildingKind kind) => PlacingBuilding = kind;
+
+    /// <summary>Gives up placing the chosen building.</summary>
+    public void CancelPlacement() => PlacingBuilding = null;
+
+    /// <summary>
+    /// Where the chosen building would go with the mouse at <paramref name="point"/>: its
+    /// footprint centred on the point, and whether the match would place it there now. Null
+    /// while no building is chosen or when the point looks above the horizon.
+    /// </summary>
+    public BuildingPlacement? PlacementAt(ScreenPoint point)
+    {
+        if (PlacingBuilding is not { } kind || sightThrough(point) is not { } sight)
+        {
+            return null;
+        }
+
+        var size = Match.BuildingSize(kind);
+
+        // The footprint whose centre is nearest the point: half a footprint back, rounded to the nearest Cell.
+        var origin = new CellPosition(
+            (int)Math.Floor(sight.Ground.X - (size / 2.0) + 0.5),
+            (int)Math.Floor(sight.Ground.Y - (size / 2.0) + 0.5));
+
+        return new BuildingPlacement(kind, origin, size, driver.CanPlace(kind, origin));
+    }
+
+    /// <summary>
+    /// Places the chosen building where <see cref="PlacementAt"/> shows it, with the selected
+    /// units as builders, and stops placing. The command goes out even when the preview is
+    /// invalid: the match refuses it and says why. Nothing is sent while no building is chosen.
+    /// </summary>
+    public void PlaceAt(ScreenPoint point)
+    {
+        if (PlacementAt(point) is not { } placement)
+        {
+            return;
+        }
+
+        // The match sends the Villagers among the builders and leaves the others be.
+        var builders = selected.Where(IsUnitOfPlayer).ToList();
+
+        driver.Enqueue(new PlaceBuildingCommand(player, placement.Kind, placement.Origin, builders));
+        PlacingBuilding = null;
+    }
+
+    private void SendToSelectedBuilding(Func<EntityId, Command> commandFor)
+    {
+        if (SelectedBuilding() is { } building)
+        {
+            driver.Enqueue(commandFor(building.Id));
+        }
+    }
+
+    /// <summary>The selected building of the Player, or null when none is selected.</summary>
+    private BuildingState? SelectedBuilding()
+    {
+        var selection = Selected;
+
+        return driver.State.Buildings.FirstOrDefault(each => each.Owner == player && selection.Contains(each.Id));
     }
 
     /// <summary>The command a right-click on <paramref name="target"/> gives.</summary>

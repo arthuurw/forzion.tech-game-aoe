@@ -1,4 +1,3 @@
-using System.Text;
 using Forzion.Simulation;
 
 namespace Forzion.Presentation;
@@ -33,21 +32,5 @@ public static class RejectionNotices
     /// Derived from the name so a reason added to the simulation has a key at once; its text
     /// still has to be added to the translations.
     /// </summary>
-    public static string MessageKeyOf(RejectionReason reason)
-    {
-        var name = reason.ToString();
-        var key = new StringBuilder(KeyPrefix);
-
-        for (var index = 0; index < name.Length; index++)
-        {
-            if (index > 0 && char.IsUpper(name[index]))
-            {
-                key.Append('_');
-            }
-
-            key.Append(char.ToUpperInvariant(name[index]));
-        }
-
-        return key.ToString();
-    }
+    public static string MessageKeyOf(RejectionReason reason) => KeyPrefix + TextKeys.UpperSnakeCase(reason.ToString());
 }

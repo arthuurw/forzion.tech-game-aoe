@@ -29,6 +29,9 @@ public sealed class MatchDriver
     /// <summary>Queues a command for the match; the next tick <see cref="Advance"/> runs applies it.</summary>
     public void Enqueue(Command command) => match.Enqueue(command);
 
+    /// <summary>Whether the match would place a building of the given kind there now, as <see cref="Match.CanPlace"/> says.</summary>
+    public bool CanPlace(BuildingKind kind, CellPosition origin) => match.CanPlace(kind, origin);
+
     /// <summary>
     /// Lets <paramref name="elapsedSeconds"/> of real time pass, running every tick that
     /// becomes due, and returns the events of all those ticks in the order they happened.

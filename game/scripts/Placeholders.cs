@@ -45,12 +45,6 @@ public sealed class Placeholders
     /// <summary>How high above the ground a unit's placeholder is placed, so it rests on the ground.</summary>
     public static float UnitStandingHeight => UnitHeight / 2;
 
-    /// <summary>How high a unit's placeholder reaches above the ground.</summary>
-    public static float UnitTop => UnitHeight;
-
-    /// <summary>How high a building's placeholder reaches above the ground.</summary>
-    public static float BuildingTop => BuildingHeight;
-
     /// <summary>
     /// The shapes as the mouse picks them. A unit is picked a little beyond its drawn radius:
     /// at a distance the capsules are only a few pixels wide.
@@ -120,6 +114,22 @@ public sealed class Placeholders
             Mesh = new BoxMesh { Size = size, Material = MaterialFor(ColourOf(building.Owner).Darkened(0.2f)) },
             Position = WorldSpace.CentreOf(building, BuildingHeight / 2),
         };
+    }
+
+    /// <summary>
+    /// Raises a building's box as far as its construction has gone, from a low slab when the
+    /// site is placed to its full height once complete.
+    /// </summary>
+    public static void ShowConstruction(Node3D view, BuildingState building)
+    {
+        const float LowestShare = 0.15f;
+
+        var share = building.IsComplete
+            ? 1
+            : Math.Max(LowestShare, (float)Fractions.Of(building.BuildProgress, building.BuildTime));
+
+        view.Scale = new Vector3(1, share, 1);
+        view.Position = WorldSpace.CentreOf(building, BuildingHeight * share / 2);
     }
 
     /// <summary>A capsule in the owner's colour. It is not placed: units move, so the caller places it every frame.</summary>

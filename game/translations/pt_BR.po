@@ -112,3 +112,120 @@ msgstr "Arcabuzeiro"
 
 msgid "FACTION_PORTUGUESE_HEAVY_SOLDIER"
 msgstr "Cavaleiro"
+
+# Nomes genéricos das unidades, para uma Facção que não dê nome próprio a uma delas.
+msgid "UNIT_VILLAGER"
+msgstr "Aldeão"
+
+msgid "UNIT_MELEE_SOLDIER"
+msgstr "Soldado corpo a corpo"
+
+msgid "UNIT_RANGED_SOLDIER"
+msgstr "Soldado à distância"
+
+msgid "UNIT_HEAVY_SOLDIER"
+msgstr "Soldado pesado"
+
+# Nomes das construções, iguais para todas as Facções.
+msgid "BUILDING_TOWN_CENTER"
+msgstr "Centro"
+
+msgid "BUILDING_HOUSE"
+msgstr "Casa"
+
+msgid "BUILDING_STOREHOUSE"
+msgstr "Depósito"
+
+msgid "BUILDING_BARRACKS"
+msgstr "Quartel"
+
+# Nomes dos Recursos.
+msgid "RESOURCE_FOOD"
+msgstr "Alimento"
+
+msgid "RESOURCE_WOOD"
+msgstr "Madeira"
+
+msgid "RESOURCE_GOLD"
+msgstr "Ouro"
+
+# Textos da HUD. {0} é trocado pelo nome ou número indicado no comentário de cada um.
+msgid "HUD_POPULATION"
+msgstr "População"
+
+# {0}: nome da próxima Era.
+msgid "HUD_ADVANCE_TO"
+msgstr "Avançar para a {0}"
+
+# {0}: nome da Era a que o Avanço leva; {1}: quanto já avançou, em porcentagem.
+msgid "HUD_ADVANCING_TO"
+msgstr "Avançando para a {0} {1}"
+
+# {0}: nome da Era que libera.
+msgid "HUD_LOCKED_UNTIL"
+msgstr "Liberado na {0}"
+
+msgid "HUD_BUILD"
+msgstr "Construir"
+
+msgid "HUD_TRAIN"
+msgstr "Treinar"
+
+msgid "HUD_TRAINING_QUEUE"
+msgstr "Fila de treino"
+
+msgid "HUD_CANCEL_TRAINING_HINT"
+msgstr "Clique para cancelar e receber o Custo de volta."
+
+msgid "HUD_CONSTRUCTION"
+msgstr "Obra"
+
+msgid "HUD_HIT_POINTS"
+msgstr "Pontos de vida"
+
+msgid "HUD_RALLY_POINT_HINT"
+msgstr "Botão direito no mapa define o Ponto de reunião."
+
+# {0}: nome da construção.
+msgid "HUD_PLACEMENT_HINT"
+msgstr "Posicionando: {0}. Clique no mapa para posicionar; botão direito ou Esc cancela."
+
+# {0}: quantidade de unidades.
+msgid "HUD_SELECTED_UNITS"
+msgstr "{0} unidades selecionadas"
+
+msgid "HUD_FREE"
+msgstr "Grátis"
+
+# {0}: nome da Era alcançada.
+msgid "HUD_AGE_REACHED"
+msgstr "Você chegou à {0}!"
+
+# Como a HUD junta nomes e números, na ordem e com a pontuação de cada idioma.
+# {0}: rótulo; {1}: valor.
+msgid "HUD_LABELLED"
+msgstr "{0}: {1}"
+
+# {0}: população; {1}: limite de população.
+msgid "HUD_POPULATION_OF_LIMIT"
+msgstr "{0}/{1}"
+
+# {0}: nome da Facção; {1}: nome da Era.
+msgid "HUD_FACTION_AND_AGE"
+msgstr "{0} · {1}"
+
+# {0}: Pontos de vida que restam; {1}: Pontos de vida da unidade ou construção inteira.
+msgid "HUD_HIT_POINTS_OF_MAX"
+msgstr "{0}/{1}"
+
+# {0}: número de 0 a 100.
+msgid "HUD_PERCENTAGE"
+msgstr "{0}%"
+
+# {0}: quantidade; {1}: nome do Recurso.
+msgid "HUD_COST_AMOUNT"
+msgstr "{0} {1}"
+
+# Entre as quantidades dos Recursos de um Custo.
+msgid "HUD_COST_SEPARATOR"
+msgstr ", "
