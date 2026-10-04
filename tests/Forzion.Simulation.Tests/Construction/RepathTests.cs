@@ -40,12 +40,12 @@ public class RepathTests
         var carrier = Site.VillagersOf(match, TestMatches.FirstPlayer)[1];
         var source = Gather.NearestSource(state, AwayFrom(townCenter), ResourceKind.Wood);
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [carrier.Id], source.Id));
-        Gather.Until(match, () => carrier.GatherPhase == GatherPhase.ToDropOffPoint);
+        TestMatches.TickUntil(match, () => carrier.GatherPhase == GatherPhase.ToDropOffPoint);
 
         PlaceHouses(match, HousesHemmingIn(match, carrier, cell => MapProbe.IsBeside(townCenter, cell)));
         var wood = player.AmountOf(ResourceKind.Wood);
         var load = carrier.Load.Amount;
-        Gather.Until(match, () => carrier.GatherPhase != GatherPhase.ToDropOffPoint);
+        TestMatches.TickUntil(match, () => carrier.GatherPhase != GatherPhase.ToDropOffPoint);
 
         Assert.Equal(wood + load, player.AmountOf(ResourceKind.Wood));
         Assert.Equal(GatherPhase.ToSource, carrier.GatherPhase);
@@ -64,7 +64,7 @@ public class RepathTests
         match.Tick();
 
         PlaceHouses(match, HousesHemmingIn(match, villager, cell => MapProbe.Touch(cell, source.Cell)));
-        Gather.Until(match, () => villager.GatherPhase != GatherPhase.ToSource);
+        TestMatches.TickUntil(match, () => villager.GatherPhase != GatherPhase.ToSource);
 
         Assert.Equal(GatherPhase.Gathering, villager.GatherPhase);
         Assert.True(MapProbe.Touch(villager.Position.Cell, source.Cell));

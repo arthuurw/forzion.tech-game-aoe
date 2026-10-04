@@ -23,7 +23,7 @@ internal static class Site
         var source = Gather.NearestSource(state, villagers[1].Position.Cell, ResourceKind.Wood);
         match.Enqueue(new GatherCommand(player, villagers.Select(villager => villager.Id).ToList(), source.Id));
 
-        Gather.Until(match, () => state.Players[player.Value - 1].AmountOf(ResourceKind.Wood) >= wood);
+        TestMatches.TickUntil(match, () => state.Players[player.Value - 1].AmountOf(ResourceKind.Wood) >= wood);
         Halt(match, villagers);
     }
 
@@ -54,7 +54,7 @@ internal static class Site
             match.Enqueue(new MoveCommand(unit.Owner, [unit.Id], unit.Position.Cell));
         }
 
-        Gather.Until(match, () => halted.All(unit => !unit.IsMoving));
+        TestMatches.TickUntil(match, () => halted.All(unit => !unit.IsMoving));
     }
 
     /// <summary>

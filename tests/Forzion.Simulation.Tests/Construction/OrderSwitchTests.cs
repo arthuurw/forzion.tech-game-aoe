@@ -41,7 +41,7 @@ public class OrderSwitchTests
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
         match.Tick();
         var progress = house.BuildProgress;
-        Gather.Until(match, () => villager.Load.Amount > 0);
+        TestMatches.TickUntil(match, () => villager.Load.Amount > 0);
 
         Assert.Null(villager.ConstructionSite);
         Assert.Equal(ResourceKind.Food, villager.Load.Resource);
@@ -56,11 +56,11 @@ public class OrderSwitchTests
         var house = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.House, []);
         var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Food);
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
-        Gather.Until(match, () => villager.Load.Amount > 1);
+        TestMatches.TickUntil(match, () => villager.Load.Amount > 1);
         var load = villager.Load;
 
         match.Enqueue(new BuildCommand(TestMatches.FirstPlayer, [villager.Id], house.Id));
-        Gather.Until(match, () => house.IsComplete);
+        TestMatches.TickUntil(match, () => house.IsComplete);
 
         Assert.Equal(GatherPhase.None, villager.GatherPhase);
         Assert.Null(villager.GatherSource);
@@ -74,7 +74,7 @@ public class OrderSwitchTests
     private static BuildingState BuildingFor(Match match, UnitState villager, int ticks)
     {
         var house = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.House, [villager.Id]);
-        Gather.Until(match, () => house.BuildProgress == ticks);
+        TestMatches.TickUntil(match, () => house.BuildProgress == ticks);
 
         return house;
     }

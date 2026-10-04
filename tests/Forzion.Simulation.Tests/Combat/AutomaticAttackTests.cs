@@ -13,13 +13,13 @@ public class AutomaticAttackTests
         var match = Battle.Create(first: plain =>
             [new StartingUnit(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, First, 2, 0))]);
         var soldier = Battle.Last(match);
-        var villager = Battle.MiddleVillager(match, Second);
+        var villager = TestMatches.MiddleVillager(match, Second);
         var startingDistance = Battle.Distance(soldier.Position, villager.Position);
         match.Enqueue(new MoveCommand(Second, [villager.Id], TestArmies.BesideHome(match, First, 2, 1)));
 
-        Battle.TickUntil(match, () => soldier.Target is not null);
+        TestMatches.TickUntil(match, () => soldier.Target is not null);
         var noticedAt = Battle.Distance(soldier.Position, villager.Position);
-        Battle.TickUntil(match, () => villager.HitPoints < villager.MaxHitPoints);
+        TestMatches.TickUntil(match, () => villager.HitPoints < villager.MaxHitPoints);
 
         Assert.True(startingDistance > 20);
         Assert.Equal(villager.Id, soldier.Target);
@@ -48,7 +48,7 @@ public class AutomaticAttackTests
         var destination = TestArmies.BesideHome(match, Second, -2, 0);
         match.Enqueue(new MoveCommand(First, [soldier.Id], destination));
 
-        Battle.TickUntil(match, () =>
+        TestMatches.TickUntil(match, () =>
         {
             Assert.Null(soldier.Target);
 
@@ -104,10 +104,10 @@ public class AutomaticAttackTests
 
         // The enemy Villagers leave for a corner far from both homes, then the soldier walks up to their Town Center.
         match.Enqueue(new MoveCommand(Second, enemyVillagers, new CellPosition(0, match.State.Map.Height - 1)));
-        Battle.TickUntil(match, () => match.State.Units.All(unit => !unit.IsMoving));
+        TestMatches.TickUntil(match, () => match.State.Units.All(unit => !unit.IsMoving));
         match.Enqueue(new MoveCommand(First, [soldier.Id], TestArmies.BesideHome(match, Second, -2, 0)));
-        Battle.TickUntil(match, () => !soldier.IsMoving);
-        Battle.TickUntil(match, () => townCenter.HitPoints < townCenter.MaxHitPoints);
+        TestMatches.TickUntil(match, () => !soldier.IsMoving);
+        TestMatches.TickUntil(match, () => townCenter.HitPoints < townCenter.MaxHitPoints);
 
         Assert.All(
             enemyVillagers,

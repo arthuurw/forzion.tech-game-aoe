@@ -1,4 +1,3 @@
-using Forzion.Simulation.Tests.Economy;
 using Forzion.Simulation.Tests.Maps;
 using Forzion.Simulation.Tests.Matches;
 using Forzion.Simulation.Tests.Movement;
@@ -20,7 +19,7 @@ public class BuildTests
 
         for (var tick = 0; !house.IsComplete; tick++)
         {
-            Assert.True(tick < Gather.TickLimit);
+            Assert.True(tick < TestMatches.TickLimit);
             match.Tick();
 
             // Work only counts while the Villager stands beside the site.
@@ -50,7 +49,7 @@ public class BuildTests
 
         while (!house.IsComplete)
         {
-            Assert.True(ticks < Gather.TickLimit);
+            Assert.True(ticks < TestMatches.TickLimit);
             var before = house.BuildProgress;
             match.Tick();
             ticks++;

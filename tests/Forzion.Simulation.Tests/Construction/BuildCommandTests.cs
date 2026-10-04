@@ -1,4 +1,3 @@
-using Forzion.Simulation.Tests.Economy;
 using Forzion.Simulation.Tests.Maps;
 using Forzion.Simulation.Tests.Matches;
 
@@ -14,7 +13,7 @@ public class BuildCommandTests
         var house = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.House, []);
         match.Enqueue(new BuildCommand(TestMatches.FirstPlayer, [villager.Id], house.Id));
 
-        Gather.Until(match, () => house.IsComplete);
+        TestMatches.TickUntil(match, () => house.IsComplete);
 
         Assert.True(MapProbe.IsBeside(house, villager.Position.Cell));
         Assert.Null(villager.ConstructionSite);

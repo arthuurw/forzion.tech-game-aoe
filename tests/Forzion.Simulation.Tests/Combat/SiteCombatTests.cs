@@ -34,7 +34,7 @@ public class SiteCombatTests
 
         Assert.DoesNotContain(match.Events, matchEvent => matchEvent is CommandRejected);
 
-        Battle.TickUntil(match, () => site.HitPoints < site.MaxHitPoints);
+        TestMatches.TickUntil(match, () => site.HitPoints < site.MaxHitPoints);
 
         Assert.False(site.IsComplete);
         Assert.All(Battle.RaidersOf(match), soldier => Assert.Equal(site.Id, soldier.Target));
@@ -51,8 +51,8 @@ public class SiteCombatTests
         // The first Player's Villagers leave for a far corner, out of the soldier's sight.
         match.Enqueue(new MoveCommand(First, villagers.Select(villager => villager.Id).ToList(), new CellPosition(63, 0)));
         match.Enqueue(new MoveCommand(Second, [soldier.Id], new CellPosition(site.Origin.X - 1, site.Origin.Y)));
-        Battle.TickUntil(match, () => !soldier.IsMoving && villagers.All(villager => !villager.IsMoving));
-        Battle.TickUntil(match, () => site.HitPoints < site.MaxHitPoints);
+        TestMatches.TickUntil(match, () => !soldier.IsMoving && villagers.All(villager => !villager.IsMoving));
+        TestMatches.TickUntil(match, () => site.HitPoints < site.MaxHitPoints);
 
         Assert.True(Battle.Distance(soldier.Position, MapPosition.CentreOf(site.Origin)) < 2);
         Assert.Equal(site.Id, soldier.Target);

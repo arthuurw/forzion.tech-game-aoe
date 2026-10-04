@@ -13,10 +13,10 @@ public class DeathTests
         var match = Battle.Create(first: plain =>
             [new StartingUnit(UnitKind.RangedSoldier, TestArmies.BesideHome(plain, Second, -2, 0))]);
         var archer = Battle.Last(match);
-        var villager = Battle.MiddleVillager(match, Second);
+        var villager = TestMatches.MiddleVillager(match, Second);
         match.Enqueue(new AttackCommand(First, [archer.Id], villager.Id));
 
-        Battle.TickUntil(match, () => villager.HitPoints <= 0);
+        TestMatches.TickUntil(match, () => villager.HitPoints <= 0);
 
         Assert.Null(Battle.Unit(match, villager.Id));
         Assert.Contains(new EntityDestroyed(villager.Id), match.Events);
@@ -30,11 +30,11 @@ public class DeathTests
         var match = Battle.Create(first: plain =>
             [new StartingUnit(UnitKind.RangedSoldier, TestArmies.BesideHome(plain, Second, -2, 0))]);
         var archer = Battle.Last(match);
-        var villager = Battle.MiddleVillager(match, Second);
+        var villager = TestMatches.MiddleVillager(match, Second);
         match.Enqueue(new AttackCommand(First, [archer.Id], villager.Id));
 
         var events = new List<MatchEvent>();
-        Battle.TickUntil(match, () =>
+        TestMatches.TickUntil(match, () =>
         {
             events.AddRange(match.Events);
 
@@ -56,7 +56,7 @@ public class DeathTests
         match.Enqueue(new AttackCommand(First, [attacker.Id], defender.Id));
         match.Enqueue(new AttackCommand(Second, [defender.Id], attacker.Id));
 
-        Battle.TickUntil(match, () => attacker.HitPoints <= 0 || defender.HitPoints <= 0);
+        TestMatches.TickUntil(match, () => attacker.HitPoints <= 0 || defender.HitPoints <= 0);
 
         // Units act in ID order within a tick, yet acting first is no advantage: both hits land.
         Assert.Equal(attacker.HitPoints, defender.HitPoints);

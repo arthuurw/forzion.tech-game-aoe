@@ -17,11 +17,11 @@ public class DestroyedBuildingTests
         var builder = Site.VillagersOf(match, First)[1];
         var site = Site.Place(match, First, BuildingKind.House, []);
         Battle.Raid(match, site);
-        Battle.TickUntil(match, () => site.HitPoints < site.MaxHitPoints);
+        TestMatches.TickUntil(match, () => site.HitPoints < site.MaxHitPoints);
 
         match.Enqueue(new BuildCommand(First, [builder.Id], site.Id));
-        Battle.TickUntil(match, () => site.BuildProgress > 0);
-        Battle.TickUntil(match, () => Battle.Building(match, site.Id) is null);
+        TestMatches.TickUntil(match, () => site.BuildProgress > 0);
+        TestMatches.TickUntil(match, () => Battle.Building(match, site.Id) is null);
 
         Assert.False(site.IsComplete);
         Assert.Null(builder.ConstructionSite);
@@ -37,12 +37,12 @@ public class DestroyedBuildingTests
         var builder = Site.VillagersOf(match, First)[1];
         var site = Site.Place(match, First, BuildingKind.House, []);
         Battle.Raid(match, site);
-        Battle.TickUntil(match, () => site.HitPoints < site.MaxHitPoints);
+        TestMatches.TickUntil(match, () => site.HitPoints < site.MaxHitPoints);
         match.Enqueue(new BuildCommand(First, [builder.Id], site.Id));
-        Battle.TickUntil(match, () => site.BuildProgress > 0);
+        TestMatches.TickUntil(match, () => site.BuildProgress > 0);
         var progress = site.BuildProgress;
 
-        Battle.TickUntil(match, () =>
+        TestMatches.TickUntil(match, () =>
         {
             if (Battle.Building(match, site.Id) is null)
             {
@@ -75,18 +75,18 @@ public class DestroyedBuildingTests
         match.Enqueue(new PlaceBuildingCommand(First, BuildingKind.Storehouse, origin, villagers.Select(villager => villager.Id).ToList()));
         match.Tick();
         var storehouse = state.Buildings[^1];
-        Battle.TickUntil(match, () => storehouse.IsComplete);
+        TestMatches.TickUntil(match, () => storehouse.IsComplete);
 
         // The carrier fills its load at the source and waits there with it.
         match.Enqueue(new GatherCommand(First, [carrier.Id], source.Id));
-        Battle.TickUntil(match, () => carrier.GatherPhase == GatherPhase.ToDropOffPoint);
+        TestMatches.TickUntil(match, () => carrier.GatherPhase == GatherPhase.ToDropOffPoint);
         Site.Halt(match, [carrier]);
 
         // The raiders bring the Storehouse down to its last hit.
         Battle.Raid(match, storehouse);
         var smallestHit = int.MaxValue;
         var hitPoints = storehouse.HitPoints;
-        Battle.TickUntil(match, () =>
+        TestMatches.TickUntil(match, () =>
         {
             if (storehouse.HitPoints < hitPoints)
             {
@@ -103,7 +103,7 @@ public class DestroyedBuildingTests
         Assert.Equal(GatherPhase.ToDropOffPoint, carrier.GatherPhase);
         Assert.True(MapProbe.IsBeside(storehouse, carrier.Path[^1]));
 
-        Battle.TickUntil(match, () => Battle.Building(match, storehouse.Id) is null);
+        TestMatches.TickUntil(match, () => Battle.Building(match, storehouse.Id) is null);
 
         Assert.Equal(GatherPhase.ToDropOffPoint, carrier.GatherPhase);
         Assert.True(carrier.IsMoving);
@@ -116,7 +116,7 @@ public class DestroyedBuildingTests
     {
         // The match is deterministic: a first run tells how many ticks the raid takes to bring the Storehouse down.
         var probe = StorehouseUnderRaid();
-        var ticksToDestroy = Battle.TickUntil(probe.Match, () => Battle.Building(probe.Match, probe.Storehouse.Id) is null);
+        var ticksToDestroy = TestMatches.TickUntil(probe.Match, () => Battle.Building(probe.Match, probe.Storehouse.Id) is null);
 
         var (match, storehouse, carrier, source) = StorehouseUnderRaid();
         var townCenter = Battle.TownCenter(match, First);
@@ -148,11 +148,11 @@ public class DestroyedBuildingTests
         var initial = match.State.PopulationLimitOf(First);
         var villagers = Site.VillagersOf(match, First).Select(villager => villager.Id).ToList();
         var house = Site.Place(match, First, BuildingKind.House, villagers);
-        Battle.TickUntil(match, () => house.IsComplete);
+        TestMatches.TickUntil(match, () => house.IsComplete);
         var withHouse = match.State.PopulationLimitOf(First);
 
         Battle.Raid(match, house);
-        Battle.TickUntil(match, () => Battle.Building(match, house.Id) is null);
+        TestMatches.TickUntil(match, () => Battle.Building(match, house.Id) is null);
 
         Assert.True(withHouse > initial);
         Assert.Equal(initial, match.State.PopulationLimitOf(First));
@@ -178,16 +178,16 @@ public class DestroyedBuildingTests
         match.Enqueue(new PlaceBuildingCommand(First, BuildingKind.Storehouse, origin, villagers.Select(villager => villager.Id).ToList()));
         match.Tick();
         var storehouse = state.Buildings[^1];
-        Battle.TickUntil(match, () => storehouse.IsComplete);
+        TestMatches.TickUntil(match, () => storehouse.IsComplete);
 
         match.Enqueue(new GatherCommand(First, [carrier.Id], source.Id));
-        Battle.TickUntil(match, () => carrier.GatherPhase == GatherPhase.ToDropOffPoint);
+        TestMatches.TickUntil(match, () => carrier.GatherPhase == GatherPhase.ToDropOffPoint);
         Site.Halt(match, [carrier]);
 
         // The ring of Cells around a site placed by FreeOriginNear is free; on its side away from home it is not beside the Town Center.
         var beside = new CellPosition(storehouse.Origin.X + storehouse.Width, storehouse.Origin.Y);
         match.Enqueue(new MoveCommand(First, [carrier.Id], beside));
-        Battle.TickUntil(match, () => !carrier.IsMoving);
+        TestMatches.TickUntil(match, () => !carrier.IsMoving);
         Battle.Raid(match, storehouse);
 
         return (match, storehouse, carrier, source);

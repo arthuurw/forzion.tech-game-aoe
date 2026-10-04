@@ -20,10 +20,10 @@ public class CompletedBuildingTests
         Assert.True(initial > 0);
         Assert.Equal(initial, match.State.PopulationLimitOf(TestMatches.FirstPlayer));
 
-        Gather.Until(match, () => first.IsComplete);
+        TestMatches.TickUntil(match, () => first.IsComplete);
         var withOne = match.State.PopulationLimitOf(TestMatches.FirstPlayer);
         var second = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.House, villagers);
-        Gather.Until(match, () => second.IsComplete);
+        TestMatches.TickUntil(match, () => second.IsComplete);
 
         Assert.True(withOne > initial);
         Assert.Equal(initial + (2 * (withOne - initial)), match.State.PopulationLimitOf(TestMatches.FirstPlayer));
@@ -55,7 +55,7 @@ public class CompletedBuildingTests
         Assert.True(MapProbe.IsBeside(townCenter, delivery));
 
         match.Enqueue(new BuildCommand(TestMatches.FirstPlayer, villagers.Select(villager => villager.Id).ToList(), storehouse.Id));
-        Gather.Until(match, () => storehouse.IsComplete);
+        TestMatches.TickUntil(match, () => storehouse.IsComplete);
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [gatherer.Id], Gather.NearestSource(state, gatherer.Position.Cell, ResourceKind.Wood).Id));
         delivery = DeliveryBy(match, player, gatherer);
 
@@ -69,7 +69,7 @@ public class CompletedBuildingTests
         var villagers = Site.VillagersOf(match, TestMatches.FirstPlayer);
         var barracks = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.Barracks, villagers.Select(villager => villager.Id).ToList());
         var completed = new List<MatchEvent>();
-        Gather.Until(match, () =>
+        TestMatches.TickUntil(match, () =>
         {
             completed.AddRange(match.Events.OfType<BuildingCompleted>());
 
@@ -96,7 +96,7 @@ public class CompletedBuildingTests
     private static CellPosition DeliveryBy(Match match, PlayerState player, UnitState villager)
     {
         var before = player.AmountOf(ResourceKind.Wood);
-        Gather.Until(match, () => player.AmountOf(ResourceKind.Wood) > before);
+        TestMatches.TickUntil(match, () => player.AmountOf(ResourceKind.Wood) > before);
 
         return villager.Position.Cell;
     }

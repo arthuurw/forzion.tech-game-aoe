@@ -6,20 +6,12 @@ namespace Forzion.Simulation.Tests.Matches;
 /// </summary>
 internal static class TestArmies
 {
-    /// <summary>The two-Player configuration of <see cref="TestMatches"/>, with extra units for either Player.</summary>
-    public static MatchConfig Config(
-        ulong seed = 42, IReadOnlyList<StartingUnit>? first = null, IReadOnlyList<StartingUnit>? second = null) =>
-        new(
-            seed,
-            new MapConfig(64, 48),
-            [new PlayerConfig(TestMatches.FirstFaction, first ?? []), new PlayerConfig(TestMatches.FirstFaction, second ?? [])]);
-
     /// <summary>
     /// The two-Player match, with the first Player starting with a melee soldier two Cells left
     /// of the centre of its Town Center.
     /// </summary>
     public static Match MatchWithSoldier() =>
-        Match.Create(Config(
+        Match.Create(TestMatches.TwoPlayerConfig(
             first: [new StartingUnit(UnitKind.MeleeSoldier, BesideHome(TestMatches.TwoPlayerMatch(), TestMatches.FirstPlayer, -2, 0))]));
 
     /// <summary>The Player's only melee soldier.</summary>
