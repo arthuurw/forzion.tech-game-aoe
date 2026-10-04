@@ -19,19 +19,29 @@ internal sealed class MovementSystem : ISystem
     /// Sends the unit walking to the Cell with the shortest way to it among those for which
     /// <paramref name="isGoal"/> holds, as <see cref="Pathfinder.FindPathToNearest"/> picks it.
     /// When none can be reached, the unit walks instead to the Cell it can reach that is
-    /// nearest in a straight line to <paramref name="destination"/>, as <see cref="WalkTo"/>
+    /// nearest in a straight line to the Cell <paramref name="destination"/> gives, as <see cref="WalkTo"/>
     /// picks it. This is how a job sends a unit up to where it is done: short of it, the unit
     /// still goes as near as it can.
     /// </summary>
-    public static void WalkToNearestOrTowards(MapState map, UnitState unit, Func<CellPosition, bool> isGoal, CellPosition destination)
+    public static void WalkToNearestOrTowards(MapState map, UnitState unit, Func<CellPosition, bool> isGoal, Func<CellPosition> destination)
     {
         var start = unit.Position.Cell;
+
+        // A unit already on a goal stays where it is, as it does at the end of every walk to
+        // its job, without searching the map.
+        if (isGoal(start))
+        {
+            Follow(unit, []);
+
+            return;
+        }
+
         var path = Pathfinder.FindPathToNearest(map, start, isGoal);
 
-        // An empty path leaves a unit already on a goal where it is; otherwise no goal can be reached.
-        if (path.Count == 0 && !isGoal(start))
+        // An empty path from a Cell that is no goal means no goal can be reached.
+        if (path.Count == 0)
         {
-            path = Pathfinder.FindPath(map, start, destination);
+            path = Pathfinder.FindPath(map, start, destination());
         }
 
         Follow(unit, path);

@@ -28,7 +28,7 @@ internal sealed class ConstructionSystem : ISystem
     {
         // The centre, not the side nearest to the Villager: every new way it looks for then aims
         // at the same Cell, wherever it stands by then.
-        MovementSystem.WalkToNearestOrTowards(map, villager, site.IsBeside, site.Footprint.Centre);
+        MovementSystem.WalkToNearestOrTowards(map, villager, site.IsBeside, () => site.Footprint.Centre);
     }
 
     /// <summary>

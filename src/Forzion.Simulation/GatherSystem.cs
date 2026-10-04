@@ -58,7 +58,7 @@ internal sealed class GatherSystem : ISystem
     public static void WalkUpToSource(MapState map, UnitState villager, ResourceSourceState source)
     {
         villager.GatherPhase = GatherPhase.ToSource;
-        MovementSystem.WalkToNearestOrTowards(map, villager, source.IsBeside, source.Cell);
+        MovementSystem.WalkToNearestOrTowards(map, villager, source.IsBeside, () => source.Cell);
     }
 
     /// <summary>
@@ -132,7 +132,7 @@ internal sealed class GatherSystem : ISystem
             state.Map,
             villager,
             cell => dropOffPoints.Any(building => building.IsBeside(cell)),
-            NearestCentre(dropOffPoints, villager.Position.Cell));
+            () => NearestCentre(dropOffPoints, villager.Position.Cell));
     }
 
     public void Run(TickContext context)
