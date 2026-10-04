@@ -97,7 +97,7 @@ internal sealed class CombatSystem : ISystem
         {
             if (building.Owner != unit.Owner)
             {
-                Consider(building.Id, Distance(unit.Position, building));
+                Consider(building.Id, building.Footprint.DistanceTo(unit.Position));
             }
         }
 
@@ -109,7 +109,7 @@ internal sealed class CombatSystem : ISystem
         var (targetUnit, targetBuilding) = state.FindUnitOrBuilding(target);
         var distance = targetUnit is not null
             ? Distance(unit.Position, targetUnit.Position)
-            : Distance(unit.Position, targetBuilding!);
+            : targetBuilding!.Footprint.DistanceTo(unit.Position);
 
         if (distance > attack.Range)
         {
@@ -122,7 +122,7 @@ internal sealed class CombatSystem : ISystem
             else if (!unit.IsMoving)
             {
                 // A building stays put, so the way to it is only searched again when the unit stopped short.
-                MovementSystem.WalkTo(state.Map, unit, targetBuilding!.NearestCellTo(unit.Position.Cell));
+                MovementSystem.WalkTo(state.Map, unit, targetBuilding!.Footprint.NearestCellTo(unit.Position.Cell));
             }
 
             return;
@@ -166,17 +166,4 @@ internal sealed class CombatSystem : ISystem
     }
 
     private static Fix64 Distance(MapPosition from, MapPosition to) => Fix64.Hypot(to.X - from.X, to.Y - from.Y);
-
-    /// <summary>Distance to the nearest point of the building's footprint; zero inside it.</summary>
-    private static Fix64 Distance(MapPosition from, BuildingState building)
-    {
-        var left = Fix64.FromInt(building.Origin.X);
-        var bottom = Fix64.FromInt(building.Origin.Y);
-        var right = Fix64.FromInt(building.Origin.X + building.Width);
-        var top = Fix64.FromInt(building.Origin.Y + building.Height);
-        var x = Fix64.Max(Fix64.Max(left - from.X, from.X - right), Fix64.Zero);
-        var y = Fix64.Max(Fix64.Max(bottom - from.Y, from.Y - top), Fix64.Zero);
-
-        return Fix64.Hypot(x, y);
-    }
 }

@@ -21,14 +21,12 @@ public enum BuildingKind
 /// </summary>
 public sealed class BuildingState
 {
-    internal BuildingState(EntityId id, PlayerId owner, BuildingKind kind, CellPosition origin, int width, int height)
+    internal BuildingState(EntityId id, PlayerId owner, BuildingKind kind, CellPosition origin)
     {
         Id = id;
         Owner = owner;
         Kind = kind;
-        Origin = origin;
-        Width = width;
-        Height = height;
+        Footprint = Footprint.Of(kind, origin);
         HitPoints = MaxHitPoints;
     }
 
@@ -39,13 +37,16 @@ public sealed class BuildingState
     public BuildingKind Kind { get; }
 
     /// <summary>The Cell of the footprint with the lowest X and Y.</summary>
-    public CellPosition Origin { get; }
+    public CellPosition Origin => Footprint.Origin;
 
     /// <summary>Width of the footprint in Cells.</summary>
-    public int Width { get; }
+    public int Width => Footprint.Width;
 
     /// <summary>Height of the footprint in Cells.</summary>
-    public int Height { get; }
+    public int Height => Footprint.Height;
+
+    /// <summary>The Cells the building covers, the size its kind gives.</summary>
+    internal Footprint Footprint { get; }
 
     /// <summary>Hit points the building has when whole.</summary>
     public int MaxHitPoints => Balance.Of(Kind).HitPoints;
@@ -71,13 +72,8 @@ public sealed class BuildingState
     /// </summary>
     internal bool IsDropOffPoint => Kind is (BuildingKind.TownCenter or BuildingKind.Storehouse) && IsComplete;
 
-    /// <summary>The Cell of the footprint nearest to the given Cell.</summary>
-    internal CellPosition NearestCellTo(CellPosition cell) => new(
-        Math.Clamp(cell.X, Origin.X, Origin.X + Width - 1),
-        Math.Clamp(cell.Y, Origin.Y, Origin.Y + Height - 1));
-
     /// <summary>Whether the given Cell lies beside the footprint, by a side or by a corner.</summary>
-    internal bool IsBeside(CellPosition cell) => cell.Touches(NearestCellTo(cell));
+    internal bool IsBeside(CellPosition cell) => Footprint.IsBeside(cell);
 
     internal void WriteTo(StateHasher hasher)
     {

@@ -42,8 +42,6 @@ public sealed record PlaceBuildingCommand(
             return;
         }
 
-        var size = Balance.Of(Kind).Size;
-
         if (!context.State.CanPlace(Kind, Origin))
         {
             context.Reject(this, RejectionReason.InvalidPlacement);
@@ -59,7 +57,7 @@ public sealed record PlaceBuildingCommand(
         }
 
         issuer.Pay(cost);
-        var site = context.State.AddBuilding(issuer.Id, Kind, Origin, size, size);
+        var site = context.State.AddBuilding(issuer.Id, Kind, Origin);
         MovementSystem.Reroute(context.State);
 
         foreach (var builder in builders)
