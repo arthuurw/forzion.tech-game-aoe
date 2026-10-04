@@ -103,17 +103,17 @@ public sealed class PlayerControl
             return;
         }
 
-        driver.Enqueue(OrderFor(units, picker.At(sight.Value), CellUnder(sight.Value.Ground)));
+        driver.Enqueue(OrderFor(units, picker.At(sight.Value)));
     }
 
     /// <summary>The command a right-click on <paramref name="target"/> gives.</summary>
-    private Command OrderFor(IReadOnlyList<EntityId> units, object? target, CellPosition ground) => target switch
+    private Command OrderFor(IReadOnlyList<EntityId> units, Pick pick) => pick switch
     {
-        ResourceSourceState source => new GatherCommand(player, units, source.Id),
-        UnitState enemy when enemy.Owner != player && AnyCanAttack(units) => new AttackCommand(player, units, enemy.Id),
-        BuildingState enemy when enemy.Owner != player && AnyCanAttack(units) => new AttackCommand(player, units, enemy.Id),
-        BuildingState site when site.Owner == player && !site.IsComplete => new BuildCommand(player, units, site.Id),
-        _ => new MoveCommand(player, units, ground),
+        SourcePick { Source: var source } => new GatherCommand(player, units, source.Id),
+        UnitPick { Unit: var enemy } when enemy.Owner != player && AnyCanAttack(units) => new AttackCommand(player, units, enemy.Id),
+        BuildingPick { Building: var enemy } when enemy.Owner != player && AnyCanAttack(units) => new AttackCommand(player, units, enemy.Id),
+        BuildingPick { Building: var site } when site.Owner == player && !site.IsComplete => new BuildCommand(player, units, site.Id),
+        _ => new MoveCommand(player, units, pick.Ground),
     };
 
     private bool AnyCanAttack(IReadOnlyList<EntityId> units) =>
@@ -121,8 +121,6 @@ public sealed class PlayerControl
 
     private bool IsUnitOfPlayer(EntityId id) =>
         driver.State.Units.Any(unit => unit.Id == id && unit.Owner == player);
-
-    private static CellPosition CellUnder(MapPoint point) => new((int)Math.Floor(point.X), (int)Math.Floor(point.Y));
 
     private void SelectInBox(ScreenPoint corner, ScreenPoint opposite)
     {
@@ -160,10 +158,10 @@ public sealed class PlayerControl
         // Only what the Player owns can be selected: the selection is what the Player commands.
         switch (picker.At(sight.Value))
         {
-            case UnitState unit when unit.Owner == player:
+            case UnitPick { Unit: var unit } when unit.Owner == player:
                 selected.Add(unit.Id);
                 break;
-            case BuildingState building when building.Owner == player:
+            case BuildingPick { Building: var building } when building.Owner == player:
                 selected.Add(building.Id);
                 break;
         }

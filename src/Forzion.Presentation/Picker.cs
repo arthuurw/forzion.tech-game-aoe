@@ -10,11 +10,17 @@ namespace Forzion.Presentation;
 internal sealed class Picker(MatchDriver driver, PickSizes sizes)
 {
     /// <summary>
-    /// The entity the line points at: a <see cref="UnitState"/>, a <see cref="BuildingState"/>,
-    /// a <see cref="ResourceSourceState"/> or null for bare ground. Units come first, since
-    /// they are small and stand in front of what they are next to.
+    /// What the line points at: a unit, a building, a resource source or bare ground. Units
+    /// come first, since they are small and stand in front of what they are next to.
     /// </summary>
-    public object? At(SightLine sight) => (object?)UnitAt(sight) ?? BuildingOrSourceAt(sight);
+    public Pick At(SightLine sight)
+    {
+        var ground = CellUnder(sight.Ground);
+
+        return UnitAt(sight) is { } unit
+            ? new UnitPick(unit, ground)
+            : BuildingOrSourceAt(sight, ground) ?? new GroundPick(ground);
+    }
 
     /// <summary>
     /// The units seen inside the area that four lines of sight, through the corners of a box
@@ -56,36 +62,38 @@ internal sealed class Picker(MatchDriver driver, PickSizes sizes)
     /// The building or resource source the line meets first coming down from the camera.
     /// Footprints never overlap, so on a tie the first in the state's order is as good as any.
     /// </summary>
-    private object? BuildingOrSourceAt(SightLine sight)
+    private Pick? BuildingOrSourceAt(SightLine sight, CellPosition ground)
     {
         var top = sight.At(sizes.BuildingAndSourceHeight);
         var bottom = sight.At(0);
-        object? first = null;
+        Pick? first = null;
         var firstEntry = double.PositiveInfinity;
 
-        void Consider(object entity, CellPosition origin, int width, int height)
+        void Consider(Pick pick, CellPosition origin, int width, int height)
         {
             var entry = EntryAlong(top, bottom, origin.X, origin.Y, origin.X + width, origin.Y + height);
 
             if (entry < firstEntry)
             {
-                first = entity;
+                first = pick;
                 firstEntry = entry;
             }
         }
 
         foreach (var building in driver.State.Buildings)
         {
-            Consider(building, building.Origin, building.Width, building.Height);
+            Consider(new BuildingPick(building, ground), building.Origin, building.Width, building.Height);
         }
 
         foreach (var source in driver.State.ResourceSources)
         {
-            Consider(source, source.Cell, 1, 1);
+            Consider(new SourcePick(source, ground), source.Cell, 1, 1);
         }
 
         return first;
     }
+
+    private static CellPosition CellUnder(MapPoint point) => new((int)Math.Floor(point.X), (int)Math.Floor(point.Y));
 
     /// <summary>
     /// How far along the segment from <paramref name="start"/> to <paramref name="end"/>, from 0
