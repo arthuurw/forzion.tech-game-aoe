@@ -513,9 +513,8 @@ public class PlayerControlTests
 
     private static BuildingState SelectFirstTownCenter(PlayerControl control, Match match)
     {
-        var townCenter = match.State.Buildings.First(building => building.Owner == FirstPlayer);
-        var middle = new ScreenPoint(townCenter.Origin.X + (townCenter.Width / 2.0), townCenter.Origin.Y + (townCenter.Height / 2.0));
-        control.Select(middle, middle);
+        var townCenter = TownCenterOf(match, FirstPlayer);
+        control.Select(OverCentreOf(townCenter), OverCentreOf(townCenter));
 
         Assert.Equal([townCenter.Id], control.Selected);
 
