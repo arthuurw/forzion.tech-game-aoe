@@ -29,6 +29,20 @@ internal readonly record struct Footprint(CellPosition Origin, int Width, int He
         }
     }
 
+    /// <summary>
+    /// The Cell the footprint is centred on; for an even side, the nearer of the two middle
+    /// Cells to the origin along that axis.
+    /// </summary>
+    public CellPosition Centre => new(Origin.X + (Width / 2), Origin.Y + (Height / 2));
+
+    /// <summary>The footprint and the ring of Cells around it, by a side or by a corner.</summary>
+    public Footprint WithRing() => new(new CellPosition(Origin.X - 1, Origin.Y - 1), Width + 2, Height + 2);
+
+    /// <summary>Whether the two footprints share a Cell.</summary>
+    public bool Overlaps(Footprint other) =>
+        Origin.X < other.Origin.X + other.Width && other.Origin.X < Origin.X + Width
+        && Origin.Y < other.Origin.Y + other.Height && other.Origin.Y < Origin.Y + Height;
+
     /// <summary>Whether the Cell is one of the footprint's.</summary>
     public bool Contains(CellPosition cell) =>
         cell.X >= Origin.X && cell.X < Origin.X + Width && cell.Y >= Origin.Y && cell.Y < Origin.Y + Height;

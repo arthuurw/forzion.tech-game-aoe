@@ -34,7 +34,7 @@ internal sealed class AiScript
 
     // Construction sites placed this tick, which the match only adds once it applies the
     // placements: a later placement of the same tick keeps clear of their footprints.
-    private readonly List<(BuildingKind Kind, CellPosition Origin, int Size)> placed = [];
+    private readonly List<(BuildingKind Kind, Footprint Footprint)> placed = [];
 
     private AiScript(MatchState state, PlayerState player)
     {
@@ -152,7 +152,7 @@ internal sealed class AiScript
 
         Spend(cost);
         busy.UnionWith(builders);
-        placed.Add((kind, origin, Balance.Of(kind).Size));
+        placed.Add((kind, Footprint.Of(kind, origin)));
         commands.Add(new PlaceBuildingCommand(player.Id, kind, origin, builders));
 
         return true;
@@ -168,7 +168,6 @@ internal sealed class AiScript
     /// </summary>
     private CellPosition? DrawOrigin(BuildingKind kind, CellPosition centre, int reach)
     {
-        var size = Balance.Of(kind).Size;
         var origins = new List<(CellPosition Origin, int Distance)>();
 
         for (var y = centre.Y - reach; y <= centre.Y + reach; y++)
@@ -176,10 +175,11 @@ internal sealed class AiScript
             for (var x = centre.X - reach; x <= centre.X + reach; x++)
             {
                 var origin = new CellPosition(x, y);
+                var footprint = Footprint.Of(kind, origin);
 
-                if (state.CanPlace(kind, origin) && IsRingedByFreeCells(origin, size) && !IsNearPlaced(origin, size))
+                if (state.CanPlace(kind, origin) && IsRingedByFreeCells(footprint) && !IsNearPlaced(footprint))
                 {
-                    origins.Add((origin, new CellPosition(x + (size / 2), y + (size / 2)).SquaredDistanceTo(centre)));
+                    origins.Add((origin, footprint.Centre.SquaredDistanceTo(centre)));
                 }
             }
         }
@@ -204,28 +204,13 @@ internal sealed class AiScript
     /// Whether the footprint, or a Cell around it, overlaps a footprint placed this tick: the
     /// two would touch or overlap once both are applied.
     /// </summary>
-    private bool IsNearPlaced(CellPosition origin, int size) => placed.Any(other =>
-        origin.X - 1 < other.Origin.X + other.Size && other.Origin.X < origin.X + size + 1
-        && origin.Y - 1 < other.Origin.Y + other.Size && other.Origin.Y < origin.Y + size + 1);
+    private bool IsNearPlaced(Footprint footprint) =>
+        placed.Any(other => footprint.WithRing().Overlaps(other.Footprint));
 
     /// <summary>Whether every Cell around the footprint, by a side or by a corner, is inside the map and free.</summary>
-    private bool IsRingedByFreeCells(CellPosition origin, int size)
-    {
-        for (var y = origin.Y - 1; y <= origin.Y + size; y++)
-        {
-            for (var x = origin.X - 1; x <= origin.X + size; x++)
-            {
-                var inside = x >= origin.X && x < origin.X + size && y >= origin.Y && y < origin.Y + size;
-
-                if (!inside && !state.Map.IsFree(new CellPosition(x, y)))
-                {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
+    private bool IsRingedByFreeCells(Footprint footprint) => footprint.WithRing().Cells
+        .Where(cell => !footprint.Contains(cell))
+        .All(state.Map.IsFree);
 
     /// <summary>
     /// Puts a Villager in training at the Town Center while it trains none and the Player has
@@ -482,7 +467,7 @@ internal sealed class AiScript
     /// </summary>
     private CellPosition Home() =>
         TownCenter() is { } townCenter
-            ? new CellPosition(townCenter.Origin.X + (townCenter.Width / 2), townCenter.Origin.Y + (townCenter.Height / 2))
+            ? townCenter.Footprint.Centre
             : new CellPosition(state.Map.Width / 2, state.Map.Height / 2);
 
     private BuildingState? TownCenter() =>
