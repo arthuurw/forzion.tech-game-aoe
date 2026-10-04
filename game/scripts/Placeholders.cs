@@ -29,8 +29,8 @@ public sealed class Placeholders
     /// </summary>
     private const float UnitPickRadius = 0.5f;
 
-    /// <summary>How see-through a construction site's unfinished building is.</summary>
-    private const float SiteTransparency = 0.45f;
+    /// <summary>How see-through a construction site's unfinished building is: enough to tell it from a complete one, not so much that the owner's colour fades.</summary>
+    private const float SiteTransparency = 0.35f;
 
     private static readonly Color Grass = new(0.36f, 0.52f, 0.25f);
     private static readonly Color ForestGreen = new(0.1f, 0.3f, 0.12f);
