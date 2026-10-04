@@ -32,8 +32,7 @@ public static class HitPointBars
         {
             if (building.HitPoints < building.MaxHitPoints || selected.Contains(building.Id))
             {
-                var centre = new MapPoint(building.Origin.X + (building.Width / 2.0), building.Origin.Y + (building.Height / 2.0));
-                bars.Add(new HitPointBar(building.Id, centre, OverBuilding: true, Fill(building.HitPoints, building.MaxHitPoints)));
+                bars.Add(new HitPointBar(building.Id, MapPoint.CentreOf(building), OverBuilding: true, Fill(building.HitPoints, building.MaxHitPoints)));
             }
         }
 
