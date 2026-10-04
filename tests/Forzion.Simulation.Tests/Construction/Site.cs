@@ -82,10 +82,10 @@ internal static class Site
             .ThenBy(origin => origin.X)
             .First(origin =>
             {
-                var ringed = new CellPosition(origin.X - 1, origin.Y - 1);
+                var ring = MapProbe.Square(new CellPosition(origin.X - 1, origin.Y - 1), side + 2).ToHashSet();
 
-                return MapProbe.Square(ringed, side + 2).All(cell => map[cell] == CellKind.Free)
-                    && !state.Units.Any(unit => IsUnder(unit.Position.Cell, ringed, side + 2));
+                return ring.All(cell => map[cell] == CellKind.Free)
+                    && !state.Units.Any(unit => ring.Contains(unit.Position.Cell));
             });
     }
 
@@ -122,7 +122,4 @@ internal static class Site
                     && !reachable.Any(cell => Walk.SquaredDistance(cell, nearSide) == nearest && MapProbe.IsBeside(footprint, cell));
             });
     }
-
-    private static bool IsUnder(CellPosition cell, CellPosition origin, int side) =>
-        cell.X >= origin.X && cell.X < origin.X + side && cell.Y >= origin.Y && cell.Y < origin.Y + side;
 }

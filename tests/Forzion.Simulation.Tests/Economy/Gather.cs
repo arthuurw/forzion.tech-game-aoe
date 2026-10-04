@@ -38,7 +38,7 @@ internal static class Gather
     /// </summary>
     public static int LargestLoadUntilDelivery(Match match, UnitState villager)
     {
-        var player = match.State.Players.First(player => player.Id == villager.Owner);
+        var player = match.State.Players.First(each => each.Id == villager.Owner);
         var held = player.AmountOf(ResourceKind.Food);
         var largest = villager.Load.Amount;
 

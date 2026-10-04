@@ -2,6 +2,7 @@ using Forzion.Simulation.Tests.Construction;
 using Forzion.Simulation.Tests.Economy;
 using Forzion.Simulation.Tests.Maps;
 using Forzion.Simulation.Tests.Matches;
+using Forzion.Simulation.Tests.Movement;
 
 namespace Forzion.Simulation.Tests.Combat;
 
@@ -141,7 +142,7 @@ public class DestroyedBuildingTests
         // The ring of Cells around a site placed by FreeOriginNear is free; on its side away from home it is not beside the Town Center.
         var beside = new CellPosition(storehouse.Origin.X + storehouse.Width, storehouse.Origin.Y);
         match.Enqueue(new MoveCommand(First, [carrier.Id], beside));
-        TestMatches.TickUntil(match, () => !carrier.IsMoving);
+        Walk.UntilStopped(match, carrier);
         Battle.Raid(match, storehouse);
 
         return (match, storehouse, carrier, source);

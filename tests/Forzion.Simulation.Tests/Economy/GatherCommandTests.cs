@@ -332,8 +332,8 @@ public class GatherCommandTests
     {
         var match = TestMatches.TwoPlayerMatch();
         var player = match.State.Players[0];
+        var initial = Gather.NearestSource(match.State, TestMatches.MiddleVillager(match).Position.Cell, ResourceKind.Food).Amount;
         var (villager, source) = Gather.UntilFirstFullLoad(match);
-        var initial = source.Amount + villager.Load.Amount;
         var full = villager.Load.Amount;
         TestMatches.TickUntil(match, () => villager.Load.Amount == 2);
         match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], Walk.BehindTownCenter(match)));

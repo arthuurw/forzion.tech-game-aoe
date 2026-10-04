@@ -40,7 +40,7 @@ public class RepathTests
         match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [walker.Id], new CellPosition(match.State.Map.Width / 2, match.State.Map.Height / 2)));
         match.Tick();
         var destination = walker.Path[^1];
-        var (origin, from, to) = OriginBesideADiagonalStep(match, walker);
+        var origin = OriginBesideADiagonalStep(match, walker);
         var house = MapProbe.Square(origin, Match.BuildingSize(BuildingKind.House)).ToHashSet();
 
         Assert.DoesNotContain(walker.Path, house.Contains);
@@ -50,7 +50,6 @@ public class RepathTests
 
         Assert.Equal(CellKind.Building, match.State.Map[origin]);
         Assert.Equal(MapPosition.CentreOf(destination), walker.Position);
-        Assert.DoesNotContain(visited.Zip(visited.Skip(1)), step => step == (from, to));
         Assert.All(visited.Zip(visited.Skip(1)), step => Assert.False(CutsCorner(step.First, step.Second, house)));
     }
 
@@ -186,9 +185,9 @@ public class RepathTests
     /// <summary>
     /// The origin of a House that can be placed now beside a diagonal step of the unit's path
     /// well ahead of it, over one of the two Cells the step passes between and over no Cell of
-    /// the path, with the two Cells of that step.
+    /// the path.
     /// </summary>
-    private static (CellPosition Origin, CellPosition From, CellPosition To) OriginBesideADiagonalStep(Match match, UnitState unit)
+    private static CellPosition OriginBesideADiagonalStep(Match match, UnitState unit)
     {
         var size = Match.BuildingSize(BuildingKind.House);
         var path = unit.Path;
@@ -209,7 +208,7 @@ public class RepathTests
                 {
                     if (match.CanPlace(BuildingKind.House, origin) && !MapProbe.Square(origin, size).Any(avoided.Contains))
                     {
-                        return (origin, from, to);
+                        return origin;
                     }
                 }
             }
