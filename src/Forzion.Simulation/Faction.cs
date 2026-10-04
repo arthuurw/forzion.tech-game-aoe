@@ -43,6 +43,7 @@ public sealed class Faction
         UnitNameKeys = new Dictionary<UnitKind, string>(unitNameKeys);
     }
 
+    /// <summary>The Faction's ID, by which each Player's configuration names the Faction it controls.</summary>
     public FactionId Id { get; }
 
     /// <summary>Key of the text that names the Faction.</summary>
