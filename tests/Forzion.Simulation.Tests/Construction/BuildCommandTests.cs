@@ -105,8 +105,6 @@ public class BuildCommandTests
         Assert.False(soldier.IsMoving);
     }
 
-    /// <summary>The default two-Player match, the first Player starting with a melee soldier beside its Town Center.</summary>
-
     /// <summary>
     /// Places a House of the first Player with no builder in two equal matches, sends the
     /// command <paramref name="build"/> makes from one of them, its House and its first Villager,

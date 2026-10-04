@@ -161,7 +161,6 @@ public class PlaceBuildingCommandTests
         Assert.Equal(without.StateHash, withRejection.StateHash);
     }
 
-    /// <summary>The default two-Player configuration, the first Player starting with a melee soldier beside its Town Center.</summary>
     /// <summary>
     /// Gives the first Player of both matches the Wood for a House and enqueues, in
     /// <paramref name="withRejection"/> only, a valid placement whose builders are its first

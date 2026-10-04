@@ -213,7 +213,6 @@ public class AttackCommandTests
         Assert.NotEqual(without.StateHash, withAttack.StateHash);
     }
 
-    /// <summary>A match in which the first Player has a melee soldier beside its own Town Center.</summary>
     private static void AssertRejected(Match match, AttackCommand command, RejectionReason reason)
     {
         match.Enqueue(command);
