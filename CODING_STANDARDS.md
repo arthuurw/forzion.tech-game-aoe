@@ -27,7 +27,7 @@ A origem é o ADR 0001: as regras do jogo vivem no núcleo, sem referência à e
 
 - **EST-1**: o núcleo não referencia o Godot nem pacote externo algum.
 - **EST-2**: `Match` é a única porta de entrada. Quem usa o núcleo cria a partida, enfileira comandos, avança ticks e lê estado, hash e eventos. Sistemas, gerador de mapa, `Pathfinder` e `StateHasher` são `internal`.
-- **EST-3**: o estado só muda por comando ou por sistema, dentro de um tick. As classes de estado expõem leitura pública e escrita `internal`.
+- **EST-3**: o estado só muda por comando ou por sistema, dentro de um tick. A única exceção é a IA: em `Match.EnqueueAiCommands`, no início do tick e antes dos comandos, ela sorteia do gerador da partida (`state.Random`), e não muda mais nada (ADR 0003). As classes de estado expõem leitura pública e escrita `internal`.
 - **EST-4**: cada comando é um `sealed record` derivado de `Command`, com a regra no próprio `Execute`. Um comando inválido é recusado inteiro com `context.Reject` e um `RejectionReason`, sem alterar o estado.
 - **EST-5**: cada regra contínua é um sistema (`ISystem`) registrado em `Match.Systems`. A ordem desse array é parte das regras.
 - **EST-6**: o que a apresentação precisa saber que aconteceu é um evento (`MatchEvent`). Eventos informam e nunca alteram estado.
