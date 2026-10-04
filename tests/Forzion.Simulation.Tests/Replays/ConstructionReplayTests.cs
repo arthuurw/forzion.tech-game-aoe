@@ -13,8 +13,8 @@ public class ConstructionReplayTests
 
     /// <summary>
     /// Construction by both Players: Wood gathered for it, a House built by two Villagers and
-    /// joined by a third, a Barracks the Player cannot afford yet, a Storehouse built near the
-    /// Wood, a build order for the other Player's site and the builders sent back to
+    /// joined by a third, a Barracks left unfinished when its builder joins the House, a
+    /// Storehouse built near the Wood, a build order for the other Player's site and the builders sent back to
     /// gathering. Unit, source and building IDs and the origins are read
     /// from a match of the same configuration.
     /// </summary>
@@ -29,9 +29,9 @@ public class ConstructionReplayTests
         var storehouse = Site.FreeOriginNear(state, secondWood.Cell, Match.BuildingSize(BuildingKind.Storehouse));
         var barracks = Site.FreeOriginNear(state, firstWood.Cell, Match.BuildingSize(BuildingKind.Barracks));
 
-        // Entities take IDs in creation order: the first site placed is the House.
+        // Entities take IDs in creation order: the sites are placed House, Barracks, Storehouse.
         var houseId = new EntityId(state.Units[^1].Id.Value + 1);
-        var storehouseId = new EntityId(houseId.Value + 1);
+        var storehouseId = new EntityId(houseId.Value + 2);
 
         return
         [
@@ -78,9 +78,15 @@ public class ConstructionReplayTests
     // to walk to the Cell beside the site with the shortest way to it, the hash layout stayed
     // the same: the model, run on the new build, matched the match's own hash at every tick and
     // gave this value, and the final state still showed the House and Storehouse complete, the
-    // Barracks refused and both Players' Villagers as above. CI runs this on Windows, Linux and
-    // macOS: every system must reach the same hash.
-    private const ulong ExpectedFinalHash = 8773148366225202895UL;
+    // Barracks refused and both Players' Villagers as above. When Villagers began to walk to
+    // the free Cell beside their source with the shortest way to it, the first Player had the
+    // Wood for the Barracks when it was ordered, so it was placed, and its builder called off
+    // to the House left it unfinished; the second Player's Villagers too stand idle at the end,
+    // once the Wood near them ran out. The layout stayed the same: the model gave this value
+    // and matched the match's own hash at every tick, and the final state held every unit of
+    // Wood taken from a source in a Player's stock, a load or the cost of a site. CI runs this
+    // on Windows, Linux and macOS: every system must reach the same hash.
+    private const ulong ExpectedFinalHash = 10115864156868803705UL;
 
     [Fact]
     public void A_recorded_replay_of_construction_reaches_the_recorded_final_hash()

@@ -68,8 +68,14 @@ public class EconomyReplayTests
     // by a model of the layout (see ReplayTests): from the same final state it gave the value
     // before with the layout before, and the new one with the new layout, and it matched the
     // match's own hash at every tick of this replay. CI runs this on Windows, Linux and macOS:
-    // every system must reach the same hash.
-    private const ulong ExpectedFinalHash = 13330404736794081936UL;
+    // every system must reach the same hash. When Villagers began to walk to the free Cell
+    // beside their source with the shortest way to it, the layout stayed the same: the model,
+    // which reproduced the values recorded in the other replays left unchanged, gave this one
+    // and matched the match's own hash at every tick, and the final state still showed the
+    // first Player idle once its second Food source ran out, the second Player gathering Food
+    // and Gold, and every Resource taken from a source in a Player's stock or a load, but for
+    // the load dropped on the switch to Food.
+    private const ulong ExpectedFinalHash = 4099921261291809943UL;
 
     [Fact]
     public void A_recorded_replay_of_gathering_reaches_the_recorded_final_hash()

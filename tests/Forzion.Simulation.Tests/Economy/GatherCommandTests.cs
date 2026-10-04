@@ -1,3 +1,5 @@
+using Forzion.Simulation.Tests.Construction;
+using Forzion.Simulation.Tests.Maps;
 using Forzion.Simulation.Tests.Matches;
 using Forzion.Simulation.Tests.Movement;
 
@@ -20,6 +22,32 @@ public class GatherCommandTests
         Assert.Equal(ResourceKind.Food, villager.Load.Resource);
         Assert.Equal(before - villager.Load.Amount, source.Amount);
         Assert.Equal(source.Id, villager.GatherSource);
+    }
+
+    [Fact]
+    public void A_Villager_ordered_to_gather_walks_to_the_Cell_beside_the_source_with_the_shortest_way_to_it()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var map = match.State.Map;
+        var villager = Walk.MiddleVillager(match);
+        var reachable = MapProbe.ReachableFrom(map, villager.Position.Cell);
+
+        // A source in the corner of a square of reachable Cells: from the opposite corner, the
+        // Cell beside the source's corner is one diagonal step away, while the Cells beside its
+        // sides, nearer to it in a straight line, are two steps away.
+        var source = match.State.ResourceSources
+            .OrderBy(each => Walk.SquaredDistance(each.Cell, villager.Position.Cell))
+            .ThenBy(each => each.Id.Value)
+            .First(each => Site.Square(each.Cell, 3).Where(cell => cell != each.Cell).All(reachable.Contains));
+        var corner = new CellPosition(source.Cell.X + 1, source.Cell.Y + 1);
+        var start = new CellPosition(source.Cell.X + 2, source.Cell.Y + 2);
+        match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], start));
+        Walk.UntilStopped(match, villager);
+
+        match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
+        match.Tick();
+
+        Assert.Equal([corner], villager.Path);
     }
 
     [Fact]

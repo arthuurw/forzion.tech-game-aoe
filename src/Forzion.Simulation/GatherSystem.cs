@@ -46,14 +46,15 @@ internal sealed class GatherSystem : ISystem
     }
 
     /// <summary>
-    /// Sends the Villager walking up to its source, to the Cell it can reach that is nearest
-    /// the source's in a straight line, as <see cref="Pathfinder.FindPath"/> picks it: a Cell
-    /// beside the source whenever one can be reached.
+    /// Sends the Villager walking up to its source, to the free Cell beside it that has the
+    /// shortest way to it; between Cells equally far, the one with the lowest index. A Villager
+    /// that cannot reach any Cell beside the source stays where it is, and
+    /// <see cref="ReachSource"/> then finds it short of the source.
     /// </summary>
     public static void WalkUpToSource(MatchState state, UnitState villager)
     {
         villager.GatherPhase = GatherPhase.ToSource;
-        MovementSystem.WalkTo(state.Map, villager, state.FindResourceSource(villager.GatherSource!.Value)!.Cell);
+        MovementSystem.WalkToNearest(state.Map, villager, state.FindResourceSource(villager.GatherSource!.Value)!.IsBeside);
     }
 
     /// <summary>
@@ -143,9 +144,8 @@ internal sealed class GatherSystem : ISystem
     private static void ReachSource(MatchState state, UnitState villager)
     {
         var source = state.FindResourceSource(villager.GatherSource!.Value)!;
-        var cell = villager.Position.Cell;
 
-        if (Math.Abs(cell.X - source.Cell.X) <= 1 && Math.Abs(cell.Y - source.Cell.Y) <= 1)
+        if (source.IsBeside(villager.Position.Cell))
         {
             villager.GatherPhase = GatherPhase.Gathering;
         }
