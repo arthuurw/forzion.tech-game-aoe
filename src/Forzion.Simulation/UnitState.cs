@@ -68,6 +68,12 @@ public sealed class UnitState
     /// <summary>Hit points the unit has when whole.</summary>
     public int MaxHitPoints => Balance.Of(Kind).HitPoints;
 
+    /// <summary>Whether the unit gathers Resources: only Villagers do.</summary>
+    public bool CanGather => Kind == UnitKind.Villager;
+
+    /// <summary>Whether the unit builds construction sites: only Villagers do.</summary>
+    public bool CanBuild => Kind == UnitKind.Villager;
+
     /// <summary>Whether the unit fights: military units do, Villagers do not.</summary>
     public bool CanAttack => Balance.Of(Kind).Attack is not null;
 

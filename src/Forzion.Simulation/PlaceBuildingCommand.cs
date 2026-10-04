@@ -27,7 +27,7 @@ public sealed record PlaceBuildingCommand(
         var builders = Builders.Count == 0
             ? []
             : OrderedUnits.Find(
-                context, this, issuer, Builders, unit => unit.Kind == UnitKind.Villager, RejectionReason.UnitCannotBuild);
+                context, this, issuer, Builders, unit => unit.CanBuild, RejectionReason.UnitCannotBuild);
 
         if (builders is null)
         {
