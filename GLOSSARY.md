@@ -222,7 +222,7 @@ Obstáculo que ocupa Células inteiras: Unidades não a atravessam e Construçõ
 ## Tela
 
 **HUD** (`Hud`):
-Os controles desenhados sobre a Partida: a barra do topo, com os Recursos, a População sobre o Limite de população, a Era e o Avanço de Era em andamento do Jogador, e embaixo o Painel de seleção. Existe só na tela: os botões da HUD dão ordens, e a Partida as aceita ou recusa.
+Os controles desenhados sobre a Partida: a barra do topo, com os Recursos, a População sobre o Limite de população, a Era e o Avanço de Era em andamento do Jogador, e embaixo o Painel de seleção e o Minimapa. Existe só na tela: os botões da HUD dão ordens, e a Partida as aceita ou recusa.
 _Avoid_: Interface, UI
 
 **Painel de seleção** (`Selection Panel`):
@@ -239,6 +239,21 @@ Barra sobre o mapa de uma unidade ou construção selecionada ou ferida, preench
 
 **Barra de obra** (`Construction Bar`):
 Barra sobre o mapa de cada Obra, preenchida na proporção do trabalho de construção já feito.
+
+**Minimapa** (`Minimap`):
+O mapa inteiro em miniatura, no canto de baixo da HUD: o terreno, as Fontes de Recurso e as unidades e construções de cada Jogador, na cor dele. Um clique no Minimapa leva a câmera àquele ponto do mapa.
+_Avoid_: Radar, mapa pequeno
+
+**Menu inicial** (`Main Menu`):
+A primeira tela do jogo, de onde o Jogador começa uma Partida livre contra a IA ou sai do jogo.
+_Avoid_: Tela de título, menu principal
+
+**Pausa** (`Pause`):
+A Partida parada a pedido do Jogador: nenhum Tick corre e nada se move no mapa até ele continuar. Existe só na tela: a Partida não a conhece.
+
+**Tela de fim de partida** (`End Screen`):
+Tela que aparece quando a Partida acaba para o Jogador e mostra o resultado (`MatchOutcome`): Vitória (`Victory`) quando ele é o vencedor, Derrota (`Defeat`) quando é derrotado ou a Partida termina sem que ele vença. Dela o Jogador joga de novo, numa Partida livre igual à que acabou, ou volta ao Menu inicial.
+_Avoid_: Game over, placar
 
 ## Nomes dos Portugueses
 
