@@ -153,6 +153,9 @@ internal static class TestMatches
     /// <summary>A camera looking straight down: one pixel of the screen is one Cell of the map.</summary>
     public static SightLine? TopDown(ScreenPoint point) => new SightLine(new MapPoint(point.X, point.Y), new MapPoint(0, 0));
 
+    /// <summary>The position as the presentation draws it.</summary>
+    public static MapPoint PointOf(MapPosition position) => new(position.X.ToDouble(), position.Y.ToDouble());
+
     /// <summary>On the top-down screen, the point over the position.</summary>
     public static ScreenPoint Over(MapPosition position) => new(position.X.ToDouble(), position.Y.ToDouble());
 

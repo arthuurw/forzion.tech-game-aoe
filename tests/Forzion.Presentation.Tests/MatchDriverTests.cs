@@ -34,7 +34,7 @@ public class MatchDriverTests
         Assert.Equal(3, drawn.Count);
         Assert.All(drawn, point => Assert.Equal(drawn[0].Y, point.Y));
         Assert.All(Pairs(drawn), pair => Assert.True(Distance(pair.First, pair.Second) >= 0.5 - 1e-9));
-        Assert.All(drawn, point => Assert.True(Distance(point, new MapPoint(centre.X.ToDouble(), centre.Y.ToDouble())) <= 0.5));
+        Assert.All(drawn, point => Assert.True(Distance(point, PointOf(centre)) <= 0.5));
     }
 
     [Fact]
@@ -44,7 +44,7 @@ public class MatchDriverTests
         var driver = NewDriver(out var match, PlainConfig(firstExtras: [new StartingUnit(UnitKind.Villager, cell)]));
         var walker = FirstVillager(match);
         var standing = match.State.Units.Single(unit => unit.Owner == FirstPlayer && unit.Position.Cell == cell);
-        var centre = new MapPoint(MapPosition.CentreOf(cell).X.ToDouble(), MapPosition.CentreOf(cell).Y.ToDouble());
+        var centre = PointOf(MapPosition.CentreOf(cell));
         match.Enqueue(new MoveCommand(FirstPlayer, [walker.Id], cell));
 
         TickUntil(driver, () => !walker.IsMoving && walker.Position.Cell == cell);

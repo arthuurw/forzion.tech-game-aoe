@@ -8,20 +8,17 @@ namespace Forzion.Presentation;
 /// </summary>
 public sealed class MatchDriver
 {
-    /// <summary>How far apart, in Cells, units standing on one Cell are drawn: as wide as two of their placeholders.</summary>
-    private const double StackSpacing = 0.5;
-
-    /// <summary>How many units standing on one Cell are drawn side by side in a row: three rows span a Cell.</summary>
-    private const int StackRowLength = 3;
-
-    /// <summary>How fast, in Cells per real second, a unit drawn in a stack slides to its place in it: a Villager's walk.</summary>
+    /// <summary>
+    /// How fast, in Cells per real second, a unit slides to its place in a stack: quick enough
+    /// to settle within a quarter of a second, slow enough to read as a move and not a jump.
+    /// </summary>
     private const double StackSlideSpeed = 2;
 
     private readonly Match match;
     private readonly TickClock clock;
     private readonly Dictionary<EntityId, MapPoint> positionsBeforeLastTick = [];
 
-    // Where each unit belongs in the stack on its Cell, and how far it has slid there.
+    // A unit's drawn offset trails its place in the stack, so that it slides there.
     private readonly Dictionary<EntityId, MapPoint> stackPlaces = [];
     private Dictionary<EntityId, MapPoint> stackOffsets = [];
     private Dictionary<EntityId, MapPoint> nextStackOffsets = [];
@@ -78,7 +75,7 @@ public sealed class MatchDriver
     /// <remarks>
     /// Units do not block one another, so several may stand still on one Cell. Those are drawn
     /// apart, in rows across the Cell, so each stays visible and can be clicked. A unit slides
-    /// to its place in a stack, or back from it, at walking pace as real time passes.
+    /// to its place in a stack, or back from it, a little at a time as real time passes.
     /// </remarks>
     public MapPoint PositionOf(UnitState unit)
     {
@@ -108,7 +105,7 @@ public sealed class MatchDriver
         // Positions change only on a tick, so the places are worked out once per tick.
         if (stackPlacesTick != match.State.Tick)
         {
-            SpreadStacks();
+            StackLayout.Lay(match.State.Units, stackPlaces);
             stackPlacesTick = match.State.Tick;
         }
 
@@ -144,40 +141,6 @@ public sealed class MatchDriver
         var distance = Math.Sqrt((dx * dx) + (dy * dy));
 
         return distance <= reach ? to : new MapPoint(from.X + (dx * reach / distance), from.Y + (dy * reach / distance));
-    }
-
-    /// <summary>
-    /// Lays out the units standing still on each Cell in rows of up to
-    /// <see cref="StackRowLength"/> along the map's X, <see cref="StackSpacing"/> apart and
-    /// centred on the Cell, in ascending ID order. The camera looks along the map's Y, so units
-    /// side by side never hide one another; every other row is shifted half a step, so the
-    /// units of a row behind show between those in front.
-    /// </summary>
-    private void SpreadStacks()
-    {
-        stackPlaces.Clear();
-
-        var stacks = match.State.Units
-            .Where(unit => !unit.IsMoving)
-            .GroupBy(unit => unit.Position.Cell)
-            .Where(stack => stack.Count() > 1);
-
-        foreach (var stack in stacks)
-        {
-            var units = stack.ToList();
-            var rows = (units.Count + StackRowLength - 1) / StackRowLength;
-
-            for (var index = 0; index < units.Count; index++)
-            {
-                var row = index / StackRowLength;
-                var inRow = Math.Min(StackRowLength, units.Count - (row * StackRowLength));
-                var stagger = row % 2 == 1 ? StackSpacing / 2 : 0;
-
-                stackPlaces[units[index].Id] = new MapPoint(
-                    ((index % StackRowLength) - ((inRow - 1) / 2.0)) * StackSpacing + stagger,
-                    (row - ((rows - 1) / 2.0)) * StackSpacing);
-            }
-        }
     }
 
     private void RememberPositions()
