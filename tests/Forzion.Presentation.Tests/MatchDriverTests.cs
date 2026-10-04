@@ -38,6 +38,23 @@ public class MatchDriverTests
     }
 
     [Fact]
+    public void A_row_of_a_stack_behind_another_is_drawn_between_the_units_in_front()
+    {
+        var cell = BesideFirstHome();
+        var stacked = new StartingUnit(UnitKind.Villager, cell);
+        var driver = NewDriver(out var match, PlainConfig(firstExtras: [stacked, stacked, stacked, stacked, stacked]));
+        var centre = MapPosition.CentreOf(cell);
+
+        var drawn = match.State.Units.Where(unit => unit.Position == centre).Select(driver.PositionOf).ToList();
+
+        // Three in front and two behind, none straight behind another, all on the Cell.
+        Assert.Equal(5, drawn.Count);
+        Assert.Equal(5, drawn.Select(point => Math.Round(point.X, 6)).Distinct().Count());
+        Assert.All(Pairs(drawn), pair => Assert.True(Distance(pair.First, pair.Second) >= 0.5 - 1e-9));
+        Assert.All(drawn, point => Assert.True(Math.Abs(point.X - PointOf(centre).X) <= 0.5 && Math.Abs(point.Y - PointOf(centre).Y) <= 0.5));
+    }
+
+    [Fact]
     public void Units_slide_apart_when_a_unit_stops_on_another_units_Cell_instead_of_jumping()
     {
         var cell = BesideFirstHome();

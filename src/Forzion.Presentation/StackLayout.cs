@@ -11,16 +11,18 @@ internal static class StackLayout
     /// <summary>How far apart, in Cells, the units of a stack are drawn: as wide as two of their placeholders.</summary>
     private const double Spacing = 0.5;
 
-    /// <summary>How many units are drawn side by side in a row: three rows span a Cell.</summary>
-    private const int RowLength = 3;
+    // Rows run along the map's X, alternately three places and two between them, so that a
+    // camera looking along the map's Y sees each unit of a row between two of the next. The
+    // middle place comes first, so that a short row stays on the Cell's centre line.
+    private static readonly double[] WideRow = [0, -Spacing, Spacing];
+    private static readonly double[] NarrowRow = [-Spacing / 2, Spacing / 2];
 
     /// <summary>
     /// Fills <paramref name="places"/> with how far from where it stands each unit standing
-    /// still on a Cell with others is drawn: in rows of up to <see cref="RowLength"/> along the
-    /// map's X, <see cref="Spacing"/> apart and centred on the Cell, in the order of
-    /// <paramref name="units"/>. The camera looks along the map's Y, so units side by side never
-    /// hide one another; every other row is shifted half a step. Units alone on their Cell or
-    /// walking get no place.
+    /// still on a Cell with others is drawn. Each stack fills its rows in the order of
+    /// <paramref name="units"/>, the rows <see cref="Spacing"/> apart and centred on the Cell.
+    /// Units alone on their Cell or walking get no place. Up to eight units fit on the Cell;
+    /// more spill past its edges.
     /// </summary>
     public static void Lay(IReadOnlyList<UnitState> units, Dictionary<EntityId, MapPoint> places)
     {
@@ -33,18 +35,28 @@ internal static class StackLayout
 
         foreach (var stack in stacks)
         {
-            var members = stack.ToList();
-            var rows = (members.Count + RowLength - 1) / RowLength;
+            var seats = new List<(EntityId Unit, int Row, double X)>();
+            var row = 0;
+            var place = 0;
 
-            for (var index = 0; index < members.Count; index++)
+            foreach (var unit in stack)
             {
-                var row = index / RowLength;
-                var inRow = Math.Min(RowLength, members.Count - (row * RowLength));
-                var stagger = row % 2 == 1 ? Spacing / 2 : 0;
+                var rowPlaces = row % 2 == 0 ? WideRow : NarrowRow;
 
-                places[members[index].Id] = new MapPoint(
-                    ((index % RowLength) - ((inRow - 1) / 2.0)) * Spacing + stagger,
-                    (row - ((rows - 1) / 2.0)) * Spacing);
+                seats.Add((unit.Id, row, rowPlaces[place]));
+
+                if (++place == rowPlaces.Length)
+                {
+                    row++;
+                    place = 0;
+                }
+            }
+
+            var middleRow = seats[^1].Row / 2.0;
+
+            foreach (var (unit, seatRow, x) in seats)
+            {
+                places[unit] = new MapPoint(x, (seatRow - middleRow) * Spacing);
             }
         }
     }
