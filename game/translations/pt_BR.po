@@ -200,3 +200,32 @@ msgstr "Grátis"
 # {0}: nome da Era alcançada.
 msgid "HUD_AGE_REACHED"
 msgstr "Você chegou à {0}!"
+
+# Como a HUD junta nomes e números, na ordem e com a pontuação de cada idioma.
+# {0}: rótulo; {1}: valor.
+msgid "HUD_LABELLED"
+msgstr "{0}: {1}"
+
+# {0}: população; {1}: limite de população.
+msgid "HUD_POPULATION_OF_LIMIT"
+msgstr "{0}/{1}"
+
+# {0}: nome da Facção; {1}: nome da Era.
+msgid "HUD_FACTION_AND_AGE"
+msgstr "{0} · {1}"
+
+# {0}: Pontos de vida que restam; {1}: Pontos de vida da unidade ou construção inteira.
+msgid "HUD_HIT_POINTS_OF_MAX"
+msgstr "{0}/{1}"
+
+# {0}: número de 0 a 100.
+msgid "HUD_PERCENTAGE"
+msgstr "{0}%"
+
+# {0}: quantidade; {1}: nome do Recurso.
+msgid "HUD_COST_AMOUNT"
+msgstr "{0} {1}"
+
+# Entre as quantidades dos Recursos de um Custo.
+msgid "HUD_COST_SEPARATOR"
+msgstr ", "

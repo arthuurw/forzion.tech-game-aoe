@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text;
 using Forzion.Presentation;
 using Forzion.Simulation;
@@ -146,11 +145,14 @@ public partial class Hud : CanvasLayer
     {
         foreach (var resource in status.Resources)
         {
-            resources[resource.Kind].Text = $"{Tr(TextKeys.NameOf(resource.Kind))}: {resource.Amount}";
+            resources[resource.Kind].Text = Format(HudTexts.Labelled, Tr(TextKeys.NameOf(resource.Kind)), resource.Amount);
         }
 
-        population.Text = $"{Tr(HudTexts.Population)}: {status.Population}/{status.PopulationLimit}";
-        age.Text = $"{Tr(status.FactionNameKey)} · {Tr(status.AgeNameKey)}";
+        population.Text = Format(
+            HudTexts.Labelled,
+            Tr(HudTexts.Population),
+            Format(HudTexts.PopulationOfLimit, status.Population, status.PopulationLimit));
+        age.Text = Format(HudTexts.FactionAndAge, Tr(status.FactionNameKey), Tr(status.AgeNameKey));
 
         var advance = status.AgeAdvance;
         ageAdvanceLabel.Visible = advance is not null;
@@ -158,7 +160,7 @@ public partial class Hud : CanvasLayer
 
         if (advance is not null)
         {
-            ageAdvanceLabel.Text = $"{Format(HudTexts.AdvancingTo, Tr(advance.AgeNameKey))} {HudTexts.Percent(advance.Progress)}";
+            ageAdvanceLabel.Text = $"{Format(HudTexts.AdvancingTo, Tr(advance.AgeNameKey))} {Percent(advance.Progress)}";
             ageAdvanceBar.Value = advance.Progress;
         }
     }
@@ -231,7 +233,7 @@ public partial class Hud : CanvasLayer
             refreshers.Add(panel =>
             {
                 var progress = panel.Building!.ConstructionProgress ?? 1;
-                label.Text = $"{Tr(HudTexts.Construction)}: {HudTexts.Percent(progress)}";
+                label.Text = Format(HudTexts.Labelled, Tr(HudTexts.Construction), Percent(progress));
                 bar.Value = progress;
             });
         }
@@ -298,7 +300,7 @@ public partial class Hud : CanvasLayer
         {
             if (panel.Building?.AgeAdvance is { Progress: { } progress } underway)
             {
-                label.Text = $"{Format(HudTexts.AdvancingTo, Tr(underway.AgeNameKey))} {HudTexts.Percent(progress)}";
+                label.Text = $"{Format(HudTexts.AdvancingTo, Tr(underway.AgeNameKey))} {Percent(progress)}";
                 bar.Value = progress;
             }
         });
@@ -411,7 +413,10 @@ public partial class Hud : CanvasLayer
         box.AddChild(bar);
         refreshers.Add(panel =>
         {
-            label.Text = $"{Tr(HudTexts.HitPoints)}: {hitPoints(panel)}/{maxHitPoints(panel)}";
+            label.Text = Format(
+                HudTexts.Labelled,
+                Tr(HudTexts.HitPoints),
+                Format(HudTexts.HitPointsOfMax, hitPoints(panel), maxHitPoints(panel)));
             ShowHitPoints(bar, hitPoints(panel), maxHitPoints(panel));
         });
 
@@ -452,8 +457,9 @@ public partial class Hud : CanvasLayer
 
     private string CostText(Cost cost) => HudTexts.CostText(cost, key => Tr(key));
 
-    private string Format(string key, object argument) =>
-        string.Format(CultureInfo.InvariantCulture, Tr(key), argument);
+    private string Percent(double fraction) => HudTexts.Percent(fraction, key => Tr(key));
+
+    private string Format(string key, params object[] arguments) => HudTexts.Format(text => Tr(text), key, arguments);
 
     private static VBoxContainer NewColumn(int width)
     {

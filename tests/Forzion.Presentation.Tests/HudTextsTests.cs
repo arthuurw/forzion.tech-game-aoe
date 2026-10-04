@@ -24,9 +24,26 @@ public class HudTextsTests
     [Fact]
     public void A_cost_reads_as_the_amount_of_each_Resource_it_takes_leaving_out_the_others()
     {
-        var text = HudTexts.CostText(new Cost(60, 0, 20), key => $"<{key}>");
+        var texts = TranslationTable.Load("pt_BR");
 
-        Assert.Equal("60 <RESOURCE_FOOD>, 20 <RESOURCE_GOLD>", text);
+        var text = HudTexts.CostText(new Cost(60, 0, 20), key => texts[key]);
+
+        Assert.Equal("60 Alimento, 20 Ouro", text);
+    }
+
+    // Another language may put the name before the amount, or join the amounts otherwise.
+    [Fact]
+    public void A_cost_takes_the_order_of_amount_and_name_and_what_joins_them_from_the_translations()
+    {
+        var texts = new Dictionary<string, string>
+        {
+            [HudTexts.CostAmount] = "{1} {0}",
+            [HudTexts.CostSeparator] = " + ",
+        };
+
+        var text = HudTexts.CostText(new Cost(60, 0, 20), key => texts.GetValueOrDefault(key, $"<{key}>"));
+
+        Assert.Equal("<RESOURCE_FOOD> 60 + <RESOURCE_GOLD> 20", text);
     }
 
     [Fact]
@@ -40,9 +57,23 @@ public class HudTextsTests
     [Fact]
     public void A_percentage_is_rounded_down_so_100_means_done()
     {
-        Assert.Equal("0%", HudTexts.Percent(0));
-        Assert.Equal("99%", HudTexts.Percent(0.999));
-        Assert.Equal("100%", HudTexts.Percent(1));
+        var texts = TranslationTable.Load("pt_BR");
+
+        Assert.Equal("0%", HudTexts.Percent(0, key => texts[key]));
+        Assert.Equal("99%", HudTexts.Percent(0.999, key => texts[key]));
+        Assert.Equal("100%", HudTexts.Percent(1, key => texts[key]));
+    }
+
+    [Fact]
+    public void A_text_with_two_arguments_reads_as_the_Portuguese_translation_puts_them()
+    {
+        var texts = TranslationTable.Load("pt_BR");
+        string Translate(string key) => texts[key];
+
+        Assert.Equal("Alimento: 200", HudTexts.Format(Translate, HudTexts.Labelled, Translate("RESOURCE_FOOD"), 200));
+        Assert.Equal("4/5", HudTexts.Format(Translate, HudTexts.PopulationOfLimit, 4, 5));
+        Assert.Equal("Portugueses · Era das Feitorias", HudTexts.Format(Translate, HudTexts.FactionAndAge, "Portugueses", "Era das Feitorias"));
+        Assert.Equal("1200/1500", HudTexts.Format(Translate, HudTexts.HitPointsOfMax, 1200, 1500));
     }
 
     [Fact]
