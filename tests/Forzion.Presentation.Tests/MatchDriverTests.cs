@@ -6,7 +6,7 @@ public class MatchDriverTests
 {
     private const double OneTick = 1.0 / Match.TicksPerSecond;
 
-    private static readonly PlayerId FirstPlayer = new(1);
+    private static readonly PlayerId FirstPlayer = TestMatches.FirstPlayer;
 
     [Fact]
     public void Before_any_tick_a_unit_is_drawn_where_it_stands()
@@ -82,10 +82,7 @@ public class MatchDriverTests
 
     private static MatchDriver NewDriver()
     {
-        var faction = new FactionId(1);
-        var config = new MatchConfig(42, new MapConfig(64, 48), [new PlayerConfig(faction), new PlayerConfig(faction)]);
-
-        return new MatchDriver(Match.Create(config), new TickClock(Match.TicksPerSecond));
+        return new MatchDriver(Match.Create(TestMatches.PlainConfig()), new TickClock(Match.TicksPerSecond));
     }
 
     private static UnitState FirstVillager(Match match) => match.State.Units.First(unit => unit.Owner == FirstPlayer);
