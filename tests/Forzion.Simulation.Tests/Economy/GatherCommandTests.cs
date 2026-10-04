@@ -84,6 +84,45 @@ public class GatherCommandTests
     }
 
     [Fact]
+    public void A_Villager_with_a_full_load_that_can_reach_no_drop_off_point_walks_to_the_reachable_Cell_nearest_to_one_and_waits_there()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var townCenter = match.State.Buildings[0];
+        var houses = Gather.HousesBoxingIn(townCenter.Origin, townCenter.Width);
+        Site.Stockpile(match, TestMatches.FirstPlayer, houses.Count * Match.BuildingCost(BuildingKind.House).Wood);
+
+        // The Villagers step well away, out of where the Houses go.
+        var villagers = Site.VillagersOf(match, TestMatches.FirstPlayer);
+        var away = Site.FreeOriginNear(match.State, new CellPosition(townCenter.Origin.X + 10, townCenter.Origin.Y), 1);
+        match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, villagers.Select(each => each.Id).ToList(), away));
+        TestMatches.TickUntil(match, () => villagers.All(each => !each.IsMoving));
+
+        foreach (var origin in houses)
+        {
+            match.Enqueue(new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.House, origin, []));
+        }
+
+        match.Tick();
+        Assert.Empty(match.Events.OfType<CommandRejected>());
+        var (villager, _) = Gather.UntilFirstFullLoad(match);
+        var load = villager.Load;
+        var start = villager.Position.Cell;
+        var reachable = MapProbe.ReachableFrom(match.State.Map, start);
+        var centre = new CellPosition(townCenter.Origin.X + (townCenter.Width / 2), townCenter.Origin.Y + (townCenter.Height / 2));
+
+        Walk.UntilStopped(match, villager);
+        match.Tick();
+
+        Assert.Equal(
+            reachable.Min(cell => Walk.SquaredDistance(cell, centre)),
+            Walk.SquaredDistance(villager.Position.Cell, centre));
+        Assert.True(Walk.SquaredDistance(villager.Position.Cell, centre) < Walk.SquaredDistance(start, centre));
+        Assert.Equal(GatherPhase.ToDropOffPoint, villager.GatherPhase);
+        Assert.Equal(load, villager.Load);
+        Assert.False(villager.IsMoving);
+    }
+
+    [Fact]
     public void A_Villager_carries_each_full_load_to_its_Town_Center_and_goes_back_to_the_source_on_its_own()
     {
         var match = TestMatches.TwoPlayerMatch();

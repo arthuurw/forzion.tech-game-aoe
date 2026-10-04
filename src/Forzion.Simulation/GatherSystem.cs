@@ -112,8 +112,9 @@ internal sealed class GatherSystem : ISystem
     /// Sends the Villager walking to the free Cell beside a drop-off point of its Player that
     /// has the shortest way to it, whichever point that is; between Cells equally far, the one
     /// with the lowest index. A Player with no drop-off point leaves the Villager idle with its
-    /// load. A Villager that cannot reach any Cell beside one stays where it is and waits with
-    /// its load until a way opens.
+    /// load. A Villager that cannot reach any Cell beside one walks to the Cell it can reach
+    /// nearest to the centre of the drop-off point nearest to it in a straight line, and waits
+    /// there with its load until a way opens.
     /// </summary>
     public static void CarryToDropOffPoint(MatchState state, UnitState villager)
     {
@@ -127,8 +128,11 @@ internal sealed class GatherSystem : ISystem
         }
 
         villager.GatherPhase = GatherPhase.ToDropOffPoint;
-        MovementSystem.WalkToNearest(
-            state.Map, villager, cell => dropOffPoints.Any(building => building.IsBeside(cell)));
+        MovementSystem.WalkToNearestOrTowards(
+            state.Map,
+            villager,
+            cell => dropOffPoints.Any(building => building.IsBeside(cell)),
+            NearestCentre(dropOffPoints, villager.Position.Cell));
     }
 
     public void Run(TickContext context)
@@ -302,6 +306,28 @@ internal sealed class GatherSystem : ISystem
     /// <summary>Whether the Cell lies beside one of the Player's drop-off points.</summary>
     private static bool IsBesideDropOffPoint(MatchState state, PlayerId owner, CellPosition cell) =>
         DropOffPointsOf(state, owner).Any(building => building.IsBeside(cell));
+
+    /// <summary>
+    /// The centre of the building whose centre is nearest to the Cell in a straight line.
+    /// Between buildings equally near, the one first in the list: with the list in ascending
+    /// ID order, the one with the lowest ID.
+    /// </summary>
+    private static CellPosition NearestCentre(List<BuildingState> buildings, CellPosition cell)
+    {
+        var nearest = buildings[0].Footprint.Centre;
+
+        foreach (var building in buildings)
+        {
+            var centre = building.Footprint.Centre;
+
+            if (centre.SquaredDistanceTo(cell) < nearest.SquaredDistanceTo(cell))
+            {
+                nearest = centre;
+            }
+        }
+
+        return nearest;
+    }
 
     /// <summary>The Player's drop-off points, in ascending ID order.</summary>
     private static List<BuildingState> DropOffPointsOf(MatchState state, PlayerId owner) =>

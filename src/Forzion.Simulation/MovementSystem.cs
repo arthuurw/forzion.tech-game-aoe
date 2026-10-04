@@ -18,17 +18,10 @@ internal sealed class MovementSystem : ISystem
     /// <summary>
     /// Sends the unit walking to the Cell with the shortest way to it among those for which
     /// <paramref name="isGoal"/> holds, as <see cref="Pathfinder.FindPathToNearest"/> picks it.
-    /// When none can be reached, the unit stays where it is.
-    /// </summary>
-    public static void WalkToNearest(MapState map, UnitState unit, Func<CellPosition, bool> isGoal) =>
-        Follow(unit, Pathfinder.FindPathToNearest(map, unit.Position.Cell, isGoal));
-
-    /// <summary>
-    /// Sends the unit walking to the Cell with the shortest way to it among those for which
-    /// <paramref name="isGoal"/> holds, as <see cref="WalkToNearest"/> does. When none can be
-    /// reached, the unit walks instead to the Cell it can reach that is nearest in a straight
-    /// line to <paramref name="destination"/>, as <see cref="WalkTo"/> picks it. This is how a
-    /// job sends a unit up to where it is done: short of it, the unit still goes as near as it can.
+    /// When none can be reached, the unit walks instead to the Cell it can reach that is
+    /// nearest in a straight line to <paramref name="destination"/>, as <see cref="WalkTo"/>
+    /// picks it. This is how a job sends a unit up to where it is done: short of it, the unit
+    /// still goes as near as it can.
     /// </summary>
     public static void WalkToNearestOrTowards(MapState map, UnitState unit, Func<CellPosition, bool> isGoal, CellPosition destination)
     {

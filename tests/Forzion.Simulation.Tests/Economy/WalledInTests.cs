@@ -7,8 +7,9 @@ using Forzion.Simulation.Tests.Movement;
 namespace Forzion.Simulation.Tests.Economy;
 
 /// <summary>
-/// Villagers that cannot walk to where their job takes them: they wait where they are, keeping
-/// the job, and set out once a building in their way is destroyed.
+/// Villagers that cannot walk to where their job takes them: walled in, they can go no nearer,
+/// so they wait where they are, keeping the job, and set out once a building in their way is
+/// destroyed.
 /// </summary>
 public class WalledInTests
 {
