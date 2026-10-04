@@ -52,7 +52,7 @@ SelectionInput = NodePath("../SelectionInput")
 
 [node name="WorldBars" type="CanvasLayer" parent="."]
 
-[node name="Overlay" type="Control" parent="WorldBars" node_paths=PackedStringArray("MatchView", "Camera")]
+[node name="Overlay" type="Control" parent="WorldBars" node_paths=PackedStringArray("MatchView", "SelectionInput", "Camera")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -62,6 +62,7 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("7_bars")
 MatchView = NodePath("../../MatchView")
+SelectionInput = NodePath("../../SelectionInput")
 Camera = NodePath("../../CameraRig/Camera")
 
 [node name="Hud" type="CanvasLayer" parent="." node_paths=PackedStringArray("MatchView", "SelectionInput")]

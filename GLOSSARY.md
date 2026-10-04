@@ -27,7 +27,7 @@ Pedido que a Partida recebe de um Jogador, humano ou IA, e aplica no Tick seguin
 _Avoid_: Ordem, instrução
 
 **Seleção** (`Selection`):
-As unidades ou a construção do Jogador que recebem as suas próximas Ordens.
+As unidades ou a construção do Jogador escolhidas com o mouse, que recebem as suas próximas Ordens. Existe só na tela: a Partida não a conhece.
 _Avoid_: Grupo
 
 ## Modos de jogo
@@ -105,6 +105,9 @@ _Avoid_: Base, armazém
 Aldeão parado, sem ordem nem Coleta em andamento.
 _Avoid_: Livre, desocupado
 
+**Espera** (`Waiting`):
+Aldeão parado porque não há caminho até a Fonte, o Ponto de entrega ou a Obra do seu trabalho. Não é Ocioso: guarda o trabalho e a Carga e segue sozinho quando o caminho pode ter se aberto: uma Construção destruída, uma Fonte de Recurso esgotada ou um Ponto de entrega concluído.
+
 ## Unidades
 
 **Unidade** (`Unit`):
@@ -179,6 +182,9 @@ _Avoid_: HP, saúde, energia
 **Dano** (`Damage`):
 Pontos de vida que um golpe tira do Alvo.
 
+**Barra de vida** (`Hit Point Bar`):
+Barra desenhada sobre uma unidade ou construção selecionada ou ferida, preenchida na proporção dos Pontos de vida que restam.
+
 **Alvo** (`Target`):
 A unidade ou construção inimiga que uma unidade militar está atacando.
 
@@ -189,7 +195,7 @@ Distância máxima, em Células, entre a unidade e o alvo para que o golpe acert
 Ticks que a unidade passa com o alvo ao alcance para cada golpe; o dano entra ao fim deles.
 
 **Raio de percepção** (`Perception Radius`):
-Distância, em Células, em que uma unidade militar parada e sem alvo nota uma unidade inimiga e passa a atacá-la.
+Distância, em Células, em que uma unidade militar parada e sem alvo nota um inimigo e passa a atacá-lo. Unidades inimigas vêm primeiro; sem nenhuma no raio, a construção inimiga mais próxima, Obras incluídas.
 _Avoid_: Visão, campo de visão
 
 **Derrota** (`Defeat`):

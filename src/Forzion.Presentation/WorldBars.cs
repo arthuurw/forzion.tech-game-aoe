@@ -19,28 +19,31 @@ public enum WorldBarKind
 public sealed record WorldBar(EntityId Entity, WorldBarKind Kind, double Fill);
 
 /// <summary>
-/// Which bars to draw over the entities on the map: hit points over wounded units and
-/// buildings of every Player, so the person can follow a fight, and construction over every
-/// construction site.
+/// Which bars to draw over the entities on the map: hit points over the selected units and
+/// buildings and over the wounded ones of every Player, so the person can follow a fight, and
+/// construction over every construction site.
 /// </summary>
 public static class WorldBars
 {
     /// <summary>
     /// The bars of the current tick: units first, then buildings, each in ascending ID order. A
-    /// wounded construction site gets both bars.
+    /// wounded or selected construction site gets both bars.
     /// </summary>
-    public static IEnumerable<WorldBar> Of(MatchState state)
+    /// <param name="state">The state of the match.</param>
+    /// <param name="selected">The selected entities; those no longer in the match are skipped.</param>
+    public static IEnumerable<WorldBar> Of(MatchState state, IReadOnlyCollection<EntityId> selected)
     {
         ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(selected);
 
-        foreach (var unit in state.Units.Where(unit => unit.HitPoints < unit.MaxHitPoints))
+        foreach (var unit in state.Units.Where(unit => unit.HitPoints < unit.MaxHitPoints || selected.Contains(unit.Id)))
         {
             yield return new WorldBar(unit.Id, WorldBarKind.HitPoints, Fractions.Of(unit.HitPoints, unit.MaxHitPoints));
         }
 
         foreach (var building in state.Buildings)
         {
-            if (building.HitPoints < building.MaxHitPoints)
+            if (building.HitPoints < building.MaxHitPoints || selected.Contains(building.Id))
             {
                 yield return new WorldBar(building.Id, WorldBarKind.HitPoints, Fractions.Of(building.HitPoints, building.MaxHitPoints));
             }

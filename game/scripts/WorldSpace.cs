@@ -18,6 +18,5 @@ public static class WorldSpace
     public static Vector3 CentreOf(CellPosition cell, float height = 0) => new(cell.X + 0.5f, height, cell.Y + 0.5f);
 
     /// <summary>The world point above the centre of a building's footprint.</summary>
-    public static Vector3 CentreOf(BuildingState building, float height = 0) =>
-        new(building.Origin.X + (building.Width / 2f), height, building.Origin.Y + (building.Height / 2f));
+    public static Vector3 CentreOf(BuildingState building, float height = 0) => ToWorld(MapPoint.CentreOf(building), height);
 }

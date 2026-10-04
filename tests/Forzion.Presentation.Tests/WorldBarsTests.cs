@@ -10,7 +10,26 @@ public class WorldBarsTests
     {
         var match = Portuguese();
 
-        Assert.Empty(WorldBars.Of(match.State));
+        Assert.Empty(WorldBars.Of(match.State, []));
+    }
+
+    [Fact]
+    public void A_selected_whole_unit_gets_a_full_hit_point_bar()
+    {
+        var match = Portuguese();
+        var villager = match.State.Units.First(unit => unit.Owner == FirstPlayer);
+
+        var bar = Assert.Single(WorldBars.Of(match.State, [villager.Id]));
+
+        Assert.Equal(new WorldBar(villager.Id, WorldBarKind.HitPoints, 1), bar);
+    }
+
+    [Fact]
+    public void A_selected_entity_no_longer_in_the_match_gets_no_bar()
+    {
+        var match = Portuguese();
+
+        Assert.Empty(WorldBars.Of(match.State, [new EntityId(9_999)]));
     }
 
     [Fact]
@@ -31,7 +50,7 @@ public class WorldBarsTests
         }
 
         var wounded = match.State.Units.Single(unit => unit.HitPoints < unit.MaxHitPoints);
-        var bar = Assert.Single(WorldBars.Of(match.State));
+        var bar = Assert.Single(WorldBars.Of(match.State, []));
 
         Assert.Equal((wounded.Id, WorldBarKind.HitPoints), (bar.Entity, bar.Kind));
         Assert.Equal((double)wounded.HitPoints / wounded.MaxHitPoints, bar.Fill, 6);
@@ -52,7 +71,7 @@ public class WorldBarsTests
             match.Tick();
         }
 
-        var bar = Assert.Single(WorldBars.Of(match.State));
+        var bar = Assert.Single(WorldBars.Of(match.State, []));
 
         Assert.Equal((site.Id, WorldBarKind.Construction), (bar.Entity, bar.Kind));
         Assert.Equal(0.5, bar.Fill, 2);

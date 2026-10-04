@@ -1,4 +1,5 @@
 using Forzion.Simulation.Tests.Economy;
+using Forzion.Simulation.Tests.Maps;
 using Forzion.Simulation.Tests.Matches;
 using Forzion.Simulation.Tests.Movement;
 
@@ -14,8 +15,8 @@ public class OrderSwitchTests
         var house = BuildingFor(match, villager, ticks: 20);
 
         // The far side of the site: the move ends beside it again.
-        var destination = Site.Square(new CellPosition(house.Origin.X - 1, house.Origin.Y - 1), house.Width + 2)
-            .Where(cell => Gather.Touches(house, cell))
+        var destination = MapProbe.Square(new CellPosition(house.Origin.X - 1, house.Origin.Y - 1), house.Width + 2)
+            .Where(cell => MapProbe.IsBeside(house, cell))
             .OrderByDescending(cell => Walk.SquaredDistance(cell, villager.Position.Cell))
             .First();
 
@@ -40,7 +41,7 @@ public class OrderSwitchTests
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
         match.Tick();
         var progress = house.BuildProgress;
-        Gather.Until(match, () => villager.Load.Amount > 0);
+        TestMatches.TickUntil(match, () => villager.Load.Amount > 0);
 
         Assert.Null(villager.ConstructionSite);
         Assert.Equal(ResourceKind.Food, villager.Load.Resource);
@@ -55,11 +56,11 @@ public class OrderSwitchTests
         var house = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.House, []);
         var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Food);
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
-        Gather.Until(match, () => villager.Load.Amount > 1);
+        TestMatches.TickUntil(match, () => villager.Load.Amount > 1);
         var load = villager.Load;
 
         match.Enqueue(new BuildCommand(TestMatches.FirstPlayer, [villager.Id], house.Id));
-        Gather.Until(match, () => house.IsComplete);
+        TestMatches.TickUntil(match, () => house.IsComplete);
 
         Assert.Equal(GatherPhase.None, villager.GatherPhase);
         Assert.Null(villager.GatherSource);
@@ -73,7 +74,7 @@ public class OrderSwitchTests
     private static BuildingState BuildingFor(Match match, UnitState villager, int ticks)
     {
         var house = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.House, [villager.Id]);
-        Gather.Until(match, () => house.BuildProgress == ticks);
+        TestMatches.TickUntil(match, () => house.BuildProgress == ticks);
 
         return house;
     }

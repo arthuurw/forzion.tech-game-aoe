@@ -9,7 +9,7 @@ public class MoveCommandTests
     public void A_Villager_sent_behind_the_Town_Center_walks_around_it_and_stops_on_the_destination()
     {
         var match = TestMatches.TwoPlayerMatch();
-        var villager = Walk.MiddleVillager(match);
+        var villager = TestMatches.MiddleVillager(match);
         var destination = Walk.BehindTownCenter(match);
         match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], destination));
 
@@ -28,7 +28,7 @@ public class MoveCommandTests
     public void A_Villager_sent_onto_the_enemy_Town_Center_stops_beside_it()
     {
         var match = TestMatches.TwoPlayerMatch();
-        var villager = Walk.MiddleVillager(match);
+        var villager = TestMatches.MiddleVillager(match);
         var enemyTownCenter = match.State.Buildings[1];
         var destination = new CellPosition(enemyTownCenter.Origin.X + 1, enemyTownCenter.Origin.Y + 1);
         match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], destination));
@@ -69,7 +69,7 @@ public class MoveCommandTests
     {
         var match = TestMatches.TwoPlayerMatch(seed);
         var map = match.State.Map;
-        var villager = Walk.MiddleVillager(match);
+        var villager = TestMatches.MiddleVillager(match);
         var destination = new CellPosition(x, y);
         var reachable = MapProbe.ReachableFrom(map, villager.Position.Cell);
         match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], destination));
@@ -108,9 +108,9 @@ public class MoveCommandTests
         var bystander = match.State.Units[0];
         var before = bystander.Position;
         match.Enqueue(new MoveCommand(
-            TestMatches.FirstPlayer, [Walk.MiddleVillager(match).Id], Walk.BehindTownCenter(match)));
+            TestMatches.FirstPlayer, [TestMatches.MiddleVillager(match).Id], Walk.BehindTownCenter(match)));
 
-        Walk.UntilStopped(match, Walk.MiddleVillager(match));
+        Walk.UntilStopped(match, TestMatches.MiddleVillager(match));
 
         Assert.Equal(before, bystander.Position);
     }
@@ -123,7 +123,7 @@ public class MoveCommandTests
     public void A_move_to_a_Cell_outside_the_map_is_rejected(int x, int y)
     {
         var match = TestMatches.TwoPlayerMatch();
-        var villager = Walk.MiddleVillager(match);
+        var villager = TestMatches.MiddleVillager(match);
         var command = new MoveCommand(TestMatches.FirstPlayer, [villager.Id], new CellPosition(x, y));
         match.Enqueue(command);
 
@@ -137,7 +137,7 @@ public class MoveCommandTests
     public void A_unit_that_no_longer_exists_is_skipped_and_the_other_units_of_the_move_walk()
     {
         var match = TestMatches.TwoPlayerMatch();
-        var villager = Walk.MiddleVillager(match);
+        var villager = TestMatches.MiddleVillager(match);
         var destination = Walk.BehindTownCenter(match);
         match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [new EntityId(100_000), villager.Id], destination));
 
@@ -178,7 +178,7 @@ public class MoveCommandTests
     public void A_move_of_another_Players_unit_is_rejected_and_moves_none_of_its_units()
     {
         var match = TestMatches.TwoPlayerMatch();
-        var own = Walk.MiddleVillager(match);
+        var own = TestMatches.MiddleVillager(match);
         var foreign = match.State.UnitsOf(TestMatches.SecondPlayer).First();
         var command = new MoveCommand(TestMatches.FirstPlayer, [own.Id, foreign.Id], Walk.BehindTownCenter(match));
         match.Enqueue(command);
@@ -198,7 +198,7 @@ public class MoveCommandTests
         var foreign = withRejection.State.UnitsOf(TestMatches.SecondPlayer).First();
         withRejection.Enqueue(new MoveCommand(
             TestMatches.FirstPlayer,
-            [Walk.MiddleVillager(withRejection).Id, foreign.Id],
+            [TestMatches.MiddleVillager(withRejection).Id, foreign.Id],
             Walk.BehindTownCenter(withRejection)));
 
         withRejection.Tick();
@@ -211,7 +211,7 @@ public class MoveCommandTests
     public void A_unit_ordered_elsewhere_while_walking_goes_to_the_new_destination()
     {
         var match = TestMatches.TwoPlayerMatch();
-        var villager = Walk.MiddleVillager(match);
+        var villager = TestMatches.MiddleVillager(match);
         var home = villager.Position.Cell;
         match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], Walk.BehindTownCenter(match)));
 
@@ -235,7 +235,7 @@ public class MoveCommandTests
     public void A_unit_ordered_to_the_Cell_it_is_crossing_settles_on_its_centre()
     {
         var match = TestMatches.TwoPlayerMatch();
-        var villager = Walk.MiddleVillager(match);
+        var villager = TestMatches.MiddleVillager(match);
         match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], Walk.BehindTownCenter(match)));
 
         for (var tick = 0; tick < 33; tick++)
@@ -256,7 +256,7 @@ public class MoveCommandTests
     public void A_unit_ordered_to_the_Cell_it_stands_on_does_not_move()
     {
         var match = TestMatches.TwoPlayerMatch();
-        var villager = Walk.MiddleVillager(match);
+        var villager = TestMatches.MiddleVillager(match);
         var before = villager.Position;
         match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], before.Cell));
 
@@ -271,7 +271,7 @@ public class MoveCommandTests
     public void A_walking_unit_reports_the_Cells_it_still_has_to_walk_through()
     {
         var match = TestMatches.TwoPlayerMatch();
-        var villager = Walk.MiddleVillager(match);
+        var villager = TestMatches.MiddleVillager(match);
         var destination = Walk.BehindTownCenter(match);
         match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], destination));
 

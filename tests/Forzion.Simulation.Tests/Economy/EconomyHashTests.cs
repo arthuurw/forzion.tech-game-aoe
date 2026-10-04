@@ -11,7 +11,7 @@ public class EconomyHashTests
     {
         var gathering = BesideFoodSource(out var source);
         var standing = BesideFoodSource(out _);
-        gathering.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [Walk.MiddleVillager(gathering).Id], source.Id));
+        gathering.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [TestMatches.MiddleVillager(gathering).Id], source.Id));
 
         gathering.Tick();
         standing.Tick();
@@ -19,7 +19,7 @@ public class EconomyHashTests
         // Already beside the source, the Villager does not move, and one tick gathers nothing yet.
         Assert.Equal(PositionsOf(standing), PositionsOf(gathering));
         Assert.Equal(AmountsOf(standing), AmountsOf(gathering));
-        Assert.Equal(GatherPhase.Gathering, Walk.MiddleVillager(gathering).GatherPhase);
+        Assert.Equal(GatherPhase.Gathering, TestMatches.MiddleVillager(gathering).GatherPhase);
         Assert.NotEqual(standing.StateHash, gathering.StateHash);
     }
 
@@ -28,10 +28,10 @@ public class EconomyHashTests
     {
         var earlier = BesideFoodSource(out var source);
         var later = BesideFoodSource(out _);
-        earlier.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [Walk.MiddleVillager(earlier).Id], source.Id));
+        earlier.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [TestMatches.MiddleVillager(earlier).Id], source.Id));
         earlier.Tick();
         later.Tick();
-        later.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [Walk.MiddleVillager(later).Id], source.Id));
+        later.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [TestMatches.MiddleVillager(later).Id], source.Id));
 
         // One tick more of work, and still nothing gathered in either match.
         for (var tick = 0; tick < 2; tick++)
@@ -42,8 +42,8 @@ public class EconomyHashTests
 
         Assert.Equal(PositionsOf(later), PositionsOf(earlier));
         Assert.Equal(AmountsOf(later), AmountsOf(earlier));
-        Assert.Equal(Walk.MiddleVillager(later).Load, Walk.MiddleVillager(earlier).Load);
-        Assert.Equal(Walk.MiddleVillager(later).GatherPhase, Walk.MiddleVillager(earlier).GatherPhase);
+        Assert.Equal(TestMatches.MiddleVillager(later).Load, TestMatches.MiddleVillager(earlier).Load);
+        Assert.Equal(TestMatches.MiddleVillager(later).GatherPhase, TestMatches.MiddleVillager(earlier).GatherPhase);
         Assert.NotEqual(later.StateHash, earlier.StateHash);
     }
 
@@ -53,7 +53,7 @@ public class EconomyHashTests
         var first = TestMatches.TwoPlayerMatch();
         var second = TestMatches.TwoPlayerMatch();
         var villagers = first.State.UnitsOf(TestMatches.FirstPlayer).Select(unit => unit.Id).ToList();
-        var source = Gather.NearestSource(first.State, Walk.MiddleVillager(first).Position.Cell, ResourceKind.Food);
+        var source = Gather.NearestSource(first.State, TestMatches.MiddleVillager(first).Position.Cell, ResourceKind.Food);
         first.Enqueue(new GatherCommand(TestMatches.FirstPlayer, villagers, source.Id));
         second.Enqueue(new GatherCommand(TestMatches.FirstPlayer, villagers, source.Id));
 
@@ -72,7 +72,7 @@ public class EconomyHashTests
     private static Match BesideFoodSource(out ResourceSourceState source)
     {
         var match = TestMatches.TwoPlayerMatch();
-        var villager = Walk.MiddleVillager(match);
+        var villager = TestMatches.MiddleVillager(match);
         var reachable = MapProbe.ReachableFrom(match.State.Map, villager.Position.Cell);
         source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Food);
         var beside = MapProbe.NeighboursOf(match.State.Map, source.Cell).First(reachable.Contains);

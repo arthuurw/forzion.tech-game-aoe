@@ -29,17 +29,17 @@ public partial class SelectionInput : CanvasLayer
     public Camera3D Camera { get; set; } = null!;
 
     /// <summary>The human Player's selection and orders. Set in <see cref="_Ready"/>.</summary>
-    public PlayerControl Control { get; private set; } = null!;
+    public PlayerControl PlayerControl { get; private set; } = null!;
 
     public override void _Ready()
     {
-        Control = new PlayerControl(MatchView.Driver, MatchView.HumanPlayer, SightThrough, Placeholders.PickSizes);
+        PlayerControl = new PlayerControl(MatchView.Driver, MatchView.HumanPlayer, SightThrough, Placeholders.PickSizes);
 
         box = new Panel
         {
             Name = "DragBox",
             Visible = false,
-            MouseFilter = Godot.Control.MouseFilterEnum.Ignore,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
         };
         box.AddThemeStyleboxOverride("panel", new StyleBoxFlat
         {
@@ -55,9 +55,9 @@ public partial class SelectionInput : CanvasLayer
 
     public override void _UnhandledInput(InputEvent @event)
     {
-        if (Control.PlacingBuilding is not null && @event.IsActionPressed("ui_cancel"))
+        if (PlayerControl.PlacingBuilding is not null && @event.IsActionPressed("ui_cancel"))
         {
-            Control.CancelPlacement();
+            PlayerControl.CancelPlacement();
             GetViewport().SetInputAsHandled();
 
             return;
@@ -72,15 +72,15 @@ public partial class SelectionInput : CanvasLayer
 
         // While a building is being placed, the left button places it and the right gives up;
         // neither selects nor orders.
-        if (Control.PlacingBuilding is not null)
+        if (PlayerControl.PlacingBuilding is not null)
         {
             if (@event.IsActionPressed("select"))
             {
-                Control.PlaceAt(at);
+                PlayerControl.PlaceAt(at);
             }
             else if (@event.IsActionPressed("order"))
             {
-                Control.CancelPlacement();
+                PlayerControl.CancelPlacement();
             }
 
             return;
@@ -92,13 +92,13 @@ public partial class SelectionInput : CanvasLayer
         }
         else if (@event.IsActionReleased("select") && pressedAt is { } from)
         {
-            Control.Select(from, at);
+            PlayerControl.Select(from, at);
             pressedAt = null;
             box.Visible = false;
         }
         else if (@event.IsActionPressed("order"))
         {
-            Control.OrderAt(at);
+            PlayerControl.OrderAt(at);
         }
         else if (@event is InputEventMouseMotion && pressedAt is { } start)
         {
@@ -108,7 +108,7 @@ public partial class SelectionInput : CanvasLayer
 
     private void ShowBox(ScreenPoint from, ScreenPoint to)
     {
-        box.Visible = !Control.IsClick(from, to);
+        box.Visible = !PlayerControl.IsClick(from, to);
 
         var corner = new Vector2((float)Math.Min(from.X, to.X), (float)Math.Min(from.Y, to.Y));
         var size = new Vector2((float)Math.Abs(to.X - from.X), (float)Math.Abs(to.Y - from.Y));
@@ -127,16 +127,7 @@ public partial class SelectionInput : CanvasLayer
         var origin = Camera.ProjectRayOrigin(screen);
         var direction = Camera.ProjectRayNormal(screen);
 
-        if (direction.Y >= -1e-4f)
-        {
-            return null;
-        }
-
-        // Along the ray the height changes by direction.Y per step: dividing by it gives the
-        // step that changes the height by one unit.
-        var perHeight = direction / direction.Y;
-        var ground = origin - (perHeight * origin.Y);
-
-        return new SightLine(new MapPoint(ground.X, ground.Z), new MapPoint(perHeight.X, perHeight.Z));
+        return SightLine.FromRay(
+            new WorldVector(origin.X, origin.Y, origin.Z), new WorldVector(direction.X, direction.Y, direction.Z));
     }
 }

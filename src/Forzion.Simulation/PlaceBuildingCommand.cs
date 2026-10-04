@@ -27,16 +27,16 @@ public sealed record PlaceBuildingCommand(
         // No builder is a valid order: the site waits for a later build order.
         var builders = Builders.Count == 0
             ? []
-            : OrderedUnits.Find(
-                context, this, issuer, Builders, unit => unit.Kind == UnitKind.Villager, RejectionReason.UnitCannotBuild);
+            : CommandedUnits.Find(
+                context, this, issuer, Builders, unit => unit.CanBuild, RejectionReason.UnitCannotBuild);
 
         if (builders is null)
         {
             return;
         }
 
-        // Each Player starts with its Town Center and never places another.
-        if (Kind is not (BuildingKind.House or BuildingKind.Storehouse or BuildingKind.Barracks))
+        // Kinds Players do not place have no cost, and a value outside the enum is no kind at all.
+        if (!Enum.IsDefined(Kind) || Balance.Of(Kind).Cost is not { } cost)
         {
             context.Reject(this, RejectionReason.BuildingNotPlaceable);
 
@@ -49,9 +49,6 @@ public sealed record PlaceBuildingCommand(
 
             return;
         }
-
-        var size = Balance.BuildingSize(Kind);
-        var cost = Balance.BuildingCost(Kind);
 
         if (!context.State.CanPlace(Kind, Origin))
         {
@@ -68,8 +65,8 @@ public sealed record PlaceBuildingCommand(
         }
 
         issuer.Pay(cost);
-        var site = context.State.AddBuilding(issuer.Id, Kind, Origin, size, size);
-        MovementSystem.Reroute(context.State);
+        var site = context.State.AddBuilding(issuer.Id, Kind, Origin);
+        Rerouting.AfterBlocking(context.State);
 
         foreach (var builder in builders)
         {

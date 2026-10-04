@@ -135,7 +135,7 @@ internal static class MapGenerator
             {
                 var cell = new CellPosition(x, y);
 
-                if (Distance(cell, home) >= Balance.NearestHomeSource)
+                if (cell.KingDistanceTo(home) >= Balance.NearestHomeSource)
                 {
                     candidates.Add(cell);
                 }
@@ -149,7 +149,7 @@ internal static class MapGenerator
                 var cell = candidates[random.NextInt(candidates.Count)];
 
                 // Dropping the neighbours too keeps the sources from touching one another.
-                candidates.RemoveAll(candidate => Distance(candidate, cell) <= 1);
+                candidates.RemoveAll(candidate => candidate.KingDistanceTo(cell) <= 1);
                 PlaceSourcePair(map, cell, kind, sources);
             }
         }
@@ -233,8 +233,8 @@ internal static class MapGenerator
     private static bool CanScatterOn(MapState map, CellPosition home, CellPosition cell) =>
         map.IsFree(cell)
         && cell != map.Mirror(cell)
-        && Distance(cell, home) > ClearingRadius
-        && Distance(cell, map.Mirror(home)) > ClearingRadius;
+        && cell.KingDistanceTo(home) > ClearingRadius
+        && cell.KingDistanceTo(map.Mirror(home)) > ClearingRadius;
 
     /// <summary>
     /// The free Cells linked to the home by free Cells that share a side. The Town Centers are
@@ -297,8 +297,4 @@ internal static class MapGenerator
         sources.Add(new SourcePlacement(cell, kind));
         sources.Add(new SourcePlacement(mirror, kind));
     }
-
-    /// <summary>Distance in king's moves.</summary>
-    private static int Distance(CellPosition a, CellPosition b) =>
-        Math.Max(Math.Abs(a.X - b.X), Math.Abs(a.Y - b.Y));
 }

@@ -61,7 +61,7 @@ public partial class RtsCamera : Node3D
         camera = GetNode<Camera3D>("Camera");
         distance = targetDistance = Mathf.Clamp(StartDistance, MinDistance, MaxDistance);
 
-        var homeTownCenter = MatchView.Match.State.Buildings
+        var homeTownCenter = MatchView.State.Buildings
             .FirstOrDefault(building => building.Owner == MatchView.HumanPlayer && building.Kind == BuildingKind.TownCenter);
 
         Position = homeTownCenter is null ? MapCentre() : WorldSpace.CentreOf(homeTownCenter);
@@ -101,7 +101,7 @@ public partial class RtsCamera : Node3D
         var direction = Input.GetVector("camera_pan_left", "camera_pan_right", "camera_pan_up", "camera_pan_down") + EdgeDirection();
         direction = direction.LimitLength(1);
 
-        var map = MatchView.Match.State.Map;
+        var map = MatchView.State.Map;
         var moved = Position + (new Vector3(direction.X, 0, direction.Y) * PanSpeed * distance * seconds);
         Position = new Vector3(Mathf.Clamp(moved.X, 0, map.Width), 0, Mathf.Clamp(moved.Z, 0, map.Height));
 
@@ -137,7 +137,7 @@ public partial class RtsCamera : Node3D
 
     private Vector3 MapCentre()
     {
-        var map = MatchView.Match.State.Map;
+        var map = MatchView.State.Map;
 
         return new Vector3(map.Width / 2f, 0, map.Height / 2f);
     }

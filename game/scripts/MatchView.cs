@@ -36,8 +36,8 @@ public partial class MatchView : Node3D
     /// <summary>Drives the match's ticks. Set in <see cref="_Ready"/>, so nodes that read it must come after this one in the scene.</summary>
     public MatchDriver Driver { get; private set; } = null!;
 
-    /// <summary>The running match: read its state and enqueue commands on it; this node ticks it.</summary>
-    public Match Match => Driver.Match;
+    /// <summary>The state of the running match; this node ticks it through <see cref="Driver"/>.</summary>
+    public MatchState State => Driver.State;
 
     public override void _Ready()
     {
@@ -48,7 +48,7 @@ public partial class MatchView : Node3D
 
         Driver = new MatchDriver(Match.Create(config), new TickClock(Match.TicksPerSecond));
 
-        var state = Match.State;
+        var state = State;
 
         AddChild(placeholders.Terrain(state.Map));
         SyncViews();
@@ -86,7 +86,7 @@ public partial class MatchView : Node3D
     /// </summary>
     private void SyncViews()
     {
-        var state = Match.State;
+        var state = State;
 
         Sync(state.ResourceSources, sourceViews, source => source.Id, placeholders.ResourceSource);
         Sync(state.Buildings, buildingViews, building => building.Id, placeholders.Building);

@@ -18,7 +18,7 @@ public class TrainingUnderAttackTests
         var queuedAtTheEnd = 0;
         List<int> stockAtTheEnd = [];
 
-        Battle.TickUntil(match, () =>
+        TestMatches.TickUntil(match, () =>
         {
             trained += match.Events.OfType<UnitTrained>().Count();
 
@@ -55,7 +55,7 @@ public class TrainingUnderAttackTests
 
         var population = match.State.PopulationOf(first);
         Battle.Raid(match, house);
-        Battle.TickUntil(match, () => house.HitPoints <= 0);
+        TestMatches.TickUntil(match, () => house.HitPoints <= 0);
 
         // The raiders head home before they turn on the Villagers.
         match.Enqueue(new MoveCommand(
@@ -66,7 +66,7 @@ public class TrainingUnderAttackTests
         Assert.NotEmpty(townCenter.TrainingQueue);
         Assert.True(population > match.State.PopulationLimitOf(first));
 
-        Battle.TickUntil(match, () => townCenter.TrainingQueue.Count == 0);
+        TestMatches.TickUntil(match, () => townCenter.TrainingQueue.Count == 0);
 
         Assert.Equal(population, match.State.UnitsOf(first).Count());
     }
