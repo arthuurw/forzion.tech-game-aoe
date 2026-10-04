@@ -3,7 +3,7 @@ namespace Forzion.Simulation;
 /// <summary>
 /// Moves every walking unit along its path by what its speed covers in one tick. A unit walks
 /// in a straight line to the centre of the next Cell of its path and stops on the centre of
-/// the last one.
+/// the last one. A unit that stops has its job, if it has one, choose its way again.
 /// </summary>
 internal sealed class MovementSystem : ISystem
 {
@@ -18,10 +18,34 @@ internal sealed class MovementSystem : ISystem
     /// <summary>
     /// Sends the unit walking to the Cell with the shortest way to it among those for which
     /// <paramref name="isGoal"/> holds, as <see cref="Pathfinder.FindPathToNearest"/> picks it.
-    /// When none can be reached, the unit stays where it is.
+    /// When none can be reached, the unit walks instead to the Cell it can reach that is
+    /// nearest in a straight line to the Cell <paramref name="destination"/> gives, as <see cref="WalkTo"/>
+    /// picks it. This is how a job sends a unit up to where it is done: short of it, the unit
+    /// still goes as near as it can.
     /// </summary>
-    public static void WalkToNearest(MapState map, UnitState unit, Func<CellPosition, bool> isGoal) =>
-        Follow(unit, Pathfinder.FindPathToNearest(map, unit.Position.Cell, isGoal));
+    public static void WalkToNearestOrTowards(MapState map, UnitState unit, Func<CellPosition, bool> isGoal, Func<CellPosition> destination)
+    {
+        var start = unit.Position.Cell;
+
+        // A unit already on a goal stays where it is, as it does at the end of every walk to
+        // its job, without searching the map.
+        if (isGoal(start))
+        {
+            Follow(unit, []);
+
+            return;
+        }
+
+        var path = Pathfinder.FindPathToNearest(map, start, isGoal);
+
+        // An empty path from a Cell that is no goal means no goal can be reached.
+        if (path.Count == 0)
+        {
+            path = Pathfinder.FindPath(map, start, destination());
+        }
+
+        Follow(unit, path);
+    }
 
     private static void Follow(UnitState unit, List<CellPosition> path)
     {
@@ -41,9 +65,16 @@ internal sealed class MovementSystem : ISystem
     {
         foreach (var unit in context.State.Units)
         {
-            if (unit.IsMoving)
+            if (!unit.IsMoving)
             {
-                Advance(unit);
+                continue;
+            }
+
+            Advance(unit);
+
+            if (!unit.IsMoving)
+            {
+                Rerouting.AfterStopping(context.State, unit);
             }
         }
     }

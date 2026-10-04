@@ -14,6 +14,38 @@ internal static class Gather
             .ThenBy(source => source.Id.Value)
             .First();
 
+    /// <summary>
+    /// The resource source nearest to the unit that four Houses placed now can box in, and the
+    /// origins of those Houses. Between sources equally near, the one with the lowest ID.
+    /// </summary>
+    public static BoxedInSource SourceToBoxIn(Match match, UnitState unit) =>
+        match.State.ResourceSources
+            .OrderBy(source => Walk.SquaredDistance(source.Cell, unit.Position.Cell))
+            .ThenBy(source => source.Id.Value)
+            .Select(source => new BoxedInSource(source, HousesBoxingIn(source.Cell, 1)))
+            .First(boxed => boxed.HouseOrigins.All(origin => match.CanPlace(BuildingKind.House, origin)));
+
+    /// <summary>
+    /// The origins of the Houses that, turned like the blades of a pinwheel around the square
+    /// of the given side from <paramref name="origin"/>, cover every Cell beside it, so no unit
+    /// can walk up to it once they stand. Each blade runs along one side of the square and the
+    /// corner past it: one House for a single Cell, two for a Town Center.
+    /// </summary>
+    public static List<CellPosition> HousesBoxingIn(CellPosition origin, int side)
+    {
+        var houses = new List<CellPosition>();
+
+        for (var along = 0; along <= side; along += Match.BuildingSize(BuildingKind.House))
+        {
+            houses.Add(new CellPosition(origin.X - 1 + along, origin.Y - 2));
+            houses.Add(new CellPosition(origin.X + side, origin.Y - 1 + along));
+            houses.Add(new CellPosition(origin.X + along, origin.Y + side));
+            houses.Add(new CellPosition(origin.X - 2, origin.Y + along));
+        }
+
+        return houses;
+    }
+
     /// <summary>The source with the given ID, or null once it has been depleted.</summary>
     public static ResourceSourceState? FindSource(MatchState state, EntityId id) =>
         state.ResourceSources.SingleOrDefault(source => source.Id == id);
@@ -63,3 +95,6 @@ internal static class Gather
         return largest;
     }
 }
+
+/// <summary>A resource source and the origins of the four Houses that box it in.</summary>
+internal sealed record BoxedInSource(ResourceSourceState Source, List<CellPosition> HouseOrigins);

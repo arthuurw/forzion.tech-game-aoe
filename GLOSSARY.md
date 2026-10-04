@@ -110,7 +110,7 @@ Aldeão parado, sem ordem nem Coleta em andamento.
 _Avoid_: Livre, desocupado
 
 **Espera** (`Waiting`):
-Aldeão parado porque não há caminho até a Fonte, o Ponto de entrega ou a Obra do seu trabalho. Não é Ocioso: guarda o trabalho e a Carga e segue sozinho quando o caminho pode ter se aberto: uma Construção destruída, uma Fonte de Recurso esgotada ou um Ponto de entrega concluído.
+Aldeão sem caminho até a Fonte, o Ponto de entrega ou a Obra do seu trabalho: primeiro anda até a Célula alcançável mais próxima dela e então espera ali, parado. Não é Ocioso: guarda o trabalho e a Carga e segue sozinho quando o caminho pode ter se aberto: uma Construção destruída, uma Fonte de Recurso esgotada ou um Ponto de entrega concluído.
 
 ## Unidades
 
