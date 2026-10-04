@@ -204,22 +204,22 @@ Obstáculo que ocupa Células inteiras: Unidades não a atravessam e Construçõ
 
 ## Nomes dos Portugueses
 
-Nomes que a Facção Portugueses dá às suas Eras e unidades, escolhidos na história do Brasil colonial dos séculos XVI e XVII. São textos do jogo: ficam em `game/translations/pt_BR.po`, sob as chaves entre parênteses, e os dados da Facção guardam só a chave. O código continua usando os nomes genéricos (`Age` 1, `MeleeSoldier` e assim por diante).
+Nomes que a Facção Portugueses dá às suas Eras e unidades, escolhidos na história do Brasil colonial dos séculos XVI e XVII. As fontes de cada verbete estão em [docs/fontes-historicas.md](docs/fontes-historicas.md). São textos do jogo: ficam em `game/translations/pt_BR.po`, sob as chaves entre parênteses, e os dados da Facção guardam só a chave. O código continua usando os nomes genéricos (`Age` 1, `MeleeSoldier` e assim por diante).
 
 **Era das Feitorias** (Era I, `FACTION_PORTUGUESE_AGE_1`):
 Os primeiros anos da presença portuguesa, até a década de 1530, quando o pau-brasil, monopólio da Coroa arrendado a mercadores, era trocado com os indígenas e embarcado em feitorias no litoral.
 
 **Era dos Engenhos** (Era II, `FACTION_PORTUGUESE_AGE_2`):
-A colônia do açúcar. Os primeiros engenhos são da década de 1530; da segunda metade do século XVI em diante, a colônia se organiza em torno deles.
+A colônia do açúcar. Os primeiros engenhos são da década de 1530; da segunda metade do século XVI em diante, sobretudo a partir da década de 1570, a colônia se organiza em torno deles.
 
 **Rodeleiro** (`MeleeSoldier`, `FACTION_PORTUGUESE_MELEE_SOLDIER`):
-Infante de espada e rodela, o escudo redondo, das tropas portuguesas dos séculos XVI e XVII. No Brasil, os rodeleiros cobriam os arcabuzeiros contra as flechas na conquista da Paraíba, em 1585; na guerra holandesa, a espada e rodela seguiu em uso.
+Infante de espada e rodela, o escudo redondo, das tropas portuguesas dos séculos XVI e XVII. No Brasil, os rodeleiros cobriam os arcabuzeiros contra as flechas na conquista da Paraíba, entre 1585 e 1587; na guerra holandesa, a espada e rodela seguiu em uso.
 
 **Arcabuzeiro** (`RangedSoldier`, `FACTION_PORTUGUESE_RANGED_SOLDIER`):
-Infante armado de arcabuz, a arma de fogo portátil das expedições portuguesas do século XVI.
+Infante armado de arcabuz. O Regimento de 1548 obrigava cada capitania a ter arcabuzes, e arcabuzeiros combateram na conquista da Paraíba, em 1585.
 
 **Cavaleiro** (`HeavySoldier`, `FACTION_PORTUGUESE_HEAVY_SOLDIER`):
 Combatente a cavalo. No Brasil quinhentista, os de cavalo do ouvidor-geral Martim Leitão combateram na conquista da Paraíba, em 1585.
 
 **Colono** (`Villager`, `FACTION_PORTUGUESE_VILLAGER`):
-O povoador livre, que as fontes de época chamam de morador. Na colônia, o trabalho nas lavouras e nos engenhos era feito sobretudo por indígenas e africanos escravizados.
+O povoador livre, que as fontes de época chamam de morador. Na colônia, o trabalho nos canaviais e engenhos era feito sobretudo por indígenas e africanos escravizados.
