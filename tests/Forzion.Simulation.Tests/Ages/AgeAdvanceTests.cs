@@ -64,35 +64,38 @@ public class AgeAdvanceTests
         // The Portuguese Age II costs more Food than any Player starts with.
         Assert.True(Factions.Portuguese.Ages[1].AdvanceCost.Food > TestMatches.TwoPlayerMatch().State.Players[0].AmountOf(ResourceKind.Food));
 
-        Advance.AssertRejected(RejectionReason.NotEnoughResources, () => TestMatches.TwoPlayerMatch(), match =>
+        Train.AssertRejected(RejectionReason.NotEnoughResources, match =>
             new AgeAdvanceCommand(First, Train.TownCenter(match, First).Id));
     }
 
     [Fact]
     public void An_Age_Advance_at_a_building_other_than_the_Town_Center_is_rejected_and_changes_nothing()
     {
-        Advance.AssertRejected(RejectionReason.BuildingCannotAdvanceAge, () => TestMatches.TwoPlayerMatch(), match =>
+        Train.AssertRejected(RejectionReason.BuildingCannotAdvanceAge, match =>
             new AgeAdvanceCommand(First, Train.Complete(match, First, BuildingKind.House).Id));
     }
 
     [Fact]
     public void An_Age_Advance_at_another_Players_Town_Center_is_rejected_and_changes_nothing()
     {
-        Advance.AssertRejected(RejectionReason.BuildingOfAnotherPlayer, () => TestMatches.TwoPlayerMatch(), match =>
+        Train.AssertRejected(RejectionReason.BuildingOfAnotherPlayer, match =>
             new AgeAdvanceCommand(First, Train.TownCenter(match, TestMatches.SecondPlayer).Id));
     }
 
     [Fact]
     public void A_second_Age_Advance_while_one_is_underway_is_rejected_and_changes_nothing()
     {
-        Advance.AssertRejected(RejectionReason.AgeAdvanceInProgress, TestFactions.ThreeAgeMatch, match =>
-        {
-            var townCenter = Train.TownCenter(match, First);
-            match.Enqueue(new AgeAdvanceCommand(First, townCenter.Id));
-            match.Tick();
+        Train.AssertRejected(
+            RejectionReason.AgeAdvanceInProgress,
+            match =>
+            {
+                var townCenter = Train.TownCenter(match, First);
+                match.Enqueue(new AgeAdvanceCommand(First, townCenter.Id));
+                match.Tick();
 
-            return new AgeAdvanceCommand(First, townCenter.Id);
-        });
+                return new AgeAdvanceCommand(First, townCenter.Id);
+            },
+            TestFactions.ThreeAgeMatch);
     }
 
     [Fact]
@@ -100,10 +103,10 @@ public class AgeAdvanceTests
     {
         var oneAge = TestFactions.OneAge(3);
 
-        Advance.AssertRejected(
+        Train.AssertRejected(
             RejectionReason.LastAgeReached,
-            () => Match.Create(TestMatches.SinglePlayerConfig() with { Players = [new PlayerConfig(oneAge.Id)], Factions = [oneAge] }),
-            match => new AgeAdvanceCommand(First, Train.TownCenter(match, First).Id));
+            match => new AgeAdvanceCommand(First, Train.TownCenter(match, First).Id),
+            () => Match.Create(TestMatches.SinglePlayerConfig() with { Players = [new PlayerConfig(oneAge.Id)], Factions = [oneAge] }));
     }
 
     [Fact]

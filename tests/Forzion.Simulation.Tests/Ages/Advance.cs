@@ -40,24 +40,4 @@ internal static class Advance
         match.Enqueue(new AgeAdvanceCommand(player, Train.TownCenter(match, player).Id));
         TestMatches.TickUntil(match, () => holder.Age > age);
     }
-
-    /// <summary>
-    /// Prepares two matches alike, made by <paramref name="create"/>, with
-    /// <paramref name="prepare"/>, sends the command it returns in one of them only, and checks
-    /// that it was rejected for <paramref name="reason"/> and left the two matches with the same hash.
-    /// </summary>
-    public static void AssertRejected(RejectionReason reason, Func<Match> create, Func<Match, Command> prepare)
-    {
-        var withRejection = create();
-        var without = create();
-        var command = prepare(withRejection);
-        prepare(without);
-        withRejection.Enqueue(command);
-
-        withRejection.Tick();
-        without.Tick();
-
-        Assert.Equal([new CommandRejected(command, reason)], withRejection.Events);
-        Assert.Equal(without.StateHash, withRejection.StateHash);
-    }
 }
