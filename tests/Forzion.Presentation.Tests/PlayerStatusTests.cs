@@ -16,9 +16,13 @@ public class PlayerStatusTests
         var status = PlayerStatus.Of(match.State, FirstPlayer);
 
         Assert.Equal(
-            [player.AmountOf(ResourceKind.Food), player.AmountOf(ResourceKind.Wood), player.AmountOf(ResourceKind.Gold)],
-            [status.Food, status.Wood, status.Gold]);
-        Assert.NotEqual(match.State.Players[1].AmountOf(ResourceKind.Food), status.Food);
+            [
+                new ResourceAmount(ResourceKind.Food, player.AmountOf(ResourceKind.Food)),
+                new ResourceAmount(ResourceKind.Wood, player.AmountOf(ResourceKind.Wood)),
+                new ResourceAmount(ResourceKind.Gold, player.AmountOf(ResourceKind.Gold)),
+            ],
+            status.Resources);
+        Assert.NotEqual(match.State.Players[1].AmountOf(ResourceKind.Food), status.Resources[0].Amount);
         Assert.Equal(match.State.PopulationOf(FirstPlayer), status.Population);
         Assert.NotEqual(match.State.PopulationOf(SecondPlayer), status.Population);
         Assert.Equal(match.State.PopulationLimitOf(FirstPlayer), status.PopulationLimit);

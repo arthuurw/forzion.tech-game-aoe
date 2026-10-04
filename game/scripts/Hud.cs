@@ -25,9 +25,9 @@ public partial class Hud : CanvasLayer
     // rebuild never swallows a click; in between, these refresh the values shown.
     private readonly List<Action<SelectionPanel>> refreshers = [];
 
-    private Label food = null!;
-    private Label wood = null!;
-    private Label gold = null!;
+    // The amount of each Resource in the top bar.
+    private readonly Dictionary<ResourceKind, Label> resources = [];
+
     private Label population = null!;
     private Label age = null!;
     private ProgressBar ageAdvanceBar = null!;
@@ -105,13 +105,13 @@ public partial class Hud : CanvasLayer
         row.AddThemeConstantOverride("separation", 28);
         bar.AddChild(row);
 
-        food = NewLabel("", 18, new Color(0.95f, 0.55f, 0.6f));
-        wood = NewLabel("", 18, new Color(0.85f, 0.65f, 0.4f));
-        gold = NewLabel("", 18, new Color(1f, 0.85f, 0.35f));
+        foreach (var kind in Enum.GetValues<ResourceKind>())
+        {
+            resources[kind] = NewLabel("", 18, ResourceColour(kind));
+            row.AddChild(resources[kind]);
+        }
+
         population = NewLabel("", 18, new Color(0.85f, 0.9f, 1f));
-        row.AddChild(food);
-        row.AddChild(wood);
-        row.AddChild(gold);
         row.AddChild(population);
 
         row.AddChild(new Control { SizeFlagsHorizontal = Godot.Control.SizeFlags.ExpandFill, MouseFilter = Godot.Control.MouseFilterEnum.Ignore });
@@ -144,9 +144,11 @@ public partial class Hud : CanvasLayer
 
     private void ShowStatus(PlayerStatus status)
     {
-        food.Text = $"{Tr(TextKeys.NameOf(ResourceKind.Food))}: {status.Food}";
-        wood.Text = $"{Tr(TextKeys.NameOf(ResourceKind.Wood))}: {status.Wood}";
-        gold.Text = $"{Tr(TextKeys.NameOf(ResourceKind.Gold))}: {status.Gold}";
+        foreach (var resource in status.Resources)
+        {
+            resources[resource.Kind].Text = $"{Tr(TextKeys.NameOf(resource.Kind))}: {resource.Amount}";
+        }
+
         population.Text = $"{Tr(HudTexts.Population)}: {status.Population}/{status.PopulationLimit}";
         age.Text = $"{Tr(status.FactionNameKey)} · {Tr(status.AgeNameKey)}";
 
@@ -438,6 +440,15 @@ public partial class Hud : CanvasLayer
         bar.Value = fraction;
         ((StyleBoxFlat)bar.GetThemeStylebox("fill")).BgColor = WorldBarsOverlay.HealthColour(fraction);
     }
+
+    /// <summary>The colour of the amount of a Resource in the top bar.</summary>
+    private static Color ResourceColour(ResourceKind kind) => kind switch
+    {
+        ResourceKind.Food => new Color(0.95f, 0.55f, 0.6f),
+        ResourceKind.Wood => new Color(0.85f, 0.65f, 0.4f),
+        ResourceKind.Gold => new Color(1f, 0.85f, 0.35f),
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown Resource."),
+    };
 
     private string CostText(Cost cost) => HudTexts.CostText(cost, key => Tr(key));
 
