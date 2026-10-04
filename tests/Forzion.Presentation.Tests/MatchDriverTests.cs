@@ -33,6 +33,15 @@ public class MatchDriverTests
     }
 
     [Fact]
+    public void Two_units_standing_on_one_Cell_are_drawn_either_side_of_its_centre()
+    {
+        var drawn = DrawnStack(2, out var centre);
+
+        Assert.Equal([centre.X - 0.25, centre.X + 0.25], drawn.Select(point => point.X).Order());
+        Assert.All(drawn, point => Assert.Equal(centre.Y, point.Y));
+    }
+
+    [Fact]
     public void A_row_of_a_stack_behind_another_is_drawn_between_the_units_in_front()
     {
         var drawn = DrawnStack(5, out var centre);

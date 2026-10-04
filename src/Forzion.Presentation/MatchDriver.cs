@@ -10,7 +10,8 @@ public sealed class MatchDriver
 {
     /// <summary>
     /// How fast, in Cells per real second, a unit slides to its place in a stack: quick enough
-    /// to settle within a quarter of a second, slow enough to read as a move and not a jump.
+    /// to cross the half Cell between neighbours in a quarter of a second, slow enough to read
+    /// as a move and not a jump.
     /// </summary>
     private const double StackSlideSpeed = 2;
 

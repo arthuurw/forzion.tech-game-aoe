@@ -13,16 +13,18 @@ internal static class StackLayout
 
     // Rows run along the map's X, alternately three places and two between them, so that a
     // camera looking along the map's Y sees each unit of a row between two of the next. The
-    // middle place comes first, so that a short row stays on the Cell's centre line.
+    // middle place of a wide row comes first, so that a short wide row keeps to the middle.
     private static readonly double[] WideRow = [0, -Spacing, Spacing];
     private static readonly double[] NarrowRow = [-Spacing / 2, Spacing / 2];
 
     /// <summary>
     /// Fills <paramref name="places"/> with how far from where it stands each unit standing
-    /// still on a Cell with others is drawn. Each stack fills its rows in the order of
-    /// <paramref name="units"/>, the rows <see cref="Spacing"/> apart and centred on the Cell.
-    /// Units alone on their Cell or walking get no place. Up to eight units fit on the Cell;
-    /// more spill past its edges.
+    /// still on a Cell with others is drawn, in the order of <paramref name="units"/>; units
+    /// alone on their Cell or walking get no place. Up to three stand in one row along the
+    /// map's X, centred on the Cell. More fill rows <see cref="Spacing"/> apart, centred along
+    /// the map's Y, in places fixed across the map's X: alternately three, at the middle and
+    /// the Cell's sides, and two between them. Up to eight stay within the Cell's bounds,
+    /// those at its corners half outside; more spill past its edges.
     /// </summary>
     public static void Lay(IReadOnlyList<UnitState> units, Dictionary<EntityId, MapPoint> places)
     {
@@ -35,29 +37,55 @@ internal static class StackLayout
 
         foreach (var stack in stacks)
         {
-            var seats = new List<(EntityId Unit, int Row, double X)>();
-            var row = 0;
-            var place = 0;
+            var count = stack.Count();
 
-            foreach (var unit in stack)
+            if (count <= WideRow.Length)
             {
-                var rowPlaces = row % 2 == 0 ? WideRow : NarrowRow;
-
-                seats.Add((unit.Id, row, rowPlaces[place]));
-
-                if (++place == rowPlaces.Length)
-                {
-                    row++;
-                    place = 0;
-                }
+                LayRow(stack, count, places);
             }
-
-            var middleRow = seats[^1].Row / 2.0;
-
-            foreach (var (unit, seatRow, x) in seats)
+            else
             {
-                places[unit] = new MapPoint(x, (seatRow - middleRow) * Spacing);
+                LayRows(stack, places);
             }
+        }
+    }
+
+    /// <summary>Places the units of a long stack in rows of fixed places, alternately wide and narrow, the rows centred along the map's Y.</summary>
+    private static void LayRows(IEnumerable<UnitState> stack, Dictionary<EntityId, MapPoint> places)
+    {
+        var seats = new List<(EntityId Unit, int Row, double X)>();
+        var row = 0;
+        var place = 0;
+
+        foreach (var unit in stack)
+        {
+            var rowPlaces = row % 2 == 0 ? WideRow : NarrowRow;
+
+            seats.Add((unit.Id, row, rowPlaces[place]));
+
+            if (++place == rowPlaces.Length)
+            {
+                row++;
+                place = 0;
+            }
+        }
+
+        var middleRow = seats[^1].Row / 2.0;
+
+        foreach (var (unit, seatRow, x) in seats)
+        {
+            places[unit] = new MapPoint(x, (seatRow - middleRow) * Spacing);
+        }
+    }
+
+    /// <summary>Places the units of a short stack in one row through the Cell's centre, <see cref="Spacing"/> apart.</summary>
+    private static void LayRow(IEnumerable<UnitState> stack, int count, Dictionary<EntityId, MapPoint> places)
+    {
+        var index = 0;
+
+        foreach (var unit in stack)
+        {
+            places[unit.Id] = new MapPoint((index++ - ((count - 1) / 2.0)) * Spacing, 0);
         }
     }
 }
