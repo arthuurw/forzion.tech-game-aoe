@@ -25,9 +25,9 @@ internal sealed class CombatSystem : ISystem
                 continue;
             }
 
-            if (unit.Target is null && !unit.IsMoving && NearestEnemyUnit(state, unit, attack.PerceptionRadius) is { } enemy)
+            if (unit.Target is null && !unit.IsMoving && NearestEnemy(state, unit, attack.PerceptionRadius) is { } enemy)
             {
-                unit.Attack(enemy.Id);
+                unit.Attack(enemy);
             }
 
             if (unit.Target is { } target)
@@ -59,29 +59,45 @@ internal sealed class CombatSystem : ISystem
     }
 
     /// <summary>
-    /// The unit of another Player nearest to <paramref name="unit"/> within the radius; between
-    /// units equally near, the one with the lowest ID. Null when there is none. Buildings do not
-    /// draw an idle unit's attack.
+    /// What an idle <paramref name="unit"/> attacks of its own accord: the nearest unit of
+    /// another Player within the radius, or, when there is none, the nearest building of another
+    /// Player within it, construction sites included. Between entities equally near, the one
+    /// with the lowest ID. Null when there is neither.
     /// </summary>
-    private static UnitState? NearestEnemyUnit(MatchState state, UnitState unit, Fix64 radius)
+    /// <remarks>Units come first because they are the ones that strike back.</remarks>
+    private static EntityId? NearestEnemy(MatchState state, UnitState unit, Fix64 radius)
     {
-        UnitState? nearest = null;
+        EntityId? nearest = null;
         var nearestDistance = radius;
 
         // Ascending ID order and a strict comparison keep the lowest ID among the equally near.
-        foreach (var other in state.Units)
+        void Consider(EntityId id, Fix64 distance)
         {
-            if (other.Owner == unit.Owner)
-            {
-                continue;
-            }
-
-            var distance = Distance(unit.Position, other.Position);
-
             if (distance < nearestDistance || (nearest is null && distance == nearestDistance))
             {
-                nearest = other;
+                nearest = id;
                 nearestDistance = distance;
+            }
+        }
+
+        foreach (var other in state.Units)
+        {
+            if (other.Owner != unit.Owner)
+            {
+                Consider(other.Id, Distance(unit.Position, other.Position));
+            }
+        }
+
+        if (nearest is not null)
+        {
+            return nearest;
+        }
+
+        foreach (var building in state.Buildings)
+        {
+            if (building.Owner != unit.Owner)
+            {
+                Consider(building.Id, Distance(unit.Position, building));
             }
         }
 

@@ -94,7 +94,7 @@ public class AutomaticAttackTests
     }
 
     [Fact]
-    public void An_idle_soldier_does_not_attack_a_building_on_its_own()
+    public void An_idle_soldier_attacks_an_enemy_building_when_no_enemy_unit_is_near()
     {
         var match = Battle.Create(first: plain =>
             [new StartingUnit(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, First, 2, 0))]);
@@ -107,12 +107,41 @@ public class AutomaticAttackTests
         Battle.TickUntil(match, () => match.State.Units.All(unit => !unit.IsMoving));
         match.Enqueue(new MoveCommand(First, [soldier.Id], TestArmies.BesideHome(match, Second, -2, 0)));
         Battle.TickUntil(match, () => !soldier.IsMoving);
-        Battle.Run(match, 100);
+        Battle.TickUntil(match, () => townCenter.HitPoints < townCenter.MaxHitPoints);
 
         Assert.All(
             enemyVillagers,
             id => Assert.True(Battle.Distance(soldier.Position, Battle.Unit(match, id)!.Position) > 10));
+        Assert.Equal(townCenter.Id, soldier.Target);
+    }
+
+    [Fact]
+    public void An_idle_soldier_attacks_an_enemy_unit_before_a_nearer_enemy_building()
+    {
+        var match = Battle.Create(first: plain =>
+            [new StartingUnit(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, Second, -2, 1))]);
+        var soldier = Battle.Last(match);
+        var villagerDistance = match.State.Units
+            .Where(unit => unit.Owner == Second)
+            .Min(unit => Battle.Distance(soldier.Position, unit.Position));
+
+        match.Tick();
+
+        // The soldier stands beside the Town Center, half a Cell from its footprint.
+        Assert.True(villagerDistance > 1);
+        Assert.Equal(Second, Battle.Unit(match, soldier.Target!.Value)!.Owner);
+    }
+
+    [Fact]
+    public void An_idle_soldier_ignores_its_own_Players_buildings()
+    {
+        var match = Battle.Create(first: plain =>
+            [new StartingUnit(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, First, 2, 0))]);
+        var soldier = Battle.Last(match);
+
+        Battle.Run(match, 100);
+
         Assert.Null(soldier.Target);
-        Assert.Equal(townCenter.MaxHitPoints, townCenter.HitPoints);
+        Assert.All(match.State.Buildings, building => Assert.Equal(building.MaxHitPoints, building.HitPoints));
     }
 }

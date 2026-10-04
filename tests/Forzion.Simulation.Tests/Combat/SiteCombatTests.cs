@@ -41,7 +41,7 @@ public class SiteCombatTests
     }
 
     [Fact]
-    public void An_idle_soldier_beside_an_enemy_site_does_not_attack_it_on_its_own()
+    public void An_idle_soldier_beside_an_enemy_site_attacks_it_on_its_own()
     {
         var match = Battle.Raiders();
         var site = Site.Place(match, First, BuildingKind.House, []);
@@ -52,10 +52,9 @@ public class SiteCombatTests
         match.Enqueue(new MoveCommand(First, villagers.Select(villager => villager.Id).ToList(), new CellPosition(63, 0)));
         match.Enqueue(new MoveCommand(Second, [soldier.Id], new CellPosition(site.Origin.X - 1, site.Origin.Y)));
         Battle.TickUntil(match, () => !soldier.IsMoving && villagers.All(villager => !villager.IsMoving));
-        Battle.Run(match, 200);
+        Battle.TickUntil(match, () => site.HitPoints < site.MaxHitPoints);
 
         Assert.True(Battle.Distance(soldier.Position, MapPosition.CentreOf(site.Origin)) < 2);
-        Assert.Null(soldier.Target);
-        Assert.Equal(site.MaxHitPoints, site.HitPoints);
+        Assert.Equal(site.Id, soldier.Target);
     }
 }

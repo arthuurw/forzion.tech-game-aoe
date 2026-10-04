@@ -146,7 +146,7 @@ Distância máxima, em Células, entre a unidade e o alvo para que o golpe acert
 Ticks que a unidade passa com o alvo ao alcance para cada golpe; o dano entra ao fim deles.
 
 **Raio de percepção** (`Perception Radius`):
-Distância, em Células, em que uma unidade militar parada e sem alvo nota uma unidade inimiga e passa a atacá-la.
+Distância, em Células, em que uma unidade militar parada e sem alvo nota um inimigo e passa a atacá-lo. Unidades inimigas vêm primeiro; sem nenhuma no raio, a construção inimiga mais próxima, Obras incluídas.
 _Avoid_: Visão, campo de visão
 
 **Derrota** (`Defeat`):
