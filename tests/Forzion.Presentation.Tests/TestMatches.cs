@@ -61,6 +61,8 @@ internal static class TestMatches
     {
         var plain = Match.Create(PlainConfig());
 
+        static PlayerId EnemyOf(PlayerId player) => player == FirstPlayer ? SecondPlayer : FirstPlayer;
+
         List<StartingUnit> Flanks(PlayerId besieger)
         {
             if (!besiegers.Contains(besieger))
@@ -68,7 +70,7 @@ internal static class TestMatches
                 return [];
             }
 
-            var townCenter = TownCenterOf(plain, besieger == FirstPlayer ? SecondPlayer : FirstPlayer);
+            var townCenter = TownCenterOf(plain, EnemyOf(besieger));
             var centre = new CellPosition(townCenter.Origin.X + (townCenter.Width / 2), townCenter.Origin.Y + (townCenter.Height / 2));
 
             return [new(UnitKind.MeleeSoldier, centre with { X = centre.X - 2 }), new(UnitKind.MeleeSoldier, centre with { X = centre.X + 2 })];
@@ -79,7 +81,7 @@ internal static class TestMatches
         foreach (var besieger in besiegers)
         {
             var soldiers = match.State.Units.Where(unit => unit.Owner == besieger && unit.Kind == UnitKind.MeleeSoldier);
-            var target = TownCenterOf(match, besieger == FirstPlayer ? SecondPlayer : FirstPlayer);
+            var target = TownCenterOf(match, EnemyOf(besieger));
             match.Enqueue(new AttackCommand(besieger, soldiers.Select(unit => unit.Id).ToList(), target.Id));
         }
 
