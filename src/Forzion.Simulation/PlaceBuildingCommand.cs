@@ -26,7 +26,7 @@ public sealed record PlaceBuildingCommand(
         // No builder is a valid order: the site waits for a later build order.
         var builders = Builders.Count == 0
             ? []
-            : OrderedUnits.Find(
+            : CommandedUnits.Find(
                 context, this, issuer, Builders, unit => unit.CanBuild, RejectionReason.UnitCannotBuild);
 
         if (builders is null)

@@ -29,7 +29,7 @@ public sealed record GatherCommand(PlayerId Player, IReadOnlyList<EntityId> Unit
             return;
         }
 
-        var units = OrderedUnits.Find(
+        var units = CommandedUnits.Find(
             context, this, issuer, Units, unit => unit.CanGather, RejectionReason.UnitCannotGather);
 
         if (units is null)

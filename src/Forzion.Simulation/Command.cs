@@ -43,7 +43,7 @@ public sealed record MoveCommand(PlayerId Player, IReadOnlyList<EntityId> Units,
             return;
         }
 
-        var units = OrderedUnits.Find(context, this, issuer, Units);
+        var units = CommandedUnits.Find(context, this, issuer, Units);
 
         if (units is null)
         {

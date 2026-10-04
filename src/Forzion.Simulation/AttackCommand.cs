@@ -35,7 +35,7 @@ public sealed record AttackCommand(PlayerId Player, IReadOnlyList<EntityId> Unit
             return;
         }
 
-        var units = OrderedUnits.Find(
+        var units = CommandedUnits.Find(
             context, this, issuer, Units, unit => unit.CanAttack, RejectionReason.UnitCannotAttack);
 
         if (units is null)
