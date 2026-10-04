@@ -36,13 +36,7 @@ public class WorldBarsTests
     public void A_wounded_unit_gets_a_bar_filled_with_the_share_of_hit_points_it_has_left()
     {
         // An enemy soldier beside the first Player's Villagers attacks them on its own.
-        var match = Match.Create(new MatchConfig(
-            42,
-            new MapConfig(64, 48),
-            [
-                new PlayerConfig(Factions.Portuguese.Id),
-                new PlayerConfig(Factions.Portuguese.Id, [new StartingUnit(UnitKind.MeleeSoldier, BesideFirstHome())]),
-            ]));
+        var match = Match.Create(WithEnemySoldierAtHome());
 
         while (match.State.Units.All(unit => unit.HitPoints == unit.MaxHitPoints))
         {
