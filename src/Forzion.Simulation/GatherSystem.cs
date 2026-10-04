@@ -52,13 +52,13 @@ internal sealed class GatherSystem : ISystem
     /// <summary>
     /// Sends the Villager walking up to its source, to the free Cell beside it that has the
     /// shortest way to it; between Cells equally far, the one with the lowest index. A Villager
-    /// that cannot reach any Cell beside the source stays where it is and waits, keeping its
-    /// source, until a way opens.
+    /// that cannot reach any Cell beside the source walks to the Cell it can reach nearest to
+    /// the source's and waits there, keeping its source, until a way opens.
     /// </summary>
     public static void WalkUpToSource(MapState map, UnitState villager, ResourceSourceState source)
     {
         villager.GatherPhase = GatherPhase.ToSource;
-        MovementSystem.WalkToNearest(map, villager, source.IsBeside);
+        MovementSystem.WalkToNearestOrTowards(map, villager, source.IsBeside, source.Cell);
     }
 
     /// <summary>

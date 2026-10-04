@@ -1,3 +1,4 @@
+using Forzion.Simulation.Tests.Construction;
 using Forzion.Simulation.Tests.Maps;
 using Forzion.Simulation.Tests.Matches;
 using Forzion.Simulation.Tests.Movement;
@@ -50,6 +51,36 @@ public class GatherCommandTests
         match.Tick();
 
         Assert.Equal([corner], villager.Path);
+    }
+
+    [Fact]
+    public void A_Villager_ordered_to_gather_a_source_it_cannot_reach_walks_to_the_reachable_Cell_nearest_to_it_and_waits_there()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var villager = Site.VillagersOf(match, TestMatches.FirstPlayer)[1];
+        Site.Stockpile(match, TestMatches.FirstPlayer, 4 * Match.BuildingCost(BuildingKind.House).Wood);
+        var (source, origins) = Gather.SourceToBoxIn(match, villager);
+
+        foreach (var origin in origins)
+        {
+            match.Enqueue(new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.House, origin, []));
+        }
+
+        match.Tick();
+        var start = villager.Position.Cell;
+        var reachable = MapProbe.ReachableFrom(match.State.Map, start);
+        match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
+
+        Walk.UntilStopped(match, villager);
+        match.Tick();
+
+        Assert.Equal(
+            reachable.Min(cell => Walk.SquaredDistance(cell, source.Cell)),
+            Walk.SquaredDistance(villager.Position.Cell, source.Cell));
+        Assert.True(Walk.SquaredDistance(villager.Position.Cell, source.Cell) < Walk.SquaredDistance(start, source.Cell));
+        Assert.Equal(GatherPhase.ToSource, villager.GatherPhase);
+        Assert.Equal(source.Id, villager.GatherSource);
+        Assert.False(villager.IsMoving);
     }
 
     [Fact]
