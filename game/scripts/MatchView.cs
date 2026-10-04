@@ -59,14 +59,24 @@ public partial class MatchView : Node3D
     }
 
     /// <summary>
+    /// Raised once per frame that ran ticks, with the events of those ticks in the order they
+    /// happened, for the nodes that report them on screen.
+    /// </summary>
+    public event Action<IReadOnlyList<MatchEvent>>? EventsHappened;
+
+    /// <summary>
     /// Runs every frame: lets the frame's time pass in the match, which runs the ticks that
     /// became due (20 per second whatever the frame rate), then redraws.
     /// </summary>
     public override void _Process(double delta)
     {
-        // The events of the ticks just run are not shown yet: nothing on screen reports them.
-        Driver.Advance(delta);
+        var events = Driver.Advance(delta);
         SyncViews();
+
+        if (events.Count > 0)
+        {
+            EventsHappened?.Invoke(events);
+        }
     }
 
     /// <summary>

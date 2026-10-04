@@ -18,6 +18,9 @@ _Avoid_: Turno
 Uma imagem da Partida desenhada na tela. Quadros não seguem o ritmo dos Ticks: entre dois Ticks podem ser desenhados vários Quadros ou nenhum.
 _Avoid_: Tick
 
+**Seleção** (`Selection`):
+As unidades ou a construção do Jogador escolhidas com o mouse, que recebem as ordens do botão direito. Existe só na tela: a Partida não a conhece.
+
 ## Modos de jogo
 
 **Partida livre** (`Skirmish`):
@@ -95,8 +98,24 @@ _Avoid_: Personagem, tropa, boneco
 ## Construções
 
 **Construção** (`Building`):
-Edificação de um Jogador, como o Centro ou a Casa. Ocupa um retângulo de Células inteiras e bloqueia a passagem.
+Edificação de um Jogador, como o Centro ou a Casa. Ocupa um retângulo de Células inteiras e bloqueia a passagem desde que é posicionada.
 _Avoid_: Prédio, estrutura, edifício
+
+**Obra** (`Construction Site`):
+Construção já posicionada e paga que ainda não está pronta. Só avança enquanto Aldeões a constroem; o trabalho de vários Aldeões soma.
+_Avoid_: Fundação, alicerce, canteiro
+
+**Construir** (`Build`):
+Trabalho do Aldeão ao lado de uma Obra do seu Jogador, até ela ficar pronta.
+_Avoid_: Erguer, edificar
+
+**Custo** (`Cost`):
+Recursos que o Jogador paga por uma construção, por inteiro e na hora em que posiciona a Obra.
+_Avoid_: Preço
+
+**Limite de população** (`Population Limit`):
+Quantas unidades o Jogador pode ter ao mesmo tempo. O Centro dá um valor base e cada Casa pronta soma.
+_Avoid_: Capacidade, teto
 
 **Centro** (`Town Center`):
 Construção principal do Jogador: produz Aldeões, recebe Recursos e executa o Avanço de Era. Perder o Centro é perder a partida.
@@ -107,6 +126,37 @@ Construção que aumenta o limite de população do Jogador.
 
 **Quartel** (`Barracks`):
 Construção que produz unidades militares.
+
+## Combate
+
+**Soldado corpo a corpo** (`Melee Soldier`):
+Unidade militar que precisa encostar no alvo para atacar. Nome provisório até a escolha do nome histórico.
+
+**Soldado à distância** (`Ranged Soldier`):
+Unidade militar que ataca de longe, sem projétil simulado. Nome provisório até a escolha do nome histórico.
+
+**Pontos de vida** (`Hit Points`):
+Quanto dano uma unidade ou construção ainda aguenta. Ao chegar a zero, ela sai do mapa no mesmo tick.
+_Avoid_: HP, saúde, energia
+
+**Barra de vida** (`Hit Point Bar`):
+Barra desenhada sobre uma unidade ou construção selecionada ou ferida, preenchida na proporção dos Pontos de vida que restam.
+
+**Alvo** (`Target`):
+A unidade ou construção inimiga que uma unidade militar está atacando.
+
+**Alcance** (`Range`):
+Distância máxima, em Células, entre a unidade e o alvo para que o golpe acerte. Fora dele, a unidade persegue o alvo.
+
+**Intervalo de ataque** (`Attack Interval`):
+Ticks que a unidade passa com o alvo ao alcance para cada golpe; o dano entra ao fim deles.
+
+**Raio de percepção** (`Perception Radius`):
+Distância, em Células, em que uma unidade militar parada e sem alvo nota um inimigo e passa a atacá-lo. Unidades inimigas vêm primeiro; sem nenhuma no raio, a construção inimiga mais próxima, Obras incluídas.
+_Avoid_: Visão, campo de visão
+
+**Derrota** (`Defeat`):
+Jogador sem Centro é derrotado e não dá mais ordens. Quando resta no máximo um Jogador não derrotado, a partida termina; esse Jogador, se houver, é o vencedor (`Winner`).
 
 ## Mapa
 

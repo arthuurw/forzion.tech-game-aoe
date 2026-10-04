@@ -25,10 +25,12 @@ internal sealed class GatherSystem : ISystem
 {
     /// <summary>
     /// Sends the Villager walking up to the source to gather from it. A load of the source's
-    /// Resource is kept, and when it is already full the Villager delivers it first.
+    /// Resource is kept, and when it is already full the Villager delivers it first. It stops
+    /// building.
     /// </summary>
     public static void GatherFrom(MatchState state, UnitState villager, ResourceSourceState source)
     {
+        villager.StopBuilding();
         villager.GatherSource = source.Id;
         villager.GatherProgress = 0;
 
@@ -40,8 +42,66 @@ internal sealed class GatherSystem : ISystem
             return;
         }
 
+        WalkUpToSource(state, villager);
+    }
+
+    /// <summary>
+    /// Sends the Villager walking up to its source, to the free Cell beside it that has the
+    /// shortest way to it; between Cells equally far, the one with the lowest index. A Villager
+    /// that cannot reach any Cell beside the source stays where it is, and
+    /// <see cref="ReachSource"/> then finds it short of the source.
+    /// </summary>
+    public static void WalkUpToSource(MatchState state, UnitState villager)
+    {
         villager.GatherPhase = GatherPhase.ToSource;
-        MovementSystem.WalkTo(state.Map, villager, source.Cell);
+        MovementSystem.WalkToNearest(state.Map, villager, state.FindResourceSource(villager.GatherSource!.Value)!.IsBeside);
+    }
+
+    /// <summary>
+    /// Sends every Villager carrying its load to a drop-off point that has left the match, on
+    /// its way there or already waiting beside it, to the nearest one its Player still has, or
+    /// leaves it idle with its load when there is none. It keeps its source.
+    /// </summary>
+    public static void RedirectCarriers(MatchState state)
+    {
+        foreach (var unit in state.Units)
+        {
+            if (unit.GatherPhase != GatherPhase.ToDropOffPoint)
+            {
+                continue;
+            }
+
+            // A carrier whose load filled beside a drop-off point waits there, with no path, for the next tick.
+            var destination = unit.IsMoving ? unit.Path[^1] : unit.Position.Cell;
+
+            if (!DropOffPointsOf(state, unit.Owner).Any(building => building.IsBeside(destination)))
+            {
+                CarryToDropOffPoint(state, unit);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Sends the Villager walking to the free Cell beside a drop-off point of its Player that
+    /// has the shortest way to it, whichever point that is; between Cells equally far, the one
+    /// with the lowest index. A Player with no drop-off point leaves the Villager idle with its
+    /// load, and so does a way blocked to every Cell beside one, once <see cref="Deliver"/>
+    /// finds the Villager short of them.
+    /// </summary>
+    public static void CarryToDropOffPoint(MatchState state, UnitState villager)
+    {
+        var dropOffPoints = DropOffPointsOf(state, villager.Owner);
+
+        if (dropOffPoints.Count == 0)
+        {
+            StopGathering(state.Map, villager);
+
+            return;
+        }
+
+        villager.GatherPhase = GatherPhase.ToDropOffPoint;
+        MovementSystem.WalkToNearest(
+            state.Map, villager, cell => dropOffPoints.Any(building => building.IsBeside(cell)));
     }
 
     public void Run(TickContext context)
@@ -84,9 +144,8 @@ internal sealed class GatherSystem : ISystem
     private static void ReachSource(MatchState state, UnitState villager)
     {
         var source = state.FindResourceSource(villager.GatherSource!.Value)!;
-        var cell = villager.Position.Cell;
 
-        if (Math.Abs(cell.X - source.Cell.X) <= 1 && Math.Abs(cell.Y - source.Cell.Y) <= 1)
+        if (source.IsBeside(villager.Position.Cell))
         {
             villager.GatherPhase = GatherPhase.Gathering;
         }
@@ -194,29 +253,6 @@ internal sealed class GatherSystem : ISystem
     {
         villager.StopGathering();
         MovementSystem.WalkTo(map, villager, villager.Position.Cell);
-    }
-
-    /// <summary>
-    /// Sends the Villager walking to the free Cell beside a drop-off point of its Player that
-    /// has the shortest way to it, whichever point that is; between Cells equally far, the one
-    /// with the lowest index. A Player with no drop-off point leaves the Villager idle with its
-    /// load, and so does a way blocked to every Cell beside one, once <see cref="Deliver"/>
-    /// finds the Villager short of them.
-    /// </summary>
-    private static void CarryToDropOffPoint(MatchState state, UnitState villager)
-    {
-        var dropOffPoints = DropOffPointsOf(state, villager.Owner);
-
-        if (dropOffPoints.Count == 0)
-        {
-            StopGathering(state.Map, villager);
-
-            return;
-        }
-
-        villager.GatherPhase = GatherPhase.ToDropOffPoint;
-        MovementSystem.WalkToNearest(
-            state.Map, villager, cell => dropOffPoints.Any(building => building.IsBeside(cell)));
     }
 
     /// <summary>

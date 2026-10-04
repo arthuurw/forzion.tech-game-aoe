@@ -181,7 +181,7 @@ internal static class Pathfinder
     /// Whether a unit on <paramref name="cell"/> can take the step: the Cell it leads to is
     /// free and, for a diagonal step, so are the two Cells it passes between.
     /// </summary>
-    private static bool CanStep(MapState map, CellPosition cell, CellStep step)
+    public static bool CanStep(MapState map, CellPosition cell, CellStep step)
     {
         var next = step.From(cell);
 

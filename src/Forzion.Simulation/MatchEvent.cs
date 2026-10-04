@@ -11,11 +11,19 @@ public abstract record MatchEvent
     }
 }
 
-/// <summary>A Player was defeated and takes no further part in the match.</summary>
+/// <summary>
+/// A Player was defeated: it has no Town Center left. Its commands are rejected from then on
+/// with <see cref="RejectionReason.DefeatedPlayer"/>. Its remaining units and buildings stay
+/// on the map and act on their own: soldiers still attack enemies that come near, and
+/// Villagers go on with their gathering and building.
+/// </summary>
 public sealed record PlayerDefeated(PlayerId Player) : MatchEvent;
 
 /// <summary>A resource source was gathered to the end and left the map, freeing its Cell.</summary>
 public sealed record ResourceSourceDepleted(EntityId Source) : MatchEvent;
+
+/// <summary>Villagers finished building a construction site: the building is complete and does its work from now on.</summary>
+public sealed record BuildingCompleted(EntityId Building) : MatchEvent;
 
 /// <summary>A command was refused and changed nothing.</summary>
 public sealed record CommandRejected(Command Command, RejectionReason Reason) : MatchEvent;
@@ -40,4 +48,43 @@ public enum RejectionReason
 
     /// <summary>The command names a resource source that is not in the match, or no longer is.</summary>
     UnknownResourceSource,
+
+    /// <summary>The attack target is neither a unit nor a building of the match.</summary>
+    UnknownTarget,
+
+    /// <summary>The attack target belongs to the issuing Player.</summary>
+    OwnTarget,
+
+    /// <summary>The command orders an attack from units none of which can attack.</summary>
+    UnitCannotAttack,
+
+    /// <summary>The command orders a gather from units none of which can gather: only Villagers gather.</summary>
+    UnitCannotGather,
+
+    /// <summary>The command names a building that is not in the match, or no longer is.</summary>
+    UnknownBuilding,
+
+    /// <summary>The command names a building that belongs to another Player.</summary>
+    BuildingOfAnotherPlayer,
+
+    /// <summary>The command names a building that is already complete and needs no more building.</summary>
+    BuildingAlreadyComplete,
+
+    /// <summary>
+    /// The command names a kind of building that Players do not place, such as the Town
+    /// Center each Player starts with.
+    /// </summary>
+    BuildingNotPlaceable,
+
+    /// <summary>
+    /// A Cell of the building's footprint is outside the map, is not free or has a unit
+    /// standing on it.
+    /// </summary>
+    InvalidPlacement,
+
+    /// <summary>The Player has less of some Resource than the cost asks for.</summary>
+    NotEnoughResources,
+
+    /// <summary>The command orders building from units none of which can build: only Villagers build.</summary>
+    UnitCannotBuild,
 }

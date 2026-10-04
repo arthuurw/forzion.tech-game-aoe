@@ -2,8 +2,9 @@
 
   <!--
     Presentation logic that needs no engine: turning frame time into fixed ticks and
-    interpolating between them. The Godot project uses it and the tests cover it without
-    Godot installed. Never add a Godot reference here.
+    interpolating between them, turning the mouse into a selection and into commands, and
+    naming the notices for refused orders. The Godot project uses it and the tests cover it
+    without Godot installed. Never add a Godot reference here.
   -->
 
   <ItemGroup>

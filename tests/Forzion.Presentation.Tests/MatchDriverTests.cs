@@ -1,12 +1,11 @@
 using Forzion.Simulation;
+using static Forzion.Presentation.Tests.TestMatches;
 
 namespace Forzion.Presentation.Tests;
 
 public class MatchDriverTests
 {
     private const double OneTick = 1.0 / Match.TicksPerSecond;
-
-    private static readonly PlayerId FirstPlayer = new(1);
 
     [Fact]
     public void Before_any_tick_a_unit_is_drawn_where_it_stands()
@@ -73,18 +72,11 @@ public class MatchDriverTests
     public void A_frame_that_runs_no_tick_reports_no_event()
     {
         var driver = NewDriver();
-        driver.Match.Enqueue(new ResignCommand(FirstPlayer));
-        driver.Advance(OneTick);
+        var villager = FirstVillager(driver.Match);
+        driver.Match.Enqueue(new MoveCommand(FirstPlayer, [villager.Id], new CellPosition(-1, 0)));
+        Assert.NotEmpty(driver.Advance(OneTick));
 
         Assert.Empty(driver.Advance(OneTick / 2));
-    }
-
-    private static MatchDriver NewDriver()
-    {
-        var faction = new FactionId(1);
-        var config = new MatchConfig(42, new MapConfig(64, 48), [new PlayerConfig(faction), new PlayerConfig(faction)]);
-
-        return new MatchDriver(Match.Create(config), new TickClock(Match.TicksPerSecond));
     }
 
     private static UnitState FirstVillager(Match match) => match.State.Units.First(unit => unit.Owner == FirstPlayer);

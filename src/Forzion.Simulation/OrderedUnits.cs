@@ -44,4 +44,39 @@ internal static class OrderedUnits
 
         return units;
     }
+
+    /// <summary>
+    /// The units <paramref name="ids"/> names that can do the job, in the order named, or null
+    /// once <paramref name="command"/> has been rejected. Units are found as by
+    /// <see cref="Find(TickContext, Command, PlayerState, IReadOnlyList{EntityId})"/>; a unit
+    /// that cannot do the job is then skipped and left to whatever it was doing, so a mixed
+    /// group sends those that can. The command is rejected with <paramref name="cannotDoTheJob"/>
+    /// when none of the units can.
+    /// </summary>
+    public static List<UnitState>? Find(
+        TickContext context,
+        Command command,
+        PlayerState issuer,
+        IReadOnlyList<EntityId> ids,
+        Func<UnitState, bool> canDoTheJob,
+        RejectionReason cannotDoTheJob)
+    {
+        var units = Find(context, command, issuer, ids);
+
+        if (units is null)
+        {
+            return null;
+        }
+
+        var able = units.Where(canDoTheJob).ToList();
+
+        if (able.Count == 0)
+        {
+            context.Reject(command, cannotDoTheJob);
+
+            return null;
+        }
+
+        return able;
+    }
 }

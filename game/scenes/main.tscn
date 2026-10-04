@@ -1,8 +1,11 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/MatchView.cs" id="1_match"]
 [ext_resource type="Script" path="res://scripts/RtsCamera.cs" id="2_camera"]
-[ext_resource type="Script" path="res://scripts/DemoOrders.cs" id="3_demo"]
+[ext_resource type="Script" path="res://scripts/SelectionInput.cs" id="3_selection"]
+[ext_resource type="Script" path="res://scripts/SelectionMarkers.cs" id="4_markers"]
+[ext_resource type="Script" path="res://scripts/RejectionNoticeBoard.cs" id="5_notices"]
+[ext_resource type="Script" path="res://scripts/HitPointBarView.cs" id="6_hitpoints"]
 
 [sub_resource type="Environment" id="Environment_main"]
 background_mode = 1
@@ -31,6 +34,22 @@ MatchView = NodePath("../MatchView")
 current = true
 fov = 40.0
 
-[node name="DemoOrders" type="Node" parent="." node_paths=PackedStringArray("MatchView")]
-script = ExtResource("3_demo")
+[node name="SelectionInput" type="CanvasLayer" parent="." node_paths=PackedStringArray("MatchView", "Camera")]
+script = ExtResource("3_selection")
 MatchView = NodePath("../MatchView")
+Camera = NodePath("../CameraRig/Camera")
+
+[node name="SelectionMarkers" type="Node3D" parent="." node_paths=PackedStringArray("MatchView", "SelectionInput")]
+script = ExtResource("4_markers")
+MatchView = NodePath("../MatchView")
+SelectionInput = NodePath("../SelectionInput")
+
+[node name="RejectionNoticeBoard" type="CanvasLayer" parent="." node_paths=PackedStringArray("MatchView")]
+script = ExtResource("5_notices")
+MatchView = NodePath("../MatchView")
+
+[node name="HitPointBarView" type="CanvasLayer" parent="." node_paths=PackedStringArray("MatchView", "SelectionInput", "Camera")]
+script = ExtResource("6_hitpoints")
+MatchView = NodePath("../MatchView")
+SelectionInput = NodePath("../SelectionInput")
+Camera = NodePath("../CameraRig/Camera")
