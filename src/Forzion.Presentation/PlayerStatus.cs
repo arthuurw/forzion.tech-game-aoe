@@ -64,13 +64,10 @@ public sealed record AgeAdvanceProgress(string AgeNameKey, double Progress)
     /// <summary>The Age Advance the building is making for its Player, or null when it makes none.</summary>
     internal static AgeAdvanceProgress? Of(BuildingState building, PlayerState player)
     {
-        if (building.AgeAdvanceProgress is not { } ticks || player.Age >= player.Faction.Ages.Count)
+        if (building.AgeAdvanceProgress is not { } ticks || player.NextAge is not { } next)
         {
             return null;
         }
-
-        // Ages are numbered from 1 and listed from index 0, so the next Age is at the current number.
-        var next = player.Faction.Ages[player.Age];
 
         return new AgeAdvanceProgress(next.NameKey, Fractions.Of(ticks, next.AdvanceTime));
     }

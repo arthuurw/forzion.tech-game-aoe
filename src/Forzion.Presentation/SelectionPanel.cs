@@ -93,13 +93,10 @@ public sealed record SelectionPanel(
     private static AgeAdvanceChoice? AgeAdvanceOf(BuildingState building, PlayerState player)
     {
         // The Town Center makes the Age Advance (see the glossary); the match refuses it elsewhere.
-        if (building.Kind != BuildingKind.TownCenter || !building.IsComplete || player.Age >= player.Faction.Ages.Count)
+        if (building.Kind != BuildingKind.TownCenter || !building.IsComplete || player.NextAge is not { } next)
         {
             return null;
         }
-
-        // Ages are numbered from 1 and listed from index 0, so the next Age is at the current number.
-        var next = player.Faction.Ages[player.Age];
 
         return new AgeAdvanceChoice(next.NameKey, next.AdvanceCost, AgeAdvanceProgress.Of(building, player)?.Progress);
     }
