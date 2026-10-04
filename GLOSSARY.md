@@ -204,7 +204,10 @@ Distância, em Células, em que uma unidade militar parada e sem alvo nota um in
 _Avoid_: Visão, campo de visão
 
 **Derrota** (`Defeat`):
-Jogador sem Centro é derrotado e não dá mais Comandos; suas unidades e construções que restam ficam no mapa e agem sozinhas. Quando resta no máximo um Jogador não derrotado, a partida termina; esse Jogador, se houver, é o vencedor (`Winner`).
+Jogador sem Centro é derrotado e não dá mais Comandos; suas unidades e construções que restam ficam no mapa e agem sozinhas. Quando resta no máximo um Jogador não derrotado, a partida termina; esse Jogador, se houver, é o vencedor (`Winner`). Se os últimos Centros caem no mesmo Tick, todos os Jogadores são derrotados e a partida termina sem vencedor.
+
+**Vitória** (`Victory`):
+O fim da partida para o vencedor: o único Jogador que não foi derrotado quando ela termina.
 
 ## Mapa
 
@@ -222,7 +225,7 @@ Obstáculo que ocupa Células inteiras: Unidades não a atravessam e Construçõ
 ## Tela
 
 **HUD** (`Hud`):
-Os controles desenhados sobre a Partida: a barra do topo, com os Recursos, a População sobre o Limite de população, a Era e o Avanço de Era em andamento do Jogador, e embaixo o Painel de seleção. Existe só na tela: os botões da HUD dão ordens, e a Partida as aceita ou recusa.
+Os controles desenhados sobre a Partida: a barra do topo, com os Recursos, a População sobre o Limite de população, a Era e o Avanço de Era em andamento do Jogador, e embaixo o Painel de seleção e o Minimapa. Existe só na tela: os botões da HUD dão ordens, e a Partida as aceita ou recusa.
 _Avoid_: Interface, UI
 
 **Painel de seleção** (`Selection Panel`):
@@ -239,6 +242,24 @@ Barra sobre o mapa de uma unidade ou construção selecionada ou ferida, preench
 
 **Barra de obra** (`Construction Bar`):
 Barra sobre o mapa de cada Obra, preenchida na proporção do trabalho de construção já feito.
+
+**Minimapa** (`Minimap`):
+O mapa inteiro em miniatura, no canto de baixo da HUD: o terreno, as Fontes de Recurso e as unidades e construções de cada Jogador, na cor dele. Um clique no Minimapa leva a câmera àquele ponto do mapa.
+_Avoid_: Radar, mapa pequeno
+
+**Menu inicial** (`Main Menu`):
+A primeira tela do jogo, de onde o Jogador começa uma Partida livre contra a IA ou sai do jogo.
+_Avoid_: Tela de título, menu principal
+
+**Pausa** (`Pause`):
+A Partida parada a pedido do Jogador: nenhum Tick corre, e unidades e construções ficam como estão até ele continuar. Só a câmera continua se movendo. Existe só na tela: a Partida não a conhece.
+
+**Tela de pausa** (`Pause Screen`):
+Tela que cobre a Partida durante a Pausa, de onde o Jogador continua ou volta ao Menu inicial. Enquanto ela está aberta, nenhuma ordem chega ao mapa.
+
+**Tela de fim de partida** (`End Screen`):
+Tela que aparece quando a Partida acaba e mostra o resultado (`MatchOutcome`) para o Jogador: Vitória ou Derrota. Dela o Jogador joga de novo, numa Partida livre igual à que acabou, ou volta ao Menu inicial.
+_Avoid_: Game over, placar
 
 ## Nomes dos Portugueses
 

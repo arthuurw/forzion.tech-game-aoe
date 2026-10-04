@@ -8,7 +8,7 @@ Jogo de estratégia em tempo real (RTS) em 3D sobre a história do Brasil. O jog
 
 É um projeto de portfólio de engenharia de software em C#. O foco está na arquitetura: toda a regra do jogo vive numa simulação determinística, escrita em C# puro e separada da engine.
 
-> **Estado:** em desenvolvimento. O jogo abre o mapa com formas simples no lugar da arte; pela HUD dá para coletar, construir, treinar unidades e fazer o Avanço de Era, e o adversário, uma IA de roteiro fixo, coleta, constrói, treina, avança de Era e ataca o seu Centro. Ainda faltam o menu e a tela de fim de partida. O primeiro marco jogável está descrito na [spec do vertical slice](https://github.com/arthuurw/forzion.tech-game-aoe/issues/1).
+> **Estado:** em desenvolvimento. O jogo abre no Menu inicial, que começa uma Partida livre contra a IA, num mapa com formas simples no lugar da arte; pela HUD dá para coletar, construir, treinar unidades e fazer o Avanço de Era, e o adversário, uma IA de roteiro fixo, coleta, constrói, treina, avança de Era e ataca o seu Centro. A partida vai do menu até a tela de vitória ou derrota. O primeiro marco jogável está descrito na [spec do vertical slice](https://github.com/arthuurw/forzion.tech-game-aoe/issues/1).
 
 ### Arquitetura
 
@@ -40,7 +40,13 @@ godot --path game
 
 `godot` é o executável do Godot .NET. Também dá para abrir `game/project.godot` no editor e apertar Play.
 
-Câmera: WASD, setas ou mouse na borda da tela deslocam; roda do mouse ou Page Up e Page Down aproximam e afastam.
+O jogo abre no Menu inicial: "Partida livre contra a IA" começa a partida, e "Sair do jogo" fecha.
+
+Câmera: WASD, setas ou mouse na borda da tela deslocam; roda do mouse ou Page Up e Page Down aproximam e afastam. Um clique no Minimapa, no canto de baixo à direita, leva a câmera àquele ponto; arrastar sobre ele com o botão esquerdo a leva junto. O Minimapa mostra o terreno, as Fontes de Recurso e as unidades e construções de cada Jogador, na cor dele.
+
+Pausa: Esc, P, a tecla Pause ou o botão "Pausar" na barra do topo param a partida; a câmera continua se movendo. Com uma construção sendo posicionada, Esc primeiro desiste dela. Da pausa dá para continuar ou voltar ao Menu inicial.
+
+Fim de partida: quando um Centro cai, a tela de Vitória ou Derrota aparece, com "Jogar de novo", que recomeça a mesma Partida livre, e "Voltar ao Menu inicial".
 
 No mapa: você joga de violeta, e a IA de laranja; os telhados e as roupas mostram o dono. O Centro tem uma torre no meio, a Casa um telhado de duas águas, o Depósito é um pátio de caixotes sob um alpendre e o Quartel um salão comprido com ameias. Uma Obra aparece translúcida, entre andaimes, e sobe conforme é construída. O Colono usa chapéu de palha, o Rodeleiro leva escudo redondo e espada, o Arcabuzeiro o arcabuz na horizontal e o Cavaleiro vai a cavalo, de lança. As Fontes de Recurso ficam rente ao chão: arbusto de frutas vermelhas para Alimento, pilha de toras para Madeira, rocha com pepitas para Ouro. Unidades paradas na mesma Célula aparecem lado a lado, e um clique em cada uma a seleciona.
 
@@ -82,7 +88,7 @@ A 3D real-time strategy (RTS) game about the history of Brazil. The player gathe
 
 This is a software engineering portfolio project in C#. The focus is the architecture: every game rule lives in a deterministic simulation written in plain C#, separate from the engine.
 
-> **Status:** in development. The game opens the map with simple shapes in place of the art; through the HUD you can gather, build, train units and make the Age Advance, and the opponent, a fixed-script AI, gathers, builds, trains, advances its Age and attacks your Town Center. The menu and the end-of-match screen are still missing. The first playable milestone is described in the [vertical slice spec](https://github.com/arthuurw/forzion.tech-game-aoe/issues/1) (in Portuguese).
+> **Status:** in development. The game opens on the main menu, which starts a skirmish against the AI, on a map with simple shapes in place of the art; through the HUD you can gather, build, train units and make the Age Advance, and the opponent, a fixed-script AI, gathers, builds, trains, advances its Age and attacks your Town Center. A match runs from the menu to the victory or defeat screen. The first playable milestone is described in the [vertical slice spec](https://github.com/arthuurw/forzion.tech-game-aoe/issues/1) (in Portuguese).
 
 ### Architecture
 
@@ -114,7 +120,13 @@ godot --path game
 
 `godot` is the Godot .NET executable. You can also open `game/project.godot` in the editor and press Play.
 
-Camera: WASD, the arrow keys or the mouse at the screen edge pan; the mouse wheel or Page Up and Page Down zoom in and out.
+The game opens on the main menu: "Partida livre contra a IA" starts the skirmish and "Sair do jogo" closes the game.
+
+Camera: WASD, the arrow keys or the mouse at the screen edge pan; the mouse wheel or Page Up and Page Down zoom in and out. A click on the minimap, in the bottom right corner, takes the camera to that place; dragging over it with the left button takes the camera along. The minimap shows the terrain, the resource sources and each Player's units and buildings, in the Player's colour.
+
+Pause: Escape, P, the Pause key or the "Pausar" button in the top bar stop the match; the camera still moves. While a building is being placed, Escape gives it up first. From the pause you can go on or go back to the main menu.
+
+End of the match: when a Town Center falls, the victory or defeat screen shows, with "Jogar de novo", which starts the same skirmish anew, and "Voltar ao Menu inicial".
 
 On the map: you play violet and the AI orange; roofs and clothes show the owner. The Town Center has a tower in the middle, the House a pitched roof, the Storehouse is a yard of crates under a lean-to and the Barracks a long battlemented hall. A construction site shows see-through, in scaffolding, and rises as it is built. The Villager wears a straw hat, the melee soldier carries a round shield and a sword, the ranged soldier a gun held level, and the heavy soldier rides a horse with a lance. Resource sources lie low to the ground: a bush of red berries for Food, a pile of logs for Wood, a rock studded with nuggets for Gold. Units standing on one Cell are drawn side by side, and clicking each one selects it.
 

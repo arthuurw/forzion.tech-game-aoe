@@ -1,3 +1,4 @@
+using Forzion.Presentation;
 using Forzion.Simulation;
 using Godot;
 
@@ -101,12 +102,21 @@ public partial class RtsCamera : Node3D
         var direction = Input.GetVector("camera_pan_left", "camera_pan_right", "camera_pan_up", "camera_pan_down") + EdgeDirection();
         direction = direction.LimitLength(1);
 
-        var map = MatchView.State.Map;
-        var moved = Position + (new Vector3(direction.X, 0, direction.Y) * PanSpeed * distance * seconds);
-        Position = new Vector3(Mathf.Clamp(moved.X, 0, map.Width), 0, Mathf.Clamp(moved.Z, 0, map.Height));
+        MoveTo(Position + (new Vector3(direction.X, 0, direction.Y) * PanSpeed * distance * seconds));
 
         distance = Mathf.Lerp(distance, targetDistance, 1 - Mathf.Exp(-ZoomSmoothing * seconds));
         PlaceCamera();
+    }
+
+    /// <summary>Moves the camera to look down at a point of the map, keeping its zoom.</summary>
+    public void CentreOn(MapPoint point) => MoveTo(WorldSpace.ToWorld(point));
+
+    /// <summary>Moves the ground point to <paramref name="target"/>, kept on the map.</summary>
+    private void MoveTo(Vector3 target)
+    {
+        var map = MatchView.State.Map;
+
+        Position = new Vector3(Mathf.Clamp(target.X, 0, map.Width), 0, Mathf.Clamp(target.Z, 0, map.Height));
     }
 
     /// <summary>Which way the mouse at the edge of the screen pans: -1, 0 or 1 on each axis.</summary>

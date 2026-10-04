@@ -194,6 +194,9 @@ msgstr "Posicionando: {0}. Clique no mapa para posicionar; botão direito ou Esc
 msgid "HUD_SELECTED_UNITS"
 msgstr "{0} unidades selecionadas"
 
+msgid "HUD_PAUSE"
+msgstr "Pausar (Esc)"
+
 msgid "HUD_FREE"
 msgstr "Grátis"
 
@@ -229,3 +232,38 @@ msgstr "{0} {1}"
 # Entre as quantidades dos Recursos de um Custo.
 msgid "HUD_COST_SEPARATOR"
 msgstr ", "
+
+# Telas em volta da Partida: Menu inicial, Pausa e Tela de fim de partida.
+# Título provisório do jogo: o nome do repositório (spec #1).
+msgid "GAME_TITLE"
+msgstr "forzion.tech-game-aoe"
+
+msgid "MENU_SKIRMISH"
+msgstr "Partida livre contra a IA"
+
+msgid "MENU_QUIT"
+msgstr "Sair do jogo"
+
+msgid "PAUSE_TITLE"
+msgstr "Partida pausada"
+
+msgid "PAUSE_RESUME"
+msgstr "Continuar"
+
+msgid "SCREEN_MAIN_MENU"
+msgstr "Voltar ao Menu inicial"
+
+msgid "END_PLAY_AGAIN"
+msgstr "Jogar de novo"
+
+msgid "END_VICTORY"
+msgstr "Vitória!"
+
+msgid "END_VICTORY_REASON"
+msgstr "Você destruiu o Centro inimigo."
+
+msgid "END_DEFEAT"
+msgstr "Derrota"
+
+msgid "END_DEFEAT_REASON"
+msgstr "Seu Centro foi destruído."

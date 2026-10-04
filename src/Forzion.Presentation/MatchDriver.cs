@@ -39,6 +39,13 @@ public sealed class MatchDriver
     /// <summary>The state of the match being driven, as of its last tick.</summary>
     public MatchState State => match.State;
 
+    /// <summary>
+    /// Whether the match is paused. While it is, the time that passes is not the match's:
+    /// <see cref="Advance"/> runs no tick and every unit stays drawn where it was, and once
+    /// it resumes the match goes on from where it stopped.
+    /// </summary>
+    public bool IsPaused { get; set; }
+
     /// <summary>Queues a command for the match; the next tick <see cref="Advance"/> runs applies it.</summary>
     public void Enqueue(Command command) => match.Enqueue(command);
 
@@ -52,6 +59,11 @@ public sealed class MatchDriver
     /// </summary>
     public IReadOnlyList<MatchEvent> Advance(double elapsedSeconds)
     {
+        if (IsPaused)
+        {
+            return [];
+        }
+
         var due = clock.Advance(elapsedSeconds);
         var events = new List<MatchEvent>();
 

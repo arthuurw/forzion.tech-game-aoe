@@ -5,18 +5,17 @@ using Godot;
 namespace Forzion.Game;
 
 /// <summary>
-/// The HUD: a bar at the top with the human Player's Resources, population, Faction and Age,
-/// and a panel at the bottom with the selection and the orders it takes. What each shows
-/// comes from <see cref="PlayerStatus"/> and <see cref="SelectionPanel"/>, and each button
-/// calls <see cref="PlayerControl"/>, which sends the command; this node only lays them out.
-/// Texts come from the project's translations.
+/// The HUD: a bar at the top with the human Player's Resources, population, Faction and Age
+/// and a button that pauses the match, and a panel at the bottom with the selection and the
+/// orders it takes, beside the <see cref="MinimapView"/>. What each shows comes from
+/// <see cref="PlayerStatus"/> and <see cref="SelectionPanel"/>, and each button calls
+/// <see cref="PlayerControl"/>, which sends the command; this node only lays them out. Texts
+/// come from the project's translations.
 /// </summary>
 public partial class Hud : CanvasLayer
 {
-    private const int PanelHeight = 210;
     private const int MostUnitsShown = 24;
 
-    private static readonly Color PanelColour = new(0.08f, 0.09f, 0.11f, 0.88f);
     private static readonly Color HintColour = new(0.8f, 0.85f, 0.95f);
 
     // The panel is rebuilt only when what it holds changes, and its buttons act on press, so a
@@ -43,6 +42,10 @@ public partial class Hud : CanvasLayer
     [Export]
     public SelectionInput SelectionInput { get; set; } = null!;
 
+    /// <summary>The pause screen that the top bar's pause button opens.</summary>
+    [Export]
+    public PauseScreen PauseScreen { get; set; } = null!;
+
     private PlayerControl PlayerControl => SelectionInput.PlayerControl;
 
     public override void _Ready()
@@ -58,8 +61,8 @@ public partial class Hud : CanvasLayer
         placementHint.Name = "PlacementHint";
         placementHint.HorizontalAlignment = HorizontalAlignment.Center;
         placementHint.SetAnchorsAndOffsetsPreset(Godot.Control.LayoutPreset.BottomWide);
-        placementHint.OffsetTop = -PanelHeight - 40;
-        placementHint.OffsetBottom = -PanelHeight - 8;
+        placementHint.OffsetTop = -HudLayout.BottomHeight - 40;
+        placementHint.OffsetBottom = -HudLayout.BottomHeight - 8;
         placementHint.MouseFilter = Godot.Control.MouseFilterEnum.Ignore;
         root.AddChild(placementHint);
     }
@@ -105,7 +108,7 @@ public partial class Hud : CanvasLayer
 
         foreach (var kind in Enum.GetValues<ResourceKind>())
         {
-            resources[kind] = NewLabel("", 18, ResourceColour(kind));
+            resources[kind] = NewLabel("", 18, Palette.ColourOf(kind));
             row.AddChild(resources[kind]);
         }
 
@@ -120,8 +123,12 @@ public partial class Hud : CanvasLayer
         row.AddChild(ageAdvanceLabel);
         row.AddChild(ageAdvanceBar);
 
-        age = NewLabel("", 18, new Color(1f, 0.95f, 0.8f));
+        age = NewLabel("", 18, Palette.Heading);
         row.AddChild(age);
+
+        var pause = new Button { Name = "Pause", Text = Tr(HudTexts.Pause), FocusMode = Godot.Control.FocusModeEnum.None };
+        pause.Pressed += PauseScreen.Pause;
+        row.AddChild(pause);
 
         return bar;
     }
@@ -131,7 +138,10 @@ public partial class Hud : CanvasLayer
         bottom = new PanelContainer { Name = "SelectionPanel", MouseFilter = Godot.Control.MouseFilterEnum.Stop };
         bottom.AddThemeStyleboxOverride("panel", PanelStyle());
         bottom.SetAnchorsAndOffsetsPreset(Godot.Control.LayoutPreset.BottomWide);
-        bottom.OffsetTop = -PanelHeight;
+        bottom.OffsetTop = -HudLayout.BottomHeight;
+
+        // The minimap takes the bottom right corner.
+        bottom.OffsetRight = -HudLayout.MinimapWidth;
 
         bottomContent = new HBoxContainer { Name = "Content" };
         bottomContent.AddThemeConstantOverride("separation", 24);
@@ -423,15 +433,6 @@ public partial class Hud : CanvasLayer
         ((StyleBoxFlat)bar.GetThemeStylebox("fill")).BgColor = BarColours.HitPoints(fraction);
     }
 
-    /// <summary>The colour of the amount of a Resource in the top bar.</summary>
-    private static Color ResourceColour(ResourceKind kind) => kind switch
-    {
-        ResourceKind.Food => new Color(0.95f, 0.55f, 0.6f),
-        ResourceKind.Wood => new Color(0.85f, 0.65f, 0.4f),
-        ResourceKind.Gold => new Color(1f, 0.85f, 0.35f),
-        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown Resource."),
-    };
-
     private string CostText(Cost cost) => HudTexts.CostText(cost, key => Tr(key));
 
     private string Percent(double fraction) => HudTexts.Percent(fraction, key => Tr(key));
@@ -475,7 +476,7 @@ public partial class Hud : CanvasLayer
 
     private static StyleBoxFlat PanelStyle() => new()
     {
-        BgColor = PanelColour,
+        BgColor = Palette.Panel,
         ContentMarginLeft = 16,
         ContentMarginRight = 16,
         ContentMarginTop = 8,

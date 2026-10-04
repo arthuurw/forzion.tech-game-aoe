@@ -13,7 +13,8 @@ namespace Forzion.Game;
 /// </summary>
 /// <remarks>
 /// Bindings live in the project's input map: the <c>select</c> and <c>order</c> actions, and
-/// Godot's built-in <c>ui_cancel</c>. Clicks on the HUD never reach this node.
+/// Godot's built-in <c>ui_cancel</c>. Clicks on the HUD never reach this node, and nothing
+/// does while the match is paused.
 /// </remarks>
 public partial class SelectionInput : CanvasLayer
 {
@@ -55,6 +56,16 @@ public partial class SelectionInput : CanvasLayer
 
     public override void _UnhandledInput(InputEvent @event)
     {
+        // While paused no order reaches the match, and Escape is left to the pause screen to
+        // resume. A box being dragged is dropped.
+        if (MatchView.Driver.IsPaused)
+        {
+            pressedAt = null;
+            box.Visible = false;
+
+            return;
+        }
+
         if (PlayerControl.PlacingBuilding is not null && @event.IsActionPressed("ui_cancel"))
         {
             PlayerControl.CancelPlacement();

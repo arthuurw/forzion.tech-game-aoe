@@ -52,6 +52,9 @@ public static class HudTexts
     /// <summary>How many units are selected; <c>{0}</c> is the count.</summary>
     public const string SelectedUnits = "HUD_SELECTED_UNITS";
 
+    /// <summary>The button that pauses the match.</summary>
+    public const string Pause = "HUD_PAUSE";
+
     /// <summary>The cost of something that costs nothing.</summary>
     public const string Free = "HUD_FREE";
 
