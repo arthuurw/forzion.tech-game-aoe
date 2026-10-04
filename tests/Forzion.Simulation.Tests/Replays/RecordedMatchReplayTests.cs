@@ -17,13 +17,18 @@ public class RecordedMatchReplayTests
     private static MatchConfig Config() => TestMatches.TwoPlayerConfig(Seed);
 
     // Entities take IDs in creation order: the map's 22 resource sources come first, then each
-    // Player's Town Center and starting Villagers, so the Town Centers are 23 and 27. The first
-    // Player's Barracks is 32, the second building placed in the match, after its first House (31).
+    // Player's Town Center and starting Villagers, so the Town Centers are 23 and 27. Buildings
+    // placed later take the next free ID: the first Player's first House is 31 and its Barracks
+    // 32; the second Player's House is 33 and its Barracks 36.
     private static readonly EntityId FirstTownCenter = new(23);
 
     private static readonly EntityId SecondTownCenter = new(27);
 
     private static readonly EntityId FirstBarracks = new(32);
+
+    private static readonly EntityId SecondHouse = new(33);
+
+    private static readonly EntityId SecondBarracks = new(36);
 
     private static EntityId[] Units(params int[] ids) => [.. ids.Select(id => new EntityId(id))];
 
@@ -31,9 +36,10 @@ public class RecordedMatchReplayTests
     /// The recording, with every kind of command. The first Player gathers, builds two Houses
     /// and a Barracks (the second builder joining it later), trains Villagers, soldiers of both
     /// Age I kinds and, after its Age Advance, two heavy soldiers, cancels a ranged soldier and
-    /// sends its army against the second Player's Town Center. The second Player gathers, cancels a Villager, places a House it sends
-    /// a builder to afterwards, builds a Barracks and moves the melee soldier trained there in
-    /// front of its Town Center. IDs, Cells and ticks are as they were recorded.
+    /// sends its army against the second Player's Town Center. The second Player gathers,
+    /// cancels a Villager, places a House it sends a builder to afterwards, builds a Barracks and
+    /// moves the melee soldier trained there in front of its Town Center. IDs, Cells and ticks
+    /// are as they were recorded.
     /// </summary>
     private static ScheduledCommand[] Commands() =>
     [
@@ -51,7 +57,7 @@ public class RecordedMatchReplayTests
         new(40, new PlaceBuildingCommand(First, BuildingKind.Barracks, new(12, 13), Units(25))),
         new(60, new BuildCommand(First, Units(24), FirstBarracks)),
         new(200, new PlaceBuildingCommand(Second, BuildingKind.House, new(51, 37), [])),
-        new(201, new BuildCommand(Second, Units(30), new(33))),
+        new(201, new BuildCommand(Second, Units(30), SecondHouse)),
         new(300, new GatherCommand(First, Units(34), new(6))),
         new(300, new GatherCommand(Second, Units(35), new(17))),
         new(310, new GatherCommand(First, Units(26), new(6))),
@@ -65,7 +71,7 @@ public class RecordedMatchReplayTests
         new(722, new TrainCommand(First, FirstTownCenter, UnitKind.Villager)),
         new(1022, new GatherCommand(First, Units(39), new(1))),
         new(1064, new GatherCommand(Second, Units(28), new(22))),
-        new(1064, new TrainCommand(Second, new(36), UnitKind.MeleeSoldier)),
+        new(1064, new TrainCommand(Second, SecondBarracks, UnitKind.MeleeSoldier)),
         new(1210, new TrainCommand(First, FirstTownCenter, UnitKind.Villager)),
         new(1211, new PlaceBuildingCommand(First, BuildingKind.House, new(5, 14), Units(24))),
         new(1464, new MoveCommand(Second, Units(42), new(52, 36))),
