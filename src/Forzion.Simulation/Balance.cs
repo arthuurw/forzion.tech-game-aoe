@@ -71,7 +71,7 @@ internal static class Balance
         TrainTime: 18 * Match.TicksPerSecond,
         TrainedAt: BuildingKind.Barracks);
 
-    // The strongest and fastest melee unit: it outpaces the other soldiers and the Villagers.
+    // A mounted fighter, so it outpaces the infantry on foot. The speed is provisional.
     private static readonly UnitStats HeavySoldier = new(
         Speed: Fix64.FromInt(3),
         HitPoints: 80,

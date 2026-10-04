@@ -79,7 +79,7 @@ public class AiReplayTests
     // stayed the same; the match now ends ten ticks sooner, still won by the second Player
     // with both in Age II, and this is its final hash.
     // When the heavy soldier began to walk 3 Cells per second instead of 2, the layout stayed
-    // the same: the model reproduced the value before with the speed before, gave this one and
+    // the same: the model reproduced the previous hash with the previous speed, gave this one and
     // matched the match's own hash at every tick. The match now ends twenty ticks later, still
     // won by the second Player with both in Age II.
     private const ulong ExpectedFinalHash = 12206050394229018223UL;
