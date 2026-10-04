@@ -30,8 +30,7 @@ public sealed record SelectionPanel(
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(selected);
 
-        var playerState = state.Players.FirstOrDefault(each => each.Id == player)
-            ?? throw new ArgumentException($"The match has no Player {player.Value}.", nameof(player));
+        var playerState = PlayerLookup.Find(state, player);
         var faction = playerState.Faction;
 
         var units = state.Units

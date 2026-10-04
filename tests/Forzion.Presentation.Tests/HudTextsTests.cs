@@ -58,4 +58,15 @@ public class HudTextsTests
 
         Assert.Equal(["TEST_AGE_2"], HudTexts.AgesReachedBy(events, match.State, FirstPlayer));
     }
+
+    [Fact]
+    public void The_Ages_reached_by_a_Player_the_match_does_not_have_are_refused_as_the_status_and_panel_are()
+    {
+        var state = Match.Create(PlainConfig()).State;
+        var stranger = new PlayerId(9);
+
+        Assert.Throws<ArgumentException>(() => HudTexts.AgesReachedBy([], state, stranger));
+        Assert.Throws<ArgumentException>(() => PlayerStatus.Of(state, stranger));
+        Assert.Throws<ArgumentException>(() => SelectionPanel.For(state, stranger, []));
+    }
 }

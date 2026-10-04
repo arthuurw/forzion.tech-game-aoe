@@ -31,8 +31,7 @@ public sealed record PlayerStatus(
     {
         ArgumentNullException.ThrowIfNull(state);
 
-        var playerState = state.Players.FirstOrDefault(each => each.Id == player)
-            ?? throw new ArgumentException($"The match has no Player {player.Value}.", nameof(player));
+        var playerState = PlayerLookup.Find(state, player);
         var faction = playerState.Faction;
 
         return new PlayerStatus(

@@ -85,12 +85,13 @@ public static class HudTexts
     /// <paramref name="events"/>, in the order reached, for the notices that announce them.
     /// Other Players' Ages are not announced.
     /// </summary>
+    /// <exception cref="ArgumentException">The match has no such Player.</exception>
     public static IEnumerable<string> AgesReachedBy(IEnumerable<MatchEvent> events, MatchState state, PlayerId player)
     {
         ArgumentNullException.ThrowIfNull(events);
         ArgumentNullException.ThrowIfNull(state);
 
-        var faction = state.Players.First(each => each.Id == player).Faction;
+        var faction = PlayerLookup.Find(state, player).Faction;
 
         return events
             .OfType<AgeAdvanced>()
