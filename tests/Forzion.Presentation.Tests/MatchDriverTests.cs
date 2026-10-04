@@ -38,6 +38,25 @@ public class MatchDriverTests
     }
 
     [Fact]
+    public void Units_slide_apart_when_a_unit_stops_on_another_units_Cell_instead_of_jumping()
+    {
+        var cell = BesideFirstHome();
+        var driver = NewDriver(out var match, PlainConfig(firstExtras: [new StartingUnit(UnitKind.Villager, cell)]));
+        var walker = FirstVillager(match);
+        var standing = match.State.Units.Single(unit => unit.Owner == FirstPlayer && unit.Position.Cell == cell);
+        var centre = new MapPoint(MapPosition.CentreOf(cell).X.ToDouble(), MapPosition.CentreOf(cell).Y.ToDouble());
+        match.Enqueue(new MoveCommand(FirstPlayer, [walker.Id], cell));
+
+        TickUntil(driver, () => !walker.IsMoving && walker.Position.Cell == cell);
+
+        // In the frame the walker stops, the unit already there has moved off the centre no
+        // faster than a Villager walks, 0.1 Cell in a tick; a second later the two stand apart.
+        Assert.True(Distance(driver.PositionOf(standing), centre) <= 0.1 + 1e-9);
+        driver.Advance(1);
+        Assert.True(Distance(driver.PositionOf(standing), driver.PositionOf(walker)) >= 0.5 - 1e-9);
+    }
+
+    [Fact]
     public void Advancing_runs_the_ticks_that_are_due()
     {
         var driver = NewDriver(out var match);
