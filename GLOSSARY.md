@@ -177,7 +177,7 @@ Unidade militar que precisa encostar no alvo para atacar. É um tipo de unidade 
 Unidade militar que ataca de longe, sem projétil simulado. É um tipo de unidade do motor: cada Facção lhe dá o seu nome.
 
 **Soldado pesado** (`Heavy Soldier`):
-Unidade militar corpo a corpo mais forte, liberada pela Era II. É um tipo de unidade do motor: cada Facção lhe dá o seu nome.
+Unidade militar corpo a corpo mais forte e mais rápida, liberada pela Era II. É um tipo de unidade do motor: cada Facção lhe dá o seu nome.
 
 **Pontos de vida** (`Hit Points`):
 Quanto dano uma unidade ou construção ainda aguenta. Ao chegar a zero, ela sai do mapa no mesmo tick.
