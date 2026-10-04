@@ -12,8 +12,8 @@ namespace Forzion.Game;
 /// node only draws and forwards the mouse.
 /// </summary>
 /// <remarks>
-/// Every other button pressed over the minimap stops there, so a right click on it orders
-/// nothing to the place of the map it hides. Moving the mouse and letting go of the left
+/// Every other button, pressed or let go, and the wheel stop at the minimap, so a right click
+/// on it orders nothing to the place of the map it hides. Moving the mouse and letting go of the left
 /// button pass through to the map unless the left button was pressed on the minimap, so a
 /// selection box dragged from the map over the minimap still grows and ends there.
 /// </remarks>
