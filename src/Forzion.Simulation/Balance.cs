@@ -130,10 +130,10 @@ internal static class Balance
     };
 
     /// <summary>What the Portuguese Age Advance to Age II costs.</summary>
-    public static readonly Cost SecondAgeAdvanceCost = new(300, 0, 100);
+    public static readonly Cost PortugueseSecondAgeAdvanceCost = new(300, 0, 100);
 
     /// <summary>Ticks the Portuguese Age Advance to Age II takes.</summary>
-    public const int SecondAgeAdvanceTime = 40 * Match.TicksPerSecond;
+    public const int PortugueseSecondAgeAdvanceTime = 40 * Match.TicksPerSecond;
 
     /// <summary>The most a Villager carries at once.</summary>
     public const int VillagerCarryCapacity = 10;
