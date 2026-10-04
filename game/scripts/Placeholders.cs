@@ -15,8 +15,12 @@ namespace Forzion.Game;
 /// </remarks>
 public sealed class Placeholders
 {
-    private const float TallestUnit = 1.45f;
-    private const float TallestBuilding = 2.25f;
+    /// <summary>How tall the tallest unit stands: the heavy soldier, to the top of the rider's helmet.</summary>
+    public const float TallestUnit = 1.45f;
+
+    /// <summary>How tall the tallest building stands: the Town Center, to the ridge of its tower.</summary>
+    public const float TallestBuilding = 2.25f;
+
     private const float TallestSource = 0.6f;
 
     /// <summary>How far from a unit's position the mouse still picks it: a little beyond its body, which is only a few pixels wide at a distance.</summary>

@@ -16,8 +16,8 @@ public partial class WorldBarsOverlay : Control
     private const float BarHeight = 5;
 
     // How high above the ground each bar hangs, in world units: just over the placeholder shapes.
-    private const float AboveUnit = 1.6f;
-    private const float AboveBuilding = 2.4f;
+    private const float AboveUnit = Placeholders.TallestUnit + 0.15f;
+    private const float AboveBuilding = Placeholders.TallestBuilding + 0.15f;
 
     private static readonly Color Background = new(0, 0, 0, 0.7f);
 
