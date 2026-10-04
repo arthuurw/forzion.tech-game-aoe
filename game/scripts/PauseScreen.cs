@@ -11,8 +11,9 @@ namespace Forzion.Game;
 /// <remarks>
 /// The <c>pause</c> action of the project's input map toggles it: Escape, P or the Pause key.
 /// Godot hands unhandled input to the last node of the scene first, and this node comes
-/// before <see cref="SelectionInput"/>, so Escape first gives up a building being placed and
-/// pauses only when nothing is being placed.
+/// before <see cref="SelectionInput"/>, so while the match goes on Escape first gives up a
+/// building being placed and pauses only when nothing is being placed. While paused, the
+/// selection input lets every key through, so Escape resumes at once.
 /// </remarks>
 public partial class PauseScreen : CanvasLayer
 {
