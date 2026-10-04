@@ -171,7 +171,6 @@ internal sealed class AiScript
         var size = Balance.Of(kind).Size;
         var origins = new List<(CellPosition Origin, int Distance)>();
 
-        // Row by row, from the lowest: ascending Cell index, which the stable sort below keeps among equals.
         for (var y = centre.Y - reach; y <= centre.Y + reach; y++)
         {
             for (var x = centre.X - reach; x <= centre.X + reach; x++)
@@ -190,7 +189,13 @@ internal sealed class AiScript
             return null;
         }
 
-        var nearest = origins.OrderBy(each => each.Distance).Take(Balance.AiPlacementChoices).ToList();
+        // Row then column breaks ties: ascending Cell index.
+        var nearest = origins
+            .OrderBy(each => each.Distance)
+            .ThenBy(each => each.Origin.Y)
+            .ThenBy(each => each.Origin.X)
+            .Take(Balance.AiPlacementChoices)
+            .ToList();
 
         return nearest[state.Random.NextInt(nearest.Count)].Origin;
     }
