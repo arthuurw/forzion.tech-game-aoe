@@ -110,7 +110,7 @@ internal sealed class AiScript
     private void BuildBarracks()
     {
         if (OwnBuildings(BuildingKind.Barracks).Any()
-            || OwnUnits().Count(unit => unit.Kind == UnitKind.Villager) < Balance.AiVillagersBeforeBarracks)
+            || VillagerCount() < Balance.AiVillagersBeforeBarracks)
         {
             return;
         }
@@ -219,7 +219,7 @@ internal sealed class AiScript
     private void TrainVillager()
     {
         if (TownCenter() is not { IsComplete: true, TrainingQueue.Count: 0 } townCenter
-            || OwnUnits().Count(unit => unit.Kind == UnitKind.Villager) >= Balance.AiVillagers)
+            || VillagerCount() >= Balance.AiVillagers)
         {
             return;
         }
@@ -267,7 +267,7 @@ internal sealed class AiScript
     {
         if (OwnBuildings(BuildingKind.Barracks).FirstOrDefault(barracks => barracks.IsComplete && barracks.TrainingQueue.Count == 0)
                 is not { } barracks
-            || state.PopulationOf(player.Id) >= state.PopulationLimitOf(player.Id))
+            || IsPopulationFull())
         {
             return;
         }
@@ -326,7 +326,7 @@ internal sealed class AiScript
     /// </summary>
     private void Train(BuildingState building, UnitKind kind)
     {
-        if (state.PopulationOf(player.Id) >= state.PopulationLimitOf(player.Id) || !Spend(Balance.Of(kind).Cost))
+        if (IsPopulationFull() || !Spend(Balance.Of(kind).Cost))
         {
             return;
         }
@@ -479,6 +479,12 @@ internal sealed class AiScript
     /// <summary>The Player's Villagers that build nothing and were given no job this tick.</summary>
     private IEnumerable<UnitState> VillagersNotBuilding() => OwnUnits()
         .Where(unit => unit.Kind == UnitKind.Villager && unit.ConstructionSite is null && !busy.Contains(unit.Id));
+
+    /// <summary>How many Villagers the Player has, those in training left out.</summary>
+    private int VillagerCount() => OwnUnits().Count(unit => unit.Kind == UnitKind.Villager);
+
+    /// <summary>Whether the Player's population has reached its population limit, so it can train no more.</summary>
+    private bool IsPopulationFull() => state.PopulationOf(player.Id) >= state.PopulationLimitOf(player.Id);
 
     /// <summary>The Player's units that are not Villagers.</summary>
     private IEnumerable<UnitState> Army() => OwnUnits().Where(unit => unit.Kind != UnitKind.Villager);
