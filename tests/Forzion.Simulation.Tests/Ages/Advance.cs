@@ -28,9 +28,6 @@ internal static class Advance
         Site.Halt(match, villagers);
     }
 
-    /// <summary>The next Age of the Player's Faction, which an Age Advance would take it to.</summary>
-    public static FactionAge NextAge(PlayerState player) => player.Faction.Ages[player.Age];
-
     /// <summary>
     /// Gathers what the Player's next Age costs, orders the Age Advance at its Town Center and
     /// ticks until the Player is in that Age.
@@ -39,7 +36,7 @@ internal static class Advance
     {
         var holder = match.State.Players[player.Value - 1];
         var age = holder.Age;
-        Afford(match, player, NextAge(holder).AdvanceCost);
+        Afford(match, player, holder.NextAge!.AdvanceCost);
         match.Enqueue(new AgeAdvanceCommand(player, Train.TownCenter(match, player).Id));
         TestMatches.TickUntil(match, () => holder.Age > age);
     }

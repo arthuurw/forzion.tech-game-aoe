@@ -12,7 +12,7 @@ public class AgeAdvanceTests
     {
         var match = TestMatches.TwoPlayerMatch();
         var player = match.State.Players[0];
-        var cost = Advance.NextAge(player).AdvanceCost;
+        var cost = player.NextAge!.AdvanceCost;
         Advance.Afford(match, First, cost);
         var before = Train.Stock(player);
         match.Enqueue(new AgeAdvanceCommand(First, Train.TownCenter(match, First).Id));
@@ -31,8 +31,8 @@ public class AgeAdvanceTests
     {
         var match = TestMatches.TwoPlayerMatch();
         var player = match.State.Players[0];
-        Advance.Afford(match, First, Advance.NextAge(player).AdvanceCost);
-        var advanceTime = Advance.NextAge(player).AdvanceTime;
+        Advance.Afford(match, First, player.NextAge!.AdvanceCost);
+        var advanceTime = player.NextAge!.AdvanceTime;
         match.Enqueue(new AgeAdvanceCommand(First, Train.TownCenter(match, First).Id));
         var start = match.State.Tick;
 
@@ -48,8 +48,8 @@ public class AgeAdvanceTests
     {
         var match = TestMatches.TwoPlayerMatch();
         var player = match.State.Players[0];
-        Advance.Afford(match, First, Advance.NextAge(player).AdvanceCost);
-        var advanceTime = Advance.NextAge(player).AdvanceTime;
+        Advance.Afford(match, First, player.NextAge!.AdvanceCost);
+        var advanceTime = player.NextAge!.AdvanceTime;
         match.Enqueue(new AgeAdvanceCommand(First, Train.TownCenter(match, First).Id));
 
         Train.Run(match, advanceTime - 1);
