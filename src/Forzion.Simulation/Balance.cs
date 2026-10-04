@@ -71,8 +71,10 @@ internal static class Balance
         TrainTime: 18 * Match.TicksPerSecond,
         TrainedAt: BuildingKind.Barracks);
 
+    // Faster than the melee and ranged soldiers by design: the Portuguese field it as a
+    // horseman. The speed is provisional.
     private static readonly UnitStats HeavySoldier = new(
-        Speed: Fix64.FromInt(2),
+        Speed: Fix64.FromInt(3),
         HitPoints: 80,
         Attack: new AttackStats(Damage: 10, Range: Fix64.One, AttackInterval: 20, PerceptionRadius: Fix64.FromInt(6)),
         Cost: new Cost(70, 0, 30),

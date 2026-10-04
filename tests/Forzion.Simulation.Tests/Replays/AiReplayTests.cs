@@ -13,7 +13,7 @@ public class AiReplayTests
     private const ulong Seed = 2026;
 
     // The tick the match ends in: the replay runs exactly to the end.
-    private const int Ticks = 4701;
+    private const int Ticks = 4721;
 
     // The tick the match of an AI Player against one who does nothing ends in, from the same seed.
     private const int TicksAgainstIdlePlayer = 4563;
@@ -78,7 +78,11 @@ public class AiReplayTests
     // waiting with their job for a way), no code that writes the hash changed, so the layout
     // stayed the same; the match now ends ten ticks sooner, still won by the second Player
     // with both in Age II, and this is its final hash.
-    private const ulong ExpectedFinalHash = 9066363392942231356UL;
+    // When the heavy soldier began to walk 3 Cells per second instead of 2, the layout stayed
+    // the same: the model reproduced the previous hash with the previous speed, gave this one and
+    // matched the match's own hash at every tick. The match now ends twenty ticks later, still
+    // won by the second Player with both in Age II.
+    private const ulong ExpectedFinalHash = 12206050394229018223UL;
 
     [Fact]
     public void A_recorded_match_of_two_AI_Players_reaches_the_recorded_final_hash()
