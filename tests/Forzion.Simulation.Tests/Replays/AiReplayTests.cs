@@ -12,19 +12,16 @@ public class AiReplayTests
 {
     private const ulong Seed = 2026;
 
-    // The tick the match ends in: the replay runs exactly to the end.
-    private const int Ticks = 4721;
-
-    // The tick the match of an AI Player against one who does nothing ends in, from the same seed.
-    private const int TicksAgainstIdlePlayer = 4563;
+    // Twenty minutes of play: far more than either match takes.
+    private const int Limit = 20 * 60 * Match.TicksPerSecond;
 
     private static MatchConfig Config() => AiMatches.Config(firstIsAi: true, secondIsAi: true, Seed);
 
     [Fact]
     public void The_same_seed_gives_the_same_hash_at_every_tick_of_a_match_of_two_AI_Players()
     {
-        var first = Replay.Run(Config(), [], Ticks);
-        var second = Replay.Run(Config(), [], Ticks);
+        var first = Replay.Run(Config(), [], ExpectedEnd.Tick);
+        var second = Replay.Run(Config(), [], ExpectedEnd.Tick);
 
         Assert.Equal(first, second);
     }
@@ -34,33 +31,26 @@ public class AiReplayTests
     {
         var config = AiMatches.Config(firstIsAi: false, secondIsAi: true, Seed);
 
-        var first = Replay.Run(config, [], TicksAgainstIdlePlayer);
-        var second = Replay.Run(config, [], TicksAgainstIdlePlayer);
+        var first = Replay.Run(config, [], ExpectedEndAgainstIdlePlayer.Tick);
+        var second = Replay.Run(config, [], ExpectedEndAgainstIdlePlayer.Tick);
 
         Assert.Equal(first, second);
     }
 
-    [Fact]
-    public void The_match_of_an_AI_Player_against_one_who_does_nothing_ends_in_its_last_tick_won_by_the_AI()
-    {
-        var match = Match.Create(AiMatches.Config(firstIsAi: false, secondIsAi: true, Seed));
-
-        var ticks = AiMatches.TickUntil(match, () => match.State.IsOver, TicksAgainstIdlePlayer);
-
-        Assert.Equal(TicksAgainstIdlePlayer, ticks);
-        Assert.Equal(TestMatches.SecondPlayer, match.State.Winner);
-    }
+    // How the match of an AI Player against one who does nothing ends, from the same seed: won
+    // by the AI. As with the match of two AI Players below, the play comes from this
+    // implementation, and the independent model of the hash layout (see ReplayTests), which
+    // first reproduced every value recorded before, gave this hash from the final state as the
+    // public interface shows it and matched the match's own hash at every tick.
+    private static readonly ReplayEnd ExpectedEndAgainstIdlePlayer =
+        new(4563, TestMatches.SecondPlayer, 10469758762967193017UL);
 
     [Fact]
-    public void The_match_of_two_AI_Players_ends_in_its_last_tick_after_both_reached_Age_II()
+    public void A_recorded_match_of_an_AI_Player_against_one_who_does_nothing_reaches_its_recorded_end()
     {
-        var match = Match.Create(Config());
+        var (end, _) = Replay.RunToEnd(AiMatches.Config(firstIsAi: false, secondIsAi: true, Seed), [], Limit);
 
-        var ticks = AiMatches.TickUntil(match, () => match.State.IsOver, Ticks);
-
-        Assert.Equal(Ticks, ticks);
-        Assert.Equal(TestMatches.SecondPlayer, match.State.Winner);
-        Assert.All(match.State.Players, player => Assert.Equal(2, player.Age));
+        Assert.Equal(ExpectedEndAgainstIdlePlayer, end);
     }
 
     // The AIs' play comes from this implementation and its behaviour is checked by the tests
@@ -82,13 +72,18 @@ public class AiReplayTests
     // the same: the model reproduced the previous hash with the previous speed, gave this one and
     // matched the match's own hash at every tick. The match now ends twenty ticks later, still
     // won by the second Player with both in Age II.
-    private const ulong ExpectedFinalHash = 12206050394229018223UL;
+    // A change of rules that changes how the AIs play may move the end of the match: the tick,
+    // winner and hash are recorded together, so a failure here shows all three as they now are.
+    private static readonly ReplayEnd ExpectedEnd = new(4721, TestMatches.SecondPlayer, 12206050394229018223UL);
 
     [Fact]
-    public void A_recorded_match_of_two_AI_Players_reaches_the_recorded_final_hash()
+    public void A_recorded_match_of_two_AI_Players_reaches_its_recorded_end_after_both_reached_Age_II()
     {
-        var hashes = Replay.Run(Config(), [], Ticks);
+        var (end, events) = Replay.RunToEnd(Config(), [], Limit);
 
-        Assert.Equal(ExpectedFinalHash, hashes[^1]);
+        Assert.Equal(ExpectedEnd, end);
+        Assert.Equal(
+            [new AgeAdvanced(TestMatches.FirstPlayer, 2), new AgeAdvanced(TestMatches.SecondPlayer, 2)],
+            events.OfType<AgeAdvanced>().OrderBy(advanced => advanced.Player.Value));
     }
 }

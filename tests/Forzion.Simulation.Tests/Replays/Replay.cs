@@ -4,11 +4,48 @@ namespace Forzion.Simulation.Tests.Replays;
 internal sealed record ScheduledCommand(int Tick, Command Command);
 
 /// <summary>
+/// How a replayed match ended: the tick it ended in, its winner (null for none) and the state
+/// hash after that tick. A replay records the three together, so that a change of rules that
+/// moves the end of the match is recorded again from a single failure message.
+/// </summary>
+internal sealed record ReplayEnd(int Tick, PlayerId? Winner, ulong FinalHash);
+
+/// <summary>
 /// The replay harness: a whole match run without graphics from a configuration (which carries
 /// the seed) and a list of commands, through the simulation's public interface only.
 /// </summary>
 internal static class Replay
 {
+    /// <summary>
+    /// Runs the match until it ends, enqueuing each command as <see cref="Run"/> does, and
+    /// returns how it ended with every event of every tick, in order. Fails the test when the
+    /// match has not ended after <paramref name="limit"/> ticks.
+    /// </summary>
+    public static (ReplayEnd End, IReadOnlyList<MatchEvent> Events) RunToEnd(
+        MatchConfig config, IReadOnlyList<ScheduledCommand> commands, int limit)
+    {
+        var match = Match.Create(config);
+        var events = new List<MatchEvent>();
+
+        for (var tick = 0; tick < limit && !match.State.IsOver; tick++)
+        {
+            foreach (var scheduled in commands)
+            {
+                if (scheduled.Tick == tick)
+                {
+                    match.Enqueue(scheduled.Command);
+                }
+            }
+
+            match.Tick();
+            events.AddRange(match.Events);
+        }
+
+        Assert.True(match.State.IsOver, $"The match did not end within {limit} ticks.");
+
+        return (new ReplayEnd(match.State.Tick, match.State.Winner, match.StateHash), events);
+    }
+
     /// <summary>
     /// Runs the match for <paramref name="ticks"/> ticks and returns the state hash after each
     /// one: element 0 is the hash after the first tick, the last element is the final hash.
