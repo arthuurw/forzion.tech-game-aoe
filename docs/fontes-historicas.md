@@ -37,13 +37,14 @@ Os textos do século XVI e XVII foram lidos em cópias digitalizadas no archive.
   - p. 55, fim de 1585: "Todos nos cerrámos em esquadrão, bem cobertos os poucos arcabuzeiros que havia com os rodeleiros", depois da "primeira nuvem de flexas".
   - p. 75, dezembro de 1586 a janeiro de 1587: "amparando os rodeleiros às vezes um e dois arcabuzeiros, que era pratica antiga do ouvidor-geral".
 - Calado, Manuel. *O Valeroso Lucideno*. Lisboa: Paulo Craesbeeck, 1648. Exemplar da John Carter Brown Library. <https://archive.org/details/ovalerosoluciden00cala>
+  - Crônica da guerra dos moradores de Pernambuco contra os holandeses; João Fernandes Vieira, citado abaixo, é um dos chefes dela. Navarro (acima) usa Calado como fonte da mesma guerra.
   - p. 27: moradores "armados de espingardas, espadas, & rodelas".
   - p. 200: João Fernandes Vieira "embraçou hũa rodela, & arrancou a espada".
 
 ### Arcabuzeiro
 
 - Regimento de Tomé de Sousa (1548), *Revista do IHGB*, t. LXI (acima).
-  - Cap. 33, p. 52: cada capitão será obrigado a ter "vinte arcabuzes ou espingardas e polvora".
+  - Cap. 33, p. 52: cada capitão de capitania será obrigado a ter "vinte arcabuzes ou espingardas e polvora".
 - *Summario*, *Revista do IHGB*, t. XXXVI (acima).
   - p. 34-35, março de 1585: na vanguarda de Martim Leitão iam "alguns arcabuzeiros, que eram doze".
 

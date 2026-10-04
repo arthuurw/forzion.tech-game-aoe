@@ -213,13 +213,13 @@ Os primeiros anos da presença portuguesa, até a década de 1530, quando o pau-
 A colônia do açúcar. Os primeiros engenhos são da década de 1530; da segunda metade do século XVI em diante, sobretudo a partir da década de 1570, a colônia se organiza em torno deles.
 
 **Rodeleiro** (`MeleeSoldier`, `FACTION_PORTUGUESE_MELEE_SOLDIER`):
-Infante de espada e rodela, o escudo redondo, das tropas portuguesas dos séculos XVI e XVII. No Brasil, os rodeleiros cobriam os arcabuzeiros contra as flechas na conquista da Paraíba, entre 1585 e 1587; na guerra holandesa, a espada e rodela seguiu em uso.
+Combatente de espada e rodela, o escudo redondo, das tropas portuguesas dos séculos XVI e XVII. No Brasil, os rodeleiros cobriam os arcabuzeiros contra as flechas na conquista da Paraíba, entre 1585 e 1587; na guerra holandesa, a espada e rodela seguiu em uso.
 
 **Arcabuzeiro** (`RangedSoldier`, `FACTION_PORTUGUESE_RANGED_SOLDIER`):
-Infante armado de arcabuz. O Regimento de 1548 obrigava cada capitania a ter arcabuzes, e arcabuzeiros combateram na conquista da Paraíba, em 1585.
+Combatente armado de arcabuz. O Regimento de 1548 obrigava cada capitão a ter arcabuzes, e arcabuzeiros combateram na conquista da Paraíba, em 1585.
 
 **Cavaleiro** (`HeavySoldier`, `FACTION_PORTUGUESE_HEAVY_SOLDIER`):
 Combatente a cavalo. No Brasil quinhentista, os de cavalo do ouvidor-geral Martim Leitão combateram na conquista da Paraíba, em 1585.
 
 **Colono** (`Villager`, `FACTION_PORTUGUESE_VILLAGER`):
-O povoador livre, que as fontes de época chamam de morador. Na colônia, o trabalho nos canaviais e engenhos era feito sobretudo por indígenas e africanos escravizados.
+O povoador, que as fontes de época chamam de morador. Na colônia, o trabalho nos canaviais e engenhos era feito sobretudo por indígenas e africanos escravizados.
