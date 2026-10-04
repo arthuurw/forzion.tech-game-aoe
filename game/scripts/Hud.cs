@@ -204,7 +204,7 @@ public partial class Hud : CanvasLayer
         if (building.ConstructionProgress is not null)
         {
             var label = NewLabel("", 16, HintColour);
-            var bar = NewBar(new Color(0.95f, 0.7f, 0.25f), new Vector2(260, 14));
+            var bar = NewBar(BarColours.Construction, new Vector2(260, 14));
             column.AddChild(label);
             column.AddChild(bar);
             refreshers.Add(panel =>
@@ -352,7 +352,7 @@ public partial class Hud : CanvasLayer
             var at = index;
             var entry = new VBoxContainer();
             entry.AddChild(NewLabel(Tr(units[at].NameKey), 13, Colors.White));
-            var bar = NewBar(new Color(0.35f, 0.85f, 0.35f), new Vector2(90, 6));
+            var bar = NewBar(BarColours.HitPoints(1), new Vector2(90, 6));
             entry.AddChild(bar);
             grid.AddChild(entry);
             refreshers.Add(panel => ShowHitPoints(bar, panel.Units[at].HitPoints, panel.Units[at].MaxHitPoints));
@@ -385,7 +385,7 @@ public partial class Hud : CanvasLayer
     {
         var box = new VBoxContainer();
         var label = NewLabel("", 15, HintColour);
-        var bar = NewBar(new Color(0.35f, 0.85f, 0.35f), new Vector2(260, 12));
+        var bar = NewBar(BarColours.HitPoints(1), new Vector2(260, 12));
         box.AddChild(label);
         box.AddChild(bar);
         refreshers.Add(panel =>
@@ -420,7 +420,7 @@ public partial class Hud : CanvasLayer
     {
         var fraction = Fractions.Of(hitPoints, maxHitPoints);
         bar.Value = fraction;
-        ((StyleBoxFlat)bar.GetThemeStylebox("fill")).BgColor = WorldBarsOverlay.HealthColour(fraction);
+        ((StyleBoxFlat)bar.GetThemeStylebox("fill")).BgColor = BarColours.HitPoints(fraction);
     }
 
     /// <summary>The colour of the amount of a Resource in the top bar.</summary>

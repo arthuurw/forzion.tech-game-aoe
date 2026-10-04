@@ -20,7 +20,6 @@ public partial class WorldBarsOverlay : Control
     private const float AboveBuilding = 1.6f;
 
     private static readonly Color Background = new(0, 0, 0, 0.7f);
-    private static readonly Color ConstructionColour = new(0.95f, 0.7f, 0.25f);
 
     /// <summary>The match whose entities get bars.</summary>
     [Export]
@@ -66,8 +65,8 @@ public partial class WorldBarsOverlay : Control
             var fill = (float)bar.Fill;
             var colour = bar.Kind switch
             {
-                WorldBarKind.HitPoints => HealthColour(bar.Fill),
-                WorldBarKind.Construction => ConstructionColour,
+                WorldBarKind.HitPoints => BarColours.HitPoints(bar.Fill),
+                WorldBarKind.Construction => BarColours.Construction,
                 _ => throw new ArgumentOutOfRangeException(nameof(bar), bar.Kind, "Unknown bar."),
             };
 
@@ -75,12 +74,6 @@ public partial class WorldBarsOverlay : Control
             DrawRect(new Rect2(whole.Position, new Vector2(whole.Size.X * fill, whole.Size.Y)), colour);
         }
     }
-
-    /// <summary>The colour of a hit point bar: green when whole, through yellow, to red when nearly dead.</summary>
-    public static Color HealthColour(double fraction) =>
-        fraction > 0.5
-            ? new Color(0.35f, 0.85f, 0.35f).Lerp(new Color(0.95f, 0.85f, 0.25f), (float)((1 - fraction) * 2))
-            : new Color(0.95f, 0.85f, 0.25f).Lerp(new Color(0.9f, 0.2f, 0.15f), (float)((0.5 - fraction) * 2));
 
     /// <summary>The world point the entity's bars hang from and how wide they are; no point when the entity is gone.</summary>
     private (Vector3? Anchor, float Width) AnchorOf(MatchState state, EntityId id)
