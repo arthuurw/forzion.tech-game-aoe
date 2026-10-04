@@ -11,8 +11,7 @@ namespace Forzion.Simulation;
 /// the end of the tick's combat, in the same tick: the units attacking it stop, the
 /// Villagers building a destroyed site stand idle, and those carrying their loads to a
 /// destroyed drop-off point, or waiting beside it to hand them over, turn to the nearest one left.
-/// A destroyed building frees its Cells, and Villagers waiting for a way to their job choose
-/// theirs again.
+/// A destroyed building frees its Cells, which may open a way for Villagers waiting for one.
 /// </remarks>
 internal sealed class CombatSystem : ISystem
 {
@@ -38,7 +37,7 @@ internal sealed class CombatSystem : ISystem
             }
         }
 
-        var buildings = state.Buildings.Count;
+        var buildingsStanding = state.Buildings.Count;
         var destroyed = state.RemoveDestroyed();
 
         foreach (var id in destroyed)
@@ -53,9 +52,9 @@ internal sealed class CombatSystem : ISystem
         }
 
         // A destroyed building frees its Cells, which may open a way for those waiting.
-        if (state.Buildings.Count < buildings)
+        if (state.Buildings.Count < buildingsStanding)
         {
-            Rerouting.AfterFreeing(state);
+            context.NoteWaysMayHaveOpened();
         }
 
         foreach (var unit in state.Units)

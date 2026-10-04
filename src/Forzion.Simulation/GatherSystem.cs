@@ -211,6 +211,7 @@ internal sealed class GatherSystem : ISystem
         var state = context.State;
 
         state.RemoveResourceSource(source);
+        context.NoteWaysMayHaveOpened();
         context.Emit(new ResourceSourceDepleted(source.Id));
 
         var replacement = NearestSourceAround(state, source.Kind, source.Cell);

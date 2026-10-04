@@ -25,6 +25,8 @@ public sealed class Match
     //   arrived. A Villager does one or the other, never both, so their order between
     //   themselves only decides that a Storehouse completed in a tick takes loads from the
     //   next one on.
+    // - Waiting after the systems that free Cells or complete drop-off points: Villagers
+    //   waiting for a way choose theirs again once the tick has opened what it opens.
     // - Defeat last, after every removal of the tick: a Player whose Town Center falls is
     //   defeated, and the match ends, in the tick it falls.
     private static readonly ISystem[] Systems =
@@ -33,6 +35,7 @@ public sealed class Match
         new MovementSystem(),
         new GatherSystem(),
         new ConstructionSystem(),
+        new WaitingSystem(),
         new DefeatSystem(),
     ];
 

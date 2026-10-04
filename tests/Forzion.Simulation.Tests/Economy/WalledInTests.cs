@@ -91,6 +91,81 @@ public class WalledInTests
         Assert.True(MapProbe.IsBeside(site, villager.Path[^1]));
     }
 
+    // A depleted source frees its Cell like a destroyed building frees its own.
+    [Fact]
+    public void A_Villager_walled_in_by_its_source_sets_out_with_its_load_once_others_deplete_it()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        Site.Stockpile(match, First, 4 * Match.BuildingCost(BuildingKind.House).Wood);
+        var villagers = Site.VillagersOf(match, First);
+        var walledIn = villagers[1];
+        var source = Gather.NearestSource(match.State, walledIn.Position.Cell, ResourceKind.Food);
+
+        // The other two step well away, out of where the Houses go.
+        var away = Site.FreeOriginNear(match.State, new CellPosition(source.Cell.X + 10, source.Cell.Y), 1);
+        match.Enqueue(new MoveCommand(First, [villagers[0].Id, villagers[2].Id], away));
+        TestMatches.TickUntil(match, () => !villagers[0].IsMoving && !villagers[2].IsMoving);
+
+        var (cell, houses) = MapProbe.NeighboursOf(match.State.Map, source.Cell)
+            .Where(each => match.State.Map[each] == CellKind.Free)
+            .Select(each => (Cell: each, Houses: HousesAroundBut(match, each, source.Cell)))
+            .First(each => each.Houses is not null);
+        match.Enqueue(new MoveCommand(First, [walledIn.Id], cell));
+        Walk.UntilStopped(match, walledIn);
+
+        foreach (var origin in houses!)
+        {
+            match.Enqueue(new PlaceBuildingCommand(First, BuildingKind.House, origin, []));
+        }
+
+        match.Enqueue(new GatherCommand(First, [walledIn.Id], source.Id));
+        match.Tick();
+        Assert.Empty(match.Events.OfType<CommandRejected>());
+        TestMatches.TickUntil(match, () => walledIn.GatherPhase == GatherPhase.ToDropOffPoint);
+        Battle.Run(match, Waiting);
+
+        Assert.Equal(cell, walledIn.Position.Cell);
+        Assert.False(walledIn.IsMoving);
+        Assert.True(walledIn.Load.IsFull);
+
+        match.Enqueue(new GatherCommand(First, [villagers[0].Id, villagers[2].Id], source.Id));
+        TestMatches.TickUntil(match, () => Gather.FindSource(match.State, source.Id) is null);
+
+        Assert.True(walledIn.IsMoving);
+        Assert.True(MapProbe.IsBeside(Battle.TownCenter(match, First), walledIn.Path[^1]));
+    }
+
+    /// <summary>
+    /// The origins of at most four Houses that can be placed now and together cover every free
+    /// Cell around <paramref name="cell"/> but <paramref name="opening"/>, and neither of the
+    /// two; null when no such Houses fit.
+    /// </summary>
+    private static List<CellPosition>? HousesAroundBut(Match match, CellPosition cell, CellPosition opening)
+    {
+        var size = Match.BuildingSize(BuildingKind.House);
+        var around = MapProbe.Square(new CellPosition(cell.X - 1, cell.Y - 1), 3)
+            .Where(each => each != cell && each != opening && match.State.Map[each] == CellKind.Free)
+            .ToHashSet();
+        var candidates = MapProbe.Square(new CellPosition(cell.X - size, cell.Y - size), size + 2)
+            .Where(origin => match.CanPlace(BuildingKind.House, origin))
+            .Where(origin => !MapProbe.Square(origin, size).Any(each => each == cell || each == opening))
+            .ToList();
+
+        IEnumerable<List<CellPosition>> Choose(int start, int count) => count == 0
+            ? [[]]
+            : Enumerable.Range(start, candidates.Count - start)
+                .SelectMany(index => Choose(index + 1, count - 1).Select(rest => rest.Prepend(candidates[index]).ToList()));
+
+        return Enumerable.Range(1, 4)
+            .SelectMany(count => Choose(0, count))
+            .FirstOrDefault(houses =>
+            {
+                var covered = houses.SelectMany(origin => MapProbe.Square(origin, size)).ToList();
+
+                return covered.Distinct().Count() == covered.Count && around.All(covered.Contains);
+            });
+    }
+
     private static int FoodOf(Match match) => match.State.Players.Single(player => player.Id == First).AmountOf(ResourceKind.Food);
 
     /// <summary>Has the raiders destroy the first of the walls and ticks until the tick it falls in.</summary>

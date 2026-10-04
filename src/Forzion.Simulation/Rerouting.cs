@@ -25,16 +25,16 @@ internal static class Rerouting
 
     /// <summary>
     /// Sends every Villager standing still with a job, among them those waiting for a way to
-    /// their source, a drop-off point or their site, to choose its way again: Cells have just
-    /// been freed, and a way may have opened. One already where its job takes it stays.
+    /// their source, a drop-off point or their site, to choose its way again. One already where
+    /// its job takes it stays.
     /// </summary>
-    public static void AfterFreeing(MatchState state)
+    public static void ForStandingJobs(MatchState state)
     {
         foreach (var unit in state.Units)
         {
             if (!unit.IsMoving)
             {
-                _ = GatherSystem.ChooseWayAgain(state, unit) || ConstructionSystem.ChooseWayAgain(state, unit);
+                JobChoosesWayAgain(state, unit);
             }
         }
     }
@@ -43,11 +43,15 @@ internal static class Rerouting
     // the site, and a Villager that stops away from them does not do its job: its job chooses.
     private static void ChooseWayAgain(MatchState state, UnitState unit)
     {
-        if (!GatherSystem.ChooseWayAgain(state, unit) && !ConstructionSystem.ChooseWayAgain(state, unit))
+        if (!JobChoosesWayAgain(state, unit))
         {
             MovementSystem.WalkTo(state.Map, unit, unit.Path[^1]);
         }
     }
+
+    /// <summary>Has the unit's job, if it walks one, choose the unit's way again. False when it has none.</summary>
+    private static bool JobChoosesWayAgain(MatchState state, UnitState unit) =>
+        GatherSystem.ChooseWayAgain(state, unit) || ConstructionSystem.ChooseWayAgain(state, unit);
 
     /// <summary>
     /// Whether every step of the path, from <paramref name="from"/> on, is one the

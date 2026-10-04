@@ -89,6 +89,12 @@ internal sealed class ConstructionSystem : ISystem
         }
 
         context.Emit(new BuildingCompleted(site.Id));
+
+        if (site.IsDropOffPoint)
+        {
+            context.NoteWaysMayHaveOpened();
+        }
+
         ReleaseBuilders(context.State, site.Id);
     }
 }
