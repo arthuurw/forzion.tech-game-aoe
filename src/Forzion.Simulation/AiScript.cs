@@ -74,7 +74,7 @@ internal sealed class AiScript
             }
 
             var builder = FreeVillagers()
-                .OrderBy(unit => SquaredDistance(unit.Position.Cell, site.Origin))
+                .OrderBy(unit => unit.Position.Cell.SquaredDistanceTo(site.Origin))
                 .ThenBy(unit => unit.Id.Value)
                 .FirstOrDefault();
 
@@ -144,7 +144,7 @@ internal sealed class AiScript
         }
 
         var builders = candidates
-            .OrderBy(unit => SquaredDistance(unit.Position.Cell, origin))
+            .OrderBy(unit => unit.Position.Cell.SquaredDistanceTo(origin))
             .ThenBy(unit => unit.Id.Value)
             .Take(Balance.AiBuilders(kind))
             .Select(unit => unit.Id)
@@ -180,7 +180,7 @@ internal sealed class AiScript
 
                 if (state.CanPlace(kind, origin) && IsRingedByFreeCells(origin, size) && !IsNearPlaced(origin, size))
                 {
-                    origins.Add((origin, SquaredDistance(new CellPosition(x + (size / 2), y + (size / 2)), centre)));
+                    origins.Add((origin, new CellPosition(x + (size / 2), y + (size / 2)).SquaredDistanceTo(centre)));
                 }
             }
         }
@@ -318,7 +318,7 @@ internal sealed class AiScript
         var home = Home();
         var target = state.Buildings
             .Where(building => building.Owner != player.Id && building.Kind == BuildingKind.TownCenter)
-            .OrderBy(townCenter => SquaredDistance(townCenter.Origin, home))
+            .OrderBy(townCenter => townCenter.Origin.SquaredDistanceTo(home))
             .ThenBy(townCenter => townCenter.Id.Value)
             .FirstOrDefault();
         var stopped = !armyGrows
@@ -502,9 +502,4 @@ internal sealed class AiScript
         && ((unit.GatherSource is null && unit.ConstructionSite is null)
             || (unit.GatherPhase == GatherPhase.ToSource && !state.FindResourceSource(unit.GatherSource!.Value)!.IsBeside(unit.Position.Cell))
             || (unit.ConstructionSite is { } site && !state.FindBuilding(site)!.IsBeside(unit.Position.Cell)));
-
-    private static int KingDistance(CellPosition a, CellPosition b) => Math.Max(Math.Abs(a.X - b.X), Math.Abs(a.Y - b.Y));
-
-    private static int SquaredDistance(CellPosition a, CellPosition b) =>
-        ((a.X - b.X) * (a.X - b.X)) + ((a.Y - b.Y) * (a.Y - b.Y));
 }
