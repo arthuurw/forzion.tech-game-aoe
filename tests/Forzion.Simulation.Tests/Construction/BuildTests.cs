@@ -85,7 +85,7 @@ public class BuildTests
     }
 
     [Fact]
-    public void A_Villager_sent_to_a_site_it_cannot_reach_stops_short_of_it_and_stands_idle()
+    public void A_Villager_sent_to_a_site_it_cannot_reach_stays_where_it_is_and_keeps_the_site()
     {
         // A map with free Cells fenced in by obstacles.
         var match = TestMatches.TwoPlayerMatch(seed: 1);
@@ -107,7 +107,7 @@ public class BuildTests
             match.Tick();
         }
 
-        Assert.Null(villager.ConstructionSite);
+        Assert.Equal(house.Id, villager.ConstructionSite);
         Assert.False(villager.IsMoving);
         Assert.Equal(0, house.BuildProgress);
     }

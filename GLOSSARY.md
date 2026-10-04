@@ -89,6 +89,9 @@ _Avoid_: Base, armazém
 Aldeão parado, sem ordem nem Coleta em andamento.
 _Avoid_: Livre, desocupado
 
+**Espera** (`Waiting`):
+Aldeão parado porque não há caminho até a Fonte, o Ponto de entrega ou a Obra do seu trabalho. Não é Ocioso: guarda o trabalho e a Carga e segue sozinho quando uma Construção destruída abre o caminho.
+
 ## Unidades
 
 **Unidade** (`Unit`):
