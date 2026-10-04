@@ -238,7 +238,6 @@ public sealed class Placeholders
 
     private void AddLogPile(Node3D view)
     {
-        // Three logs, two on them, one on top, all lying along X.
         (float Y, float Z)[] logs = [(0.1f, -0.21f), (0.1f, 0), (0.1f, 0.21f), (0.27f, -0.105f), (0.27f, 0.105f), (0.44f, 0)];
 
         foreach (var (y, z) in logs)
