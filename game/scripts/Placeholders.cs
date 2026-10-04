@@ -32,14 +32,8 @@ public sealed class Placeholders
     /// <summary>How see-through a construction site's unfinished building is: enough to tell it from a complete one, not so much that the owner's colour fades.</summary>
     private const float SiteTransparency = 0.35f;
 
-    private static readonly Color Grass = new(0.36f, 0.52f, 0.25f);
-    private static readonly Color ForestGreen = new(0.1f, 0.3f, 0.12f);
-    private static readonly Color WaterBlue = new(0.2f, 0.42f, 0.75f);
     private static readonly Color BushGreen = new(0.2f, 0.4f, 0.1f);
-    private static readonly Color BerryRed = new(0.85f, 0.1f, 0.2f);
-    private static readonly Color LogBrown = new(0.55f, 0.35f, 0.15f);
     private static readonly Color RockGrey = new(0.5f, 0.5f, 0.52f);
-    private static readonly Color GoldYellow = new(0.98f, 0.8f, 0.15f);
     private static readonly Color WallWhite = new(0.86f, 0.82f, 0.72f);
     private static readonly Color DoorBrown = new(0.25f, 0.17f, 0.1f);
     private static readonly Color TimberBrown = new(0.45f, 0.3f, 0.15f);
@@ -50,15 +44,6 @@ public sealed class Placeholders
     private static readonly Color Steel = new(0.74f, 0.76f, 0.8f);
     private static readonly Color GunWood = new(0.28f, 0.18f, 0.1f);
     private static readonly Color HorseBrown = new(0.42f, 0.27f, 0.15f);
-    private static readonly Color Neutral = new(0.6f, 0.6f, 0.6f);
-
-    // Violet and orange: neither is the blue of Water, the greens of the ground, Forests and
-    // Food, nor the brown of Wood and the yellow of Gold.
-    private static readonly Color[] PlayerColours =
-    [
-        new(0.6f, 0.3f, 0.9f),
-        new(0.95f, 0.5f, 0.1f),
-    ];
 
     private readonly Dictionary<Color, StandardMaterial3D> materials = [];
 
@@ -72,10 +57,6 @@ public sealed class Placeholders
         BuildingHeight: TallestBuilding,
         SourceHeight: TallestSource);
 
-    /// <summary>The colour that marks what a Player owns.</summary>
-    public static Color ColourOf(PlayerId player) =>
-        player.Value >= 1 && player.Value <= PlayerColours.Length ? PlayerColours[player.Value - 1] : Neutral;
-
     /// <summary>
     /// The ground and the obstacles of the map: forests and water. Resource sources and
     /// buildings are entities with views of their own.
@@ -87,12 +68,12 @@ public sealed class Placeholders
         terrain.AddChild(new MeshInstance3D
         {
             Name = "Ground",
-            Mesh = new PlaneMesh { Size = new Vector2(map.Width, map.Height), Material = MaterialFor(Grass) },
+            Mesh = new PlaneMesh { Size = new Vector2(map.Width, map.Height), Material = MaterialFor(Palette.Ground) },
             Position = new Vector3(map.Width / 2f, 0, map.Height / 2f),
         });
 
-        var forest = new CylinderMesh { TopRadius = 0, BottomRadius = 0.45f, Height = 1.4f, Material = MaterialFor(ForestGreen) };
-        var water = new BoxMesh { Size = new Vector3(1, 0.05f, 1), Material = MaterialFor(WaterBlue) };
+        var forest = new CylinderMesh { TopRadius = 0, BottomRadius = 0.45f, Height = 1.4f, Material = MaterialFor(Palette.Forest) };
+        var water = new BoxMesh { Size = new Vector3(1, 0.05f, 1), Material = MaterialFor(Palette.Water) };
 
         terrain.AddChild(Scatter("Forest", forest, CellsOf(map, CellKind.Forest), height: 0.7f));
         terrain.AddChild(Scatter("Water", water, CellsOf(map, CellKind.Water), height: 0.01f));
@@ -144,7 +125,7 @@ public sealed class Placeholders
             Position = WorldSpace.CentreOf(building),
         };
         var body = new Node3D { Name = "Body" };
-        var roof = ColourOf(building.Owner);
+        var roof = Palette.ColourOf(building.Owner);
 
         // A small gap keeps neighbouring footprints apart on screen.
         var width = building.Width - 0.1f;
@@ -197,7 +178,7 @@ public sealed class Placeholders
     public Node3D Unit(UnitState unit)
     {
         var view = new Node3D { Name = $"{unit.Kind}{unit.Id.Value}" };
-        var colour = ColourOf(unit.Owner);
+        var colour = Palette.ColourOf(unit.Owner);
 
         switch (unit.Kind)
         {
@@ -232,7 +213,7 @@ public sealed class Placeholders
 
         foreach (var at in berries)
         {
-            view.AddChild(Part("Berry", Ball(0.065f), BerryRed, at));
+            view.AddChild(Part("Berry", Ball(0.065f), Palette.ColourOf(ResourceKind.Food), at));
         }
     }
 
@@ -242,7 +223,7 @@ public sealed class Placeholders
 
         foreach (var (y, z) in logs)
         {
-            view.AddChild(Part("Log", Cylinder(0.1f, 0.8f), LogBrown, new Vector3(0, y, z), new Vector3(0, 0, 90)));
+            view.AddChild(Part("Log", Cylinder(0.1f, 0.8f), Palette.ColourOf(ResourceKind.Wood), new Vector3(0, y, z), new Vector3(0, 0, 90)));
         }
     }
 
@@ -258,7 +239,7 @@ public sealed class Placeholders
 
         foreach (var at in nuggets)
         {
-            view.AddChild(Part("Nugget", Box(0.17f, 0.17f, 0.17f), GoldYellow, at, new Vector3(30, 45, 0)));
+            view.AddChild(Part("Nugget", Box(0.17f, 0.17f, 0.17f), Palette.ColourOf(ResourceKind.Gold), at, new Vector3(30, 45, 0)));
         }
     }
 

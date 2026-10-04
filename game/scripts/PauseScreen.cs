@@ -36,7 +36,7 @@ public partial class PauseScreen : CanvasLayer
 
         veil = Overlays.NewVeil();
         veil.Visible = false;
-        veil.AddChild(Overlays.NewColumn(Overlays.NewHeading(Tr(ScreenTexts.Paused), Overlays.TitleColour), resume, mainMenu));
+        veil.AddChild(Overlays.NewColumn(Overlays.NewHeading(Tr(ScreenTexts.Paused), Palette.Heading), resume, mainMenu));
         AddChild(veil);
     }
 

@@ -18,9 +18,6 @@ public partial class Hud : CanvasLayer
 
     private const int MostUnitsShown = 24;
 
-    /// <summary>The background of the HUD's bars and panels.</summary>
-    public static readonly Color PanelColour = new(0.08f, 0.09f, 0.11f, 0.88f);
-
     private static readonly Color HintColour = new(0.8f, 0.85f, 0.95f);
 
     // The panel is rebuilt only when what it holds changes, and its buttons act on press, so a
@@ -113,7 +110,7 @@ public partial class Hud : CanvasLayer
 
         foreach (var kind in Enum.GetValues<ResourceKind>())
         {
-            resources[kind] = NewLabel("", 18, ResourceColour(kind));
+            resources[kind] = NewLabel("", 18, Palette.ColourOf(kind));
             row.AddChild(resources[kind]);
         }
 
@@ -128,7 +125,7 @@ public partial class Hud : CanvasLayer
         row.AddChild(ageAdvanceLabel);
         row.AddChild(ageAdvanceBar);
 
-        age = NewLabel("", 18, new Color(1f, 0.95f, 0.8f));
+        age = NewLabel("", 18, Palette.Heading);
         row.AddChild(age);
 
         var pause = new Button { Name = "Pause", Text = Tr(HudTexts.Pause), FocusMode = Godot.Control.FocusModeEnum.None };
@@ -438,15 +435,6 @@ public partial class Hud : CanvasLayer
         ((StyleBoxFlat)bar.GetThemeStylebox("fill")).BgColor = BarColours.HitPoints(fraction);
     }
 
-    /// <summary>The colour of the amount of a Resource in the top bar.</summary>
-    private static Color ResourceColour(ResourceKind kind) => kind switch
-    {
-        ResourceKind.Food => new Color(0.95f, 0.55f, 0.6f),
-        ResourceKind.Wood => new Color(0.85f, 0.65f, 0.4f),
-        ResourceKind.Gold => new Color(1f, 0.85f, 0.35f),
-        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown Resource."),
-    };
-
     private string CostText(Cost cost) => HudTexts.CostText(cost, key => Tr(key));
 
     private string Percent(double fraction) => HudTexts.Percent(fraction, key => Tr(key));
@@ -490,7 +478,7 @@ public partial class Hud : CanvasLayer
 
     private static StyleBoxFlat PanelStyle() => new()
     {
-        BgColor = PanelColour,
+        BgColor = Palette.Panel,
         ContentMarginLeft = 16,
         ContentMarginRight = 16,
         ContentMarginTop = 8,

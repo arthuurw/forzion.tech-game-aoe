@@ -14,9 +14,6 @@ public static class Overlays
     /// <summary>What covers the match behind the pause and the end screen: dark, but still see-through.</summary>
     public static readonly Color Veil = new(0, 0, 0, 0.6f);
 
-    /// <summary>The colour of a heading.</summary>
-    public static readonly Color TitleColour = new(1f, 0.95f, 0.8f);
-
     /// <summary>A screen-wide veil that stops the mouse from reaching what lies under it.</summary>
     public static ColorRect NewVeil()
     {

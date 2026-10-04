@@ -54,7 +54,7 @@ public partial class EndScreen : CanvasLayer
 
         veil.AddChild(Overlays.NewColumn(
             Overlays.NewHeading(Tr(ScreenTexts.TitleOf(outcome)), colour),
-            Overlays.NewText(Tr(ScreenTexts.ReasonOf(outcome)), 24, Overlays.TitleColour),
+            Overlays.NewText(Tr(ScreenTexts.ReasonOf(outcome)), 24, Palette.Heading),
             playAgain,
             mainMenu));
         veil.Visible = true;

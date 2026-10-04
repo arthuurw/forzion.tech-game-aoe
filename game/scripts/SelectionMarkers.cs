@@ -85,7 +85,7 @@ public partial class SelectionMarkers : Node3D
     private static Node3D RallyFlag()
     {
         var flag = new Node3D { Name = "RallyFlag", Visible = false };
-        var colour = Placeholders.ColourOf(MatchView.HumanPlayer);
+        var colour = Palette.ColourOf(MatchView.HumanPlayer);
 
         flag.AddChild(new MeshInstance3D
         {

@@ -25,9 +25,6 @@ public partial class MinimapView : Control
     private const int BoxHeight = 192;
     private const int Margin = (Hud.PanelHeight - BoxHeight) / 2;
 
-    private static readonly Color Ground = new(0.36f, 0.52f, 0.25f);
-    private static readonly Color Forest = new(0.12f, 0.3f, 0.12f);
-    private static readonly Color Water = new(0.2f, 0.42f, 0.75f);
     private static readonly Color Outline = new(0, 0, 0, 0.8f);
 
     private Minimap minimap = null!;
@@ -65,7 +62,7 @@ public partial class MinimapView : Control
 
     public override void _Draw()
     {
-        DrawRect(new Rect2(Vector2.Zero, Size), Hud.PanelColour);
+        DrawRect(new Rect2(Vector2.Zero, Size), Palette.Panel);
 
         var mapCorner = BoxCorner + ToVector(minimap.Corner);
         var mapSize = new Vector2(terrain.GetWidth(), terrain.GetHeight()) * (float)minimap.Scale;
@@ -78,11 +75,11 @@ public partial class MinimapView : Control
             switch (mark)
             {
                 case ResourceSourceMark source:
-                    DrawRect(area, ColourOf(source.Resource));
+                    DrawRect(area, Palette.ColourOf(source.Resource));
                     break;
                 case PlayerMark owned:
                     // Outlined, so that a unit stands out on a resource source of a like colour.
-                    DrawRect(area, Placeholders.ColourOf(owned.Owner));
+                    DrawRect(area, Palette.ColourOf(owned.Owner));
                     DrawRect(area, Outline, filled: false, width: 1);
                     break;
                 default:
@@ -136,20 +133,12 @@ public partial class MinimapView : Control
 
     private static Color ColourOf(CellKind kind) => kind switch
     {
-        CellKind.Forest => Forest,
-        CellKind.Water => Water,
+        CellKind.Forest => Palette.Forest,
+        CellKind.Water => Palette.Water,
 
         // Resource sources and buildings come and go; the minimap draws them as marks.
-        CellKind.Free or CellKind.ResourceSource or CellKind.Building => Ground,
+        CellKind.Free or CellKind.ResourceSource or CellKind.Building => Palette.Ground,
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown kind of Cell."),
-    };
-
-    private static Color ColourOf(ResourceKind kind) => kind switch
-    {
-        ResourceKind.Food => new Color(0.9f, 0.2f, 0.3f),
-        ResourceKind.Wood => new Color(0.5f, 0.32f, 0.14f),
-        ResourceKind.Gold => new Color(1f, 0.85f, 0.2f),
-        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown Resource."),
     };
 
     private static Vector2 ToVector(ScreenPoint point) => new((float)point.X, (float)point.Y);

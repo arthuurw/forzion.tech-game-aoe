@@ -26,7 +26,7 @@ public partial class MainMenu : Control
         quit.Name = "Quit";
         quit.Pressed += () => GetTree().Quit();
 
-        AddChild(Overlays.NewColumn(Overlays.NewHeading(Tr(ScreenTexts.GameTitle), Overlays.TitleColour), skirmish, quit));
+        AddChild(Overlays.NewColumn(Overlays.NewHeading(Tr(ScreenTexts.GameTitle), Palette.Heading), skirmish, quit));
         skirmish.GrabFocus();
     }
 }
