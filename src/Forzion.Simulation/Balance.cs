@@ -71,7 +71,8 @@ internal static class Balance
         TrainTime: 18 * Match.TicksPerSecond,
         TrainedAt: BuildingKind.Barracks);
 
-    // A mounted fighter, so it outpaces the infantry on foot. The speed is provisional.
+    // Faster than the melee and ranged soldiers by design: the Portuguese field it as a
+    // horseman. The speed is provisional.
     private static readonly UnitStats HeavySoldier = new(
         Speed: Fix64.FromInt(3),
         HitPoints: 80,
