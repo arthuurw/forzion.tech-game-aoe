@@ -54,7 +54,7 @@ internal sealed class AiScript
         script.TrainVillager();
         script.AdvanceAge();
         script.TrainSoldier();
-        script.SendIdleVillagersToGather();
+        script.SendVillagersToGather();
         script.Attack();
 
         return script.commands;
@@ -73,7 +73,7 @@ internal sealed class AiScript
                 continue;
             }
 
-            var builder = FreeVillagers()
+            var builder = VillagersNotBuilding()
                 .OrderBy(unit => unit.Position.Cell.SquaredDistanceTo(site.Origin))
                 .ThenBy(unit => unit.Id.Value)
                 .FirstOrDefault();
@@ -124,7 +124,7 @@ internal sealed class AiScript
     /// </summary>
     private void PlaceNearHome(BuildingKind kind)
     {
-        Place(kind, Home(), Balance.AiBuildingReach, FreeVillagers().ToList());
+        Place(kind, Home(), Balance.AiBuildingReach, VillagersNotBuilding().ToList());
     }
 
     /// <summary>
@@ -318,7 +318,7 @@ internal sealed class AiScript
     /// </summary>
     private void Attack()
     {
-        var waiting = Army().Where(unit => unit.Target is null).Select(unit => unit.Id).ToList();
+        var unengaged = Army().Where(unit => unit.Target is null).Select(unit => unit.Id).ToList();
         var home = Home();
         var target = state.Buildings
             .Where(building => building.Owner != player.Id && building.Kind == BuildingKind.TownCenter)
@@ -329,9 +329,9 @@ internal sealed class AiScript
             && !OwnUnits().Any(unit => unit.GatherSource is not null)
             && !OwnBuildings(BuildingKind.Barracks).Any(barracks => barracks.TrainingQueue.Count > 0);
 
-        if (target is not null && waiting.Count > 0 && (waiting.Count >= Balance.AiAttackArmySize || stopped))
+        if (target is not null && unengaged.Count > 0 && (unengaged.Count >= Balance.AiAttackArmySize || stopped))
         {
-            commands.Add(new AttackCommand(player.Id, waiting, target.Id));
+            commands.Add(new AttackCommand(player.Id, unengaged, target.Id));
         }
     }
 
@@ -375,13 +375,14 @@ internal sealed class AiScript
     }
 
     /// <summary>
-    /// Sends each idle Villager, in ID order, to gather the Resource whose gatherers are fewest
+    /// Sends each Villager that needs a new job (<see cref="NeedsNewJob"/>), in ID order, to
+    /// gather the Resource whose gatherers are fewest
     /// for its share (<see cref="Balance.AiGatherShare"/>), from a source drawn among the
     /// nearest of that Resource to the Player's drop-off points. When even that source lies
     /// farther than <see cref="Balance.AiStorehouseDistance"/> from all of them, the Villager
     /// first places a Storehouse by it, one at a time, and is sent to gather once it is idle again.
     /// </summary>
-    private void SendIdleVillagersToGather()
+    private void SendVillagersToGather()
     {
         var gatherers = new int[ResourceKinds.Length];
 
@@ -393,7 +394,7 @@ internal sealed class AiScript
             }
         }
 
-        foreach (var villager in OwnUnits().Where(unit => IsIdleVillager(unit) && !busy.Contains(unit.Id)).ToList())
+        foreach (var villager in OwnUnits().Where(unit => NeedsNewJob(unit) && !busy.Contains(unit.Id)).ToList())
         {
             if (LeastGatheredKind(gatherers) is not { } kind)
             {
@@ -474,7 +475,11 @@ internal sealed class AiScript
         .DefaultIfEmpty(int.MaxValue)
         .Min();
 
-    /// <summary>The Cell the Player's Town Center is centred on, or the map's centre once it has none.</summary>
+    /// <summary>
+    /// The Cell the Player's own Town Center is centred on, or the map's centre once it has none:
+    /// what the AI builds around and measures the enemy Town Centers from. Not a term of the
+    /// game, only the AI's name for the area around its own Town Center.
+    /// </summary>
     private CellPosition Home() =>
         TownCenter() is { } townCenter
             ? new CellPosition(townCenter.Origin.X + (townCenter.Width / 2), townCenter.Origin.Y + (townCenter.Height / 2))
@@ -487,7 +492,7 @@ internal sealed class AiScript
         state.Buildings.Where(building => building.Owner == player.Id && building.Kind == kind);
 
     /// <summary>The Player's Villagers that build nothing and were given no job this tick.</summary>
-    private IEnumerable<UnitState> FreeVillagers() => OwnUnits()
+    private IEnumerable<UnitState> VillagersNotBuilding() => OwnUnits()
         .Where(unit => unit.Kind == UnitKind.Villager && unit.ConstructionSite is null && !busy.Contains(unit.Id));
 
     /// <summary>The Player's units that are not Villagers.</summary>
@@ -496,11 +501,12 @@ internal sealed class AiScript
     private IEnumerable<UnitState> OwnUnits() => state.Units.Where(unit => unit.Owner == player.Id);
 
     /// <summary>
-    /// A Villager standing still with no job, or waiting with one it cannot reach: a source or a
-    /// construction site with no way to it. The AI gives either a new job, as the Villager would
-    /// otherwise wait until a way opens.
+    /// Whether the unit is a Villager the AI gives a new job: an Idle one, standing still with
+    /// no job, or one Waiting with a job it cannot reach, a source or a construction site with
+    /// no way to it. A Waiting Villager is not Idle, but the AI does not leave it to wait until
+    /// a way opens.
     /// </summary>
-    private bool IsIdleVillager(UnitState unit) =>
+    private bool NeedsNewJob(UnitState unit) =>
         unit.CanGather
         && !unit.IsMoving
         && ((unit.GatherSource is null && unit.ConstructionSite is null)
