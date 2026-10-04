@@ -92,12 +92,10 @@ public class RecordedMatchReplayTests
     [Fact]
     public void The_recording_gives_every_kind_of_command()
     {
-        Type[] kinds =
-        [
-            typeof(MoveCommand), typeof(GatherCommand), typeof(PlaceBuildingCommand), typeof(BuildCommand),
-            typeof(TrainCommand), typeof(CancelTrainingCommand), typeof(SetRallyPointCommand),
-            typeof(AttackCommand), typeof(AgeAdvanceCommand),
-        ];
+        // Every command a Player can give, read from the simulation itself, so that a new kind of
+        // command fails this test until the recording gives it too.
+        var kinds = typeof(Command).Assembly.GetExportedTypes()
+            .Where(type => type.IsSubclassOf(typeof(Command)) && !type.IsAbstract);
 
         Assert.Equal(
             kinds.Select(kind => kind.Name).Order(),
