@@ -52,14 +52,14 @@ public class CompletedBuildingTests
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [gatherer.Id], source.Id));
         var delivery = DeliveryBy(match, player, gatherer);
 
-        Assert.True(Gather.Touches(townCenter, delivery));
+        Assert.True(MapProbe.IsBeside(townCenter, delivery));
 
         match.Enqueue(new BuildCommand(TestMatches.FirstPlayer, villagers.Select(villager => villager.Id).ToList(), storehouse.Id));
         Gather.Until(match, () => storehouse.IsComplete);
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [gatherer.Id], Gather.NearestSource(state, gatherer.Position.Cell, ResourceKind.Wood).Id));
         delivery = DeliveryBy(match, player, gatherer);
 
-        Assert.True(Gather.Touches(storehouse, delivery));
+        Assert.True(MapProbe.IsBeside(storehouse, delivery));
     }
 
     [Fact]

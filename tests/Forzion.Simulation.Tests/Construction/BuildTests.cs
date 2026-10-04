@@ -24,7 +24,7 @@ public class BuildTests
             match.Tick();
 
             // Work only counts while the Villager stands beside the site.
-            var working = !villager.IsMoving && Gather.Touches(house, villager.Position.Cell);
+            var working = !villager.IsMoving && MapProbe.IsBeside(house, villager.Position.Cell);
             worked += working ? 1 : 0;
             Assert.Equal(Math.Min(worked, house.BuildTime), house.BuildProgress);
         }
@@ -56,7 +56,7 @@ public class BuildTests
             ticks++;
 
             // Each Villager standing beside the site adds one tick of work.
-            var working = villagers.Count(villager => !villager.IsMoving && Gather.Touches(house, villager.Position.Cell));
+            var working = villagers.Count(villager => !villager.IsMoving && MapProbe.IsBeside(house, villager.Position.Cell));
             mostAtOnce = Math.Max(mostAtOnce, working);
             Assert.Equal(Math.Min(before + working, house.BuildTime), house.BuildProgress);
         }
@@ -81,7 +81,7 @@ public class BuildTests
         match.Tick();
 
         Assert.Equal(site.Id, builder.ConstructionSite);
-        Assert.True(Gather.Touches(site, builder.Position.Cell));
+        Assert.True(MapProbe.IsBeside(site, builder.Position.Cell));
         Assert.True(site.BuildProgress > 0);
     }
 
@@ -96,7 +96,7 @@ public class BuildTests
         var size = Match.BuildingSize(BuildingKind.House);
         var origin = MapProbe.AllCells(match.State.Map).First(cell =>
             match.CanPlace(BuildingKind.House, cell)
-            && !Site.Square(new CellPosition(cell.X - 1, cell.Y - 1), size + 2).Any(reachable.Contains));
+            && !MapProbe.Square(new CellPosition(cell.X - 1, cell.Y - 1), size + 2).Any(reachable.Contains));
         match.Enqueue(new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.House, origin, [villager.Id]));
         match.Tick();
         var house = match.State.Buildings[^1];

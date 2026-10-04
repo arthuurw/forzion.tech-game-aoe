@@ -1,5 +1,6 @@
 using Forzion.Simulation.Tests.Construction;
 using Forzion.Simulation.Tests.Economy;
+using Forzion.Simulation.Tests.Maps;
 using Forzion.Simulation.Tests.Matches;
 
 namespace Forzion.Simulation.Tests.Combat;
@@ -100,13 +101,13 @@ public class DestroyedBuildingTests
         match.Tick();
 
         Assert.Equal(GatherPhase.ToDropOffPoint, carrier.GatherPhase);
-        Assert.True(Gather.Touches(storehouse, carrier.Path[^1]));
+        Assert.True(MapProbe.IsBeside(storehouse, carrier.Path[^1]));
 
         Battle.TickUntil(match, () => Battle.Building(match, storehouse.Id) is null);
 
         Assert.Equal(GatherPhase.ToDropOffPoint, carrier.GatherPhase);
         Assert.True(carrier.IsMoving);
-        Assert.True(Gather.Touches(townCenter, carrier.Path[^1]));
+        Assert.True(MapProbe.IsBeside(townCenter, carrier.Path[^1]));
     }
 
     // A carrier already beside its drop-off point stands still until the next tick hands the load over.
@@ -120,8 +121,8 @@ public class DestroyedBuildingTests
         var (match, storehouse, carrier, source) = StorehouseUnderRaid();
         var townCenter = Battle.TownCenter(match, First);
         var load = carrier.Load;
-        Assert.True(Gather.Touches(storehouse, carrier.Position.Cell));
-        Assert.False(Gather.Touches(townCenter, carrier.Position.Cell));
+        Assert.True(MapProbe.IsBeside(storehouse, carrier.Position.Cell));
+        Assert.False(MapProbe.IsBeside(townCenter, carrier.Position.Cell));
 
         for (var tick = 1; tick < ticksToDestroy; tick++)
         {
@@ -135,7 +136,7 @@ public class DestroyedBuildingTests
         Assert.Null(Battle.Building(match, storehouse.Id));
         Assert.Equal(GatherPhase.ToDropOffPoint, carrier.GatherPhase);
         Assert.True(carrier.IsMoving);
-        Assert.True(Gather.Touches(townCenter, carrier.Path[^1]));
+        Assert.True(MapProbe.IsBeside(townCenter, carrier.Path[^1]));
         Assert.Equal(source.Id, carrier.GatherSource);
         Assert.Equal(load, carrier.Load);
     }

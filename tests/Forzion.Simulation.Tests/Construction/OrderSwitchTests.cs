@@ -1,4 +1,5 @@
 using Forzion.Simulation.Tests.Economy;
+using Forzion.Simulation.Tests.Maps;
 using Forzion.Simulation.Tests.Matches;
 using Forzion.Simulation.Tests.Movement;
 
@@ -14,8 +15,8 @@ public class OrderSwitchTests
         var house = BuildingFor(match, villager, ticks: 20);
 
         // The far side of the site: the move ends beside it again.
-        var destination = Site.Square(new CellPosition(house.Origin.X - 1, house.Origin.Y - 1), house.Width + 2)
-            .Where(cell => Gather.Touches(house, cell))
+        var destination = MapProbe.Square(new CellPosition(house.Origin.X - 1, house.Origin.Y - 1), house.Width + 2)
+            .Where(cell => MapProbe.IsBeside(house, cell))
             .OrderByDescending(cell => Walk.SquaredDistance(cell, villager.Position.Cell))
             .First();
 

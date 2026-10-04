@@ -1,4 +1,5 @@
 using Forzion.Simulation.Tests.Economy;
+using Forzion.Simulation.Tests.Maps;
 using Forzion.Simulation.Tests.Matches;
 
 namespace Forzion.Simulation.Tests.Construction;
@@ -15,7 +16,7 @@ public class BuildCommandTests
 
         Gather.Until(match, () => house.IsComplete);
 
-        Assert.True(Gather.Touches(house, villager.Position.Cell));
+        Assert.True(MapProbe.IsBeside(house, villager.Position.Cell));
         Assert.Null(villager.ConstructionSite);
     }
 

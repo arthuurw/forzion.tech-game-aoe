@@ -1,4 +1,3 @@
-using Forzion.Simulation.Tests.Construction;
 using Forzion.Simulation.Tests.Maps;
 using Forzion.Simulation.Tests.Matches;
 using Forzion.Simulation.Tests.Movement;
@@ -18,7 +17,7 @@ public class GatherCommandTests
 
         Gather.Until(match, () => villager.Load.Amount > 0);
 
-        Assert.True(Gather.Touch(villager.Position.Cell, source.Cell));
+        Assert.True(MapProbe.Touch(villager.Position.Cell, source.Cell));
         Assert.Equal(ResourceKind.Food, villager.Load.Resource);
         Assert.Equal(before - villager.Load.Amount, source.Amount);
         Assert.Equal(source.Id, villager.GatherSource);
@@ -38,7 +37,7 @@ public class GatherCommandTests
         var source = match.State.ResourceSources
             .OrderBy(each => Walk.SquaredDistance(each.Cell, villager.Position.Cell))
             .ThenBy(each => each.Id.Value)
-            .First(each => Site.Square(each.Cell, 3).Where(cell => cell != each.Cell).All(reachable.Contains));
+            .First(each => MapProbe.Square(each.Cell, 3).Where(cell => cell != each.Cell).All(reachable.Contains));
         var corner = new CellPosition(source.Cell.X + 1, source.Cell.Y + 1);
         var start = new CellPosition(source.Cell.X + 2, source.Cell.Y + 2);
         match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], start));
@@ -74,12 +73,12 @@ public class GatherCommandTests
         Assert.True(load > 1);
         Assert.Equal(load, player.AmountOf(ResourceKind.Food));
         Assert.Equal(0, villager.Load.Amount);
-        Assert.True(Gather.Touches(townCenter, villager.Position.Cell));
+        Assert.True(MapProbe.IsBeside(townCenter, villager.Position.Cell));
 
         // With no further command, back to the source for more.
         Gather.Until(match, () => villager.Load.Amount > 0);
 
-        Assert.True(Gather.Touch(villager.Position.Cell, source.Cell));
+        Assert.True(MapProbe.Touch(villager.Position.Cell, source.Cell));
         Assert.Equal(initial, source.Amount + villager.Load.Amount + player.AmountOf(ResourceKind.Food));
 
         // And the next trip brings another load of the same size.
@@ -314,12 +313,12 @@ public class GatherCommandTests
 
         Assert.Equal(full, largest);
         Assert.Equal(full, player.AmountOf(ResourceKind.Food));
-        Assert.True(Gather.Touches(match.State.Buildings[0], villager.Position.Cell));
+        Assert.True(MapProbe.IsBeside(match.State.Buildings[0], villager.Position.Cell));
 
         // And back to the source for the next load.
         Gather.Until(match, () => villager.Load.Amount > 0);
 
-        Assert.True(Gather.Touch(villager.Position.Cell, source.Cell));
+        Assert.True(MapProbe.Touch(villager.Position.Cell, source.Cell));
         Assert.Equal(source.Id, villager.GatherSource);
     }
 
@@ -341,7 +340,7 @@ public class GatherCommandTests
 
         Assert.Equal(full, largest);
         Assert.Equal(full, player.AmountOf(ResourceKind.Food));
-        Assert.True(Gather.Touches(match.State.Buildings[0], villager.Position.Cell));
+        Assert.True(MapProbe.IsBeside(match.State.Buildings[0], villager.Position.Cell));
     }
 
     [Fact]
@@ -416,7 +415,7 @@ public class GatherCommandTests
         FirstDelivery(match, villager);
 
         Assert.Equal(full, player.AmountOf(ResourceKind.Food));
-        Assert.True(Gather.Touches(townCenter, villager.Position.Cell));
+        Assert.True(MapProbe.IsBeside(townCenter, villager.Position.Cell));
     }
 
     /// <summary>

@@ -1,3 +1,4 @@
+using Forzion.Simulation.Tests.Maps;
 using Forzion.Simulation.Tests.Matches;
 using Forzion.Simulation.Tests.Movement;
 
@@ -31,7 +32,7 @@ public class SourceSwitchTests
         Gather.Until(match, () => next.Amount < nextInitial);
 
         Assert.Contains(villagers, villager =>
-            villager.GatherPhase == GatherPhase.Gathering && Gather.Touch(villager.Position.Cell, next.Cell));
+            villager.GatherPhase == GatherPhase.Gathering && MapProbe.Touch(villager.Position.Cell, next.Cell));
     }
 
     [Fact]

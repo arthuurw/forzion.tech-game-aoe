@@ -20,17 +20,6 @@ internal static class Gather
     public static ResourceSourceState? FindSource(MatchState state, EntityId id) =>
         state.ResourceSources.SingleOrDefault(source => source.Id == id);
 
-    /// <summary>Whether the two Cells touch, by a side or by a corner.</summary>
-    public static bool Touch(CellPosition a, CellPosition b) =>
-        a != b && Math.Abs(a.X - b.X) <= 1 && Math.Abs(a.Y - b.Y) <= 1;
-
-    /// <summary>Whether the Cell touches the building's footprint, by a side or by a corner, without being under it.</summary>
-    public static bool Touches(BuildingState building, CellPosition cell) =>
-        cell.X >= building.Origin.X - 1 && cell.X <= building.Origin.X + building.Width
-        && cell.Y >= building.Origin.Y - 1 && cell.Y <= building.Origin.Y + building.Height
-        && !(cell.X >= building.Origin.X && cell.X < building.Origin.X + building.Width
-            && cell.Y >= building.Origin.Y && cell.Y < building.Origin.Y + building.Height);
-
     /// <summary>Ticks the match until the condition holds, failing the test after <see cref="TickLimit"/> ticks.</summary>
     public static void Until(Match match, Func<bool> condition)
     {

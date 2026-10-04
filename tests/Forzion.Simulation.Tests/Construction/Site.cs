@@ -84,21 +84,9 @@ internal static class Site
             {
                 var ringed = new CellPosition(origin.X - 1, origin.Y - 1);
 
-                return Square(ringed, side + 2).All(cell => map[cell] == CellKind.Free)
+                return MapProbe.Square(ringed, side + 2).All(cell => map[cell] == CellKind.Free)
                     && !state.Units.Any(unit => IsUnder(unit.Position.Cell, ringed, side + 2));
             });
-    }
-
-    /// <summary>The Cells of the square of the given side whose lowest corner is <paramref name="origin"/>.</summary>
-    public static IEnumerable<CellPosition> Square(CellPosition origin, int side)
-    {
-        for (var y = origin.Y; y < origin.Y + side; y++)
-        {
-            for (var x = origin.X; x < origin.X + side; x++)
-            {
-                yield return new CellPosition(x, y);
-            }
-        }
     }
 
     /// <summary>
@@ -120,43 +108,19 @@ internal static class Site
             .ThenBy(origin => origin.X)
             .First(origin =>
             {
-                var footprint = Square(origin, size).ToHashSet();
+                var footprint = MapProbe.Square(origin, size).ToHashSet();
+                // Mirrors on purpose the aim the builders used before they looked for the nearest
+                // reachable Cell beside the site: the Cell of the footprint nearest to the unit.
+                // The simulation's own rule is internal (TST-1), so the test keeps its copy.
                 var nearSide = new CellPosition(
                     Math.Clamp(start.X, origin.X, origin.X + size - 1),
                     Math.Clamp(start.Y, origin.Y, origin.Y + size - 1));
-                var reachable = ReachableAround(map, start, footprint);
+                var reachable = MapProbe.ReachableFrom(map, start, footprint);
                 var nearest = reachable.Min(cell => Walk.SquaredDistance(cell, nearSide));
 
-                return reachable.Any(cell => IsBeside(footprint, cell))
-                    && !reachable.Any(cell => Walk.SquaredDistance(cell, nearSide) == nearest && IsBeside(footprint, cell));
+                return reachable.Any(cell => MapProbe.IsBeside(footprint, cell))
+                    && !reachable.Any(cell => Walk.SquaredDistance(cell, nearSide) == nearest && MapProbe.IsBeside(footprint, cell));
             });
-    }
-
-    /// <summary>Whether the Cell touches one of the footprint's Cells, by a side or by a corner, without being one of them.</summary>
-    private static bool IsBeside(HashSet<CellPosition> footprint, CellPosition cell) =>
-        !footprint.Contains(cell) && footprint.Any(other => Gather.Touch(cell, other));
-
-    /// <summary>
-    /// The Cells a unit on <paramref name="start"/> can walk to, moving between free Cells that
-    /// share a side, once the <paramref name="blocked"/> Cells are taken as well.
-    /// </summary>
-    private static HashSet<CellPosition> ReachableAround(MapState map, CellPosition start, HashSet<CellPosition> blocked)
-    {
-        var reached = new HashSet<CellPosition> { start };
-        var frontier = new Queue<CellPosition>([start]);
-
-        while (frontier.Count > 0)
-        {
-            foreach (var next in MapProbe.NeighboursOf(map, frontier.Dequeue()))
-            {
-                if (map[next] == CellKind.Free && !blocked.Contains(next) && reached.Add(next))
-                {
-                    frontier.Enqueue(next);
-                }
-            }
-        }
-
-        return reached;
     }
 
     private static bool IsUnder(CellPosition cell, CellPosition origin, int side) =>
