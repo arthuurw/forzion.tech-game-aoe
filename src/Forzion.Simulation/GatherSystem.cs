@@ -74,7 +74,7 @@ internal sealed class GatherSystem : ISystem
             // A carrier whose load filled beside a drop-off point waits there, with no path, for the next tick.
             var destination = unit.IsMoving ? unit.Path[^1] : unit.Position.Cell;
 
-            if (!DropOffPointsOf(state, unit.Owner).Any(building => building.IsBeside(destination)))
+            if (!IsBesideDropOffPoint(state, unit.Owner, destination))
             {
                 CarryToDropOffPoint(state, unit);
             }
@@ -264,7 +264,7 @@ internal sealed class GatherSystem : ISystem
     {
         var cell = villager.Position.Cell;
 
-        if (!DropOffPointsOf(state, villager.Owner).Any(building => building.IsBeside(cell)))
+        if (!IsBesideDropOffPoint(state, villager.Owner, cell))
         {
             StopGathering(state.Map, villager);
 
@@ -283,6 +283,10 @@ internal sealed class GatherSystem : ISystem
             StopGathering(state.Map, villager);
         }
     }
+
+    /// <summary>Whether the Cell lies beside one of the Player's drop-off points.</summary>
+    private static bool IsBesideDropOffPoint(MatchState state, PlayerId owner, CellPosition cell) =>
+        DropOffPointsOf(state, owner).Any(building => building.IsBeside(cell));
 
     /// <summary>The Player's drop-off points, in ascending ID order.</summary>
     private static List<BuildingState> DropOffPointsOf(MatchState state, PlayerId owner) =>
