@@ -23,8 +23,11 @@ public sealed class Placeholders
 
     private const float TallestSource = 0.6f;
 
-    /// <summary>How far from a unit's position the mouse still picks it: a little beyond its body, which is only a few pixels wide at a distance.</summary>
-    private const float UnitPickRadius = 0.4f;
+    /// <summary>
+    /// How far from a unit's position the mouse still picks it: past the body, which is only a
+    /// few pixels wide at a distance, and over most of the heavy soldier's horse.
+    /// </summary>
+    private const float UnitPickRadius = 0.5f;
 
     /// <summary>How see-through a construction site's unfinished building is.</summary>
     private const float SiteTransparency = 0.45f;
