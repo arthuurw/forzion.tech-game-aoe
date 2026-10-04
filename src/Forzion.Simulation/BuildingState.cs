@@ -23,14 +23,12 @@ public sealed class BuildingState
 {
     private readonly List<UnitKind> trainingQueue = [];
 
-    internal BuildingState(EntityId id, PlayerId owner, BuildingKind kind, CellPosition origin, int width, int height)
+    internal BuildingState(EntityId id, PlayerId owner, BuildingKind kind, CellPosition origin)
     {
         Id = id;
         Owner = owner;
         Kind = kind;
-        Origin = origin;
-        Width = width;
-        Height = height;
+        Footprint = Footprint.Of(kind, origin);
         HitPoints = MaxHitPoints;
     }
 
@@ -41,16 +39,19 @@ public sealed class BuildingState
     public BuildingKind Kind { get; }
 
     /// <summary>The Cell of the footprint with the lowest X and Y.</summary>
-    public CellPosition Origin { get; }
+    public CellPosition Origin => Footprint.Origin;
 
     /// <summary>Width of the footprint in Cells.</summary>
-    public int Width { get; }
+    public int Width => Footprint.Width;
 
     /// <summary>Height of the footprint in Cells.</summary>
-    public int Height { get; }
+    public int Height => Footprint.Height;
+
+    /// <summary>The Cells the building covers, the size its kind gives.</summary>
+    internal Footprint Footprint { get; }
 
     /// <summary>Hit points the building has when whole.</summary>
-    public int MaxHitPoints => Balance.HitPoints(Kind);
+    public int MaxHitPoints => Balance.Of(Kind).HitPoints;
 
     /// <summary>Hit points left. The building is destroyed when they reach zero.</summary>
     public int HitPoints { get; internal set; }
@@ -62,7 +63,7 @@ public sealed class BuildingState
     /// Ticks of Villager work the building takes to complete. Each Villager building it adds
     /// one tick of work per tick, so two finish it in half the time.
     /// </summary>
-    public int BuildTime => Balance.BuildTime(Kind);
+    public int BuildTime => Balance.Of(Kind).BuildTime;
 
     /// <summary>Whether the building is complete. Until then it is a construction site and does nothing but block its Cells.</summary>
     public bool IsComplete => BuildProgress == BuildTime;
@@ -135,7 +136,7 @@ public sealed class BuildingState
     internal CellPosition? FreeCellBeside(MapState map, CellPosition toward)
     {
         CellPosition? nearest = null;
-        var nearestDistance = long.MaxValue;
+        var nearestDistance = int.MaxValue;
 
         // Row by row, from the lowest: ascending Cell index, so a strict comparison keeps the lowest index among the equally near.
         for (var y = Origin.Y - 1; y <= Origin.Y + Height; y++)
@@ -149,7 +150,7 @@ public sealed class BuildingState
                     continue;
                 }
 
-                var distance = ((long)(x - toward.X) * (x - toward.X)) + ((long)(y - toward.Y) * (y - toward.Y));
+                var distance = cell.SquaredDistanceTo(toward);
 
                 if (distance < nearestDistance)
                 {
@@ -162,18 +163,8 @@ public sealed class BuildingState
         return nearest;
     }
 
-    /// <summary>The Cell of the footprint nearest to the given Cell.</summary>
-    internal CellPosition NearestCellTo(CellPosition cell) => new(
-        Math.Clamp(cell.X, Origin.X, Origin.X + Width - 1),
-        Math.Clamp(cell.Y, Origin.Y, Origin.Y + Height - 1));
-
     /// <summary>Whether the given Cell lies beside the footprint, by a side or by a corner.</summary>
-    internal bool IsBeside(CellPosition cell)
-    {
-        var nearest = NearestCellTo(cell);
-
-        return cell != nearest && Math.Abs(cell.X - nearest.X) <= 1 && Math.Abs(cell.Y - nearest.Y) <= 1;
-    }
+    internal bool IsBeside(CellPosition cell) => Footprint.IsBeside(cell);
 
     internal void WriteTo(StateHasher hasher)
     {

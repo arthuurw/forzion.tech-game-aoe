@@ -1,3 +1,5 @@
+using Forzion.Simulation.Tests.Matches;
+
 namespace Forzion.Simulation.Tests.Movement;
 
 /// <summary>Helpers of the movement tests, built on the simulation's public interface only.</summary>
@@ -6,9 +8,6 @@ internal static class Walk
     /// <summary>More ticks than any walk across a test map takes.</summary>
     public const int TickLimit = 5000;
 
-    /// <summary>The middle one of the first Player's starting Villagers, which stands beside the middle of the Town Center.</summary>
-    public static UnitState MiddleVillager(Match match) => match.State.Units[1];
-
     /// <summary>
     /// The Cell on the far side of the first Player's Town Center from the middle Villager:
     /// the straight line between the two crosses the building.
@@ -16,7 +15,7 @@ internal static class Walk
     public static CellPosition BehindTownCenter(Match match)
     {
         var townCenter = match.State.Buildings[0];
-        var villager = MiddleVillager(match).Position.Cell;
+        var villager = TestMatches.MiddleVillager(match).Position.Cell;
         var centre = new CellPosition(
             townCenter.Origin.X + (townCenter.Width / 2),
             townCenter.Origin.Y + (townCenter.Height / 2));

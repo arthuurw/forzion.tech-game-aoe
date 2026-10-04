@@ -1,16 +1,15 @@
 using Forzion.Simulation;
+using static Forzion.Presentation.Tests.TestMatches;
 
 namespace Forzion.Presentation.Tests;
 
 public class PlayerControlTests
 {
-    private static readonly PlayerId FirstPlayer = new(1);
-    private static readonly PlayerId SecondPlayer = new(2);
-
     // Units 0.4 Cell across and 1 tall, buildings and resource sources 1.2 tall.
     private static readonly PickSizes Sizes = new(UnitRadius: 0.4, UnitHeight: 1, BuildingAndSourceHeight: 1.2);
 
     private MatchDriver driver = null!;
+    private Match driven = null!;
 
     [Fact]
     public void Clicking_a_unit_of_the_Player_selects_it()
@@ -66,7 +65,7 @@ public class PlayerControlTests
     {
         var control = NewControl(out var match);
         var townCenter = match.State.Buildings.First(building => building.Owner == FirstPlayer);
-        var middle = new ScreenPoint(townCenter.Origin.X + (townCenter.Width / 2.0), townCenter.Origin.Y + (townCenter.Height / 2.0));
+        var middle = OverCentreOf(townCenter);
 
         control.Select(middle, middle);
 
@@ -223,7 +222,7 @@ public class PlayerControlTests
     {
         var control = NewControl(out var match);
         var townCenter = match.State.Buildings.First(building => building.Owner == FirstPlayer);
-        var middle = new ScreenPoint(townCenter.Origin.X + 1.5, townCenter.Origin.Y + 1.5);
+        var middle = OverCentreOf(townCenter);
         control.Select(middle, middle);
 
         control.OrderAt(new ScreenPoint(-5, -5));
@@ -289,10 +288,57 @@ public class PlayerControlTests
         control.Select(Over(soldier.Position), Over(soldier.Position));
         var townCenter = match.State.Buildings.First(building => building.Owner == SecondPlayer);
 
-        control.OrderAt(new ScreenPoint(townCenter.Origin.X + 1.5, townCenter.Origin.Y + 1.5));
+        control.OrderAt(OverCentreOf(townCenter));
         Tick(match);
 
         Assert.Equal(townCenter.Id, soldier.Target);
+    }
+
+    [Fact]
+    public void Right_clicking_an_enemy_unit_with_only_Villagers_selected_sends_them_walking_to_it()
+    {
+        var control = NewControl(out var match);
+        var villager = UnitsOf(match, FirstPlayer)[0];
+        control.Select(Over(villager.Position), Over(villager.Position));
+        var enemy = UnitsOf(match, SecondPlayer)[0];
+
+        control.OrderAt(Over(enemy.Position));
+        var events = Tick(match);
+
+        Assert.DoesNotContain(events, matchEvent => matchEvent is CommandRejected);
+        Assert.Equal(enemy.Position.Cell, villager.Path[^1]);
+    }
+
+    [Fact]
+    public void Right_clicking_an_enemy_building_with_only_Villagers_selected_sends_them_walking_up_to_it()
+    {
+        var control = NewControl(out var match);
+        var villager = UnitsOf(match, FirstPlayer)[0];
+        control.Select(Over(villager.Position), Over(villager.Position));
+        var townCenter = match.State.Buildings.First(building => building.Owner == SecondPlayer);
+
+        control.OrderAt(OverCentreOf(townCenter));
+        var events = Tick(match);
+
+        Assert.DoesNotContain(events, matchEvent => matchEvent is CommandRejected);
+        Assert.True(villager.IsMoving);
+        Assert.Null(villager.Target);
+    }
+
+    [Fact]
+    public void Right_clicking_an_enemy_site_with_only_Villagers_selected_sends_them_walking_up_to_it()
+    {
+        var control = NewControl(out var match);
+        var site = PlaceHouse(match, SecondPlayer);
+        var villager = UnitsOf(match, FirstPlayer)[0];
+        control.Select(Over(villager.Position), Over(villager.Position));
+
+        control.OrderAt(OverCentreOf(site));
+        var events = Tick(match);
+
+        Assert.DoesNotContain(events, matchEvent => matchEvent is CommandRejected);
+        Assert.True(villager.IsMoving);
+        Assert.Null(villager.ConstructionSite);
     }
 
     [Fact]
@@ -303,7 +349,7 @@ public class PlayerControlTests
         var villager = UnitsOf(match, FirstPlayer)[0];
         control.Select(Over(villager.Position), Over(villager.Position));
 
-        control.OrderAt(new ScreenPoint(site.Origin.X + (site.Width / 2.0), site.Origin.Y + (site.Height / 2.0)));
+        control.OrderAt(OverCentreOf(site));
         Tick(match);
 
         Assert.Equal(site.Id, villager.ConstructionSite);
@@ -327,26 +373,27 @@ public class PlayerControlTests
     }
 
     /// <summary>
-    /// Has the first Player's Villagers gather the Wood for a House, stops them, and places the
-    /// House with no builder on the free spot nearest its Town Center. Returns the unfinished House.
+    /// Has the Player's Villagers gather the Wood for a House, stops them, and places the House
+    /// with no builder on the free spot nearest its Town Center. Returns the unfinished House.
     /// </summary>
-    private BuildingState PlaceHouse(Match match)
+    private BuildingState PlaceHouse(Match match, PlayerId? owner = null)
     {
+        var player = owner ?? FirstPlayer;
         var state = match.State;
-        var villagers = UnitsOf(match, FirstPlayer);
-        var townCenter = state.Buildings.First(building => building.Owner == FirstPlayer);
+        var villagers = UnitsOf(match, player);
+        var townCenter = state.Buildings.First(building => building.Owner == player);
         var wood = state.ResourceSources
             .Where(source => source.Kind == ResourceKind.Wood)
             .OrderBy(source => Math.Abs(source.Cell.X - townCenter.Origin.X) + Math.Abs(source.Cell.Y - townCenter.Origin.Y))
             .First();
-        match.Enqueue(new GatherCommand(FirstPlayer, villagers.Select(unit => unit.Id).ToList(), wood.Id));
+        match.Enqueue(new GatherCommand(player, villagers.Select(unit => unit.Id).ToList(), wood.Id));
 
-        while (state.Players[0].AmountOf(ResourceKind.Wood) < Match.BuildingCost(BuildingKind.House).Wood)
+        while (state.Players.First(each => each.Id == player).AmountOf(ResourceKind.Wood) < Match.BuildingCost(BuildingKind.House).Wood)
         {
             Tick(match);
         }
 
-        match.Enqueue(new MoveCommand(FirstPlayer, villagers.Select(unit => unit.Id).ToList(), villagers[0].Position.Cell));
+        match.Enqueue(new MoveCommand(player, villagers.Select(unit => unit.Id).ToList(), villagers[0].Position.Cell));
 
         while (villagers.Any(unit => unit.IsMoving))
         {
@@ -360,7 +407,7 @@ public class PlayerControlTests
             .ThenBy(cell => cell.Y)
             .ThenBy(cell => cell.X)
             .First();
-        match.Enqueue(new PlaceBuildingCommand(FirstPlayer, BuildingKind.House, origin, []));
+        match.Enqueue(new PlaceBuildingCommand(player, BuildingKind.House, origin, []));
         Tick(match);
 
         var house = state.Buildings[^1];
@@ -372,41 +419,14 @@ public class PlayerControlTests
 
     private PlayerControl NewControl(out Match match, Func<ScreenPoint, SightLine?>? camera = null, MatchConfig? config = null)
     {
-        driver = new MatchDriver(Match.Create(config ?? PlainConfig()), new TickClock(Match.TicksPerSecond));
-        match = driver.Match;
+        driver = NewDriver(out match, config);
+        driven = match;
 
         return new PlayerControl(driver, FirstPlayer, camera ?? TopDown, Sizes);
     }
 
-    private static MatchConfig PlainConfig(
-        IReadOnlyList<StartingUnit>? firstExtras = null, IReadOnlyList<StartingUnit>? secondExtras = null)
-    {
-        var faction = new FactionId(1);
-
-        return new MatchConfig(
-            42, new MapConfig(64, 48), [new PlayerConfig(faction, firstExtras), new PlayerConfig(faction, secondExtras)]);
-    }
-
     /// <summary>The plain match, with the first Player starting with a melee soldier beside its Town Center.</summary>
     private static MatchConfig WithSoldier() => PlainConfig(firstExtras: [new StartingUnit(UnitKind.MeleeSoldier, BesideFirstHome())]);
-
-    /// <summary>
-    /// The plain match, with the second Player starting with a melee soldier beside the first
-    /// Player's Town Center, close enough to the first Player's Villagers to attack them on its own.
-    /// </summary>
-    private static MatchConfig WithEnemySoldierAtHome() =>
-        PlainConfig(secondExtras: [new StartingUnit(UnitKind.MeleeSoldier, BesideFirstHome())]);
-
-    /// <summary>
-    /// The Cell two left of the centre of the first Player's Town Center: free, and away from
-    /// the Villagers' row.
-    /// </summary>
-    private static CellPosition BesideFirstHome()
-    {
-        var townCenter = Match.Create(PlainConfig()).State.Buildings.First(building => building.Owner == FirstPlayer);
-
-        return new CellPosition(townCenter.Origin.X + (townCenter.Width / 2) - 2, townCenter.Origin.Y + (townCenter.Height / 2));
-    }
 
     private static UnitState SoldierOf(Match match) =>
         match.State.Units.Single(unit => unit.Owner == FirstPlayer && unit.Kind == UnitKind.MeleeSoldier);
@@ -414,7 +434,7 @@ public class PlayerControlTests
     /// <summary>Runs one tick of the match, applying the commands sent so far, and returns its events.</summary>
     private IReadOnlyList<MatchEvent> Tick(Match match)
     {
-        Assert.Same(driver.Match, match);
+        Assert.Same(driven, match);
 
         return driver.Advance(1.0 / Match.TicksPerSecond);
     }
@@ -429,6 +449,14 @@ public class PlayerControlTests
 
     private static ScreenPoint Over(MapPosition position) => new(position.X.ToDouble(), position.Y.ToDouble());
 
+    // On the top-down screen, the point over the centre of the building's footprint.
+    private static ScreenPoint OverCentreOf(BuildingState building)
+    {
+        var centre = MapPoint.CentreOf(building);
+
+        return new ScreenPoint(centre.X, centre.Y);
+    }
+
     /// <summary>
     /// The corners of a box on the top-down screen around the positions, with 3 Cells to spare
     /// across and 1 up and down: wide enough to count as a drag, not a click.
@@ -440,9 +468,6 @@ public class PlayerControlTests
         return (new ScreenPoint(points.Min(point => point.X) - 3, points.Min(point => point.Y) - 1),
                 new ScreenPoint(points.Max(point => point.X) + 3, points.Max(point => point.Y) + 1));
     }
-
-    private static List<UnitState> UnitsOf(Match match, PlayerId player) =>
-        match.State.Units.Where(unit => unit.Owner == player).ToList();
 
     /// <summary>A free Cell with nothing beside it and no unit within 3 Cells.</summary>
     private static CellPosition FreeCellAwayFromUnits(Match match)

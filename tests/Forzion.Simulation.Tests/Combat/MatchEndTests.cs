@@ -14,7 +14,7 @@ public class MatchEndTests
         var townCenter = Battle.TownCenter(match, Second);
 
         var events = new List<MatchEvent>();
-        Battle.TickUntil(match, () =>
+        TestMatches.TickUntil(match, () =>
         {
             events.AddRange(match.Events);
 
@@ -33,7 +33,7 @@ public class MatchEndTests
         var match = Battle.Siege();
         var townCenter = Battle.TownCenter(match, Second);
 
-        Battle.TickUntil(match, () => townCenter.HitPoints <= 0);
+        TestMatches.TickUntil(match, () => townCenter.HitPoints <= 0);
 
         Assert.Equal(
             [new EntityDestroyed(townCenter.Id), new PlayerDefeated(Second), new MatchEnded(First)],
@@ -49,7 +49,7 @@ public class MatchEndTests
     {
         var match = Battle.Siege();
         var townCenter = Battle.TownCenter(match, Second);
-        Battle.TickUntil(match, () => townCenter.HitPoints <= 0);
+        TestMatches.TickUntil(match, () => townCenter.HitPoints <= 0);
 
         var later = Battle.Run(match, 200);
 
@@ -62,8 +62,8 @@ public class MatchEndTests
     {
         var match = Battle.Siege();
         var townCenter = Battle.TownCenter(match, Second);
-        Battle.TickUntil(match, () => townCenter.HitPoints <= 0);
-        var villager = Battle.MiddleVillager(match, Second);
+        TestMatches.TickUntil(match, () => townCenter.HitPoints <= 0);
+        var villager = TestMatches.MiddleVillager(match, Second);
         var command = new MoveCommand(Second, [villager.Id], villager.Position.Cell with { X = villager.Position.Cell.X + 1 });
 
         match.Enqueue(command);
@@ -87,7 +87,7 @@ public class MatchEndTests
         match.Enqueue(new AttackCommand(First, firstSoldiers.Select(unit => unit.Id).ToList(), secondTownCenter.Id));
         match.Enqueue(new AttackCommand(Second, secondSoldiers.Select(unit => unit.Id).ToList(), firstTownCenter.Id));
 
-        Battle.TickUntil(match, () => firstTownCenter.HitPoints <= 0 || secondTownCenter.HitPoints <= 0);
+        TestMatches.TickUntil(match, () => firstTownCenter.HitPoints <= 0 || secondTownCenter.HitPoints <= 0);
 
         Assert.Empty(match.State.Buildings);
         Assert.All(match.State.Players, player => Assert.True(player.IsDefeated));
@@ -101,7 +101,7 @@ public class MatchEndTests
     [Fact]
     public void A_match_with_a_single_Player_does_not_end_on_its_own()
     {
-        var match = Match.Create(new MatchConfig(1, new MapConfig(64, 48), [new PlayerConfig(TestMatches.FirstFaction)]));
+        var match = Match.Create(TestMatches.SinglePlayerConfig());
 
         var events = Battle.Run(match, 10);
 

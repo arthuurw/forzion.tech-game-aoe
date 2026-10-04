@@ -10,4 +10,7 @@ public readonly record struct Load(ResourceKind Resource, int Amount)
 {
     /// <summary>Nothing carried.</summary>
     public static Load Empty => default;
+
+    /// <summary>Whether the load holds as much as a Villager carries at once.</summary>
+    public bool IsFull => Amount >= Balance.VillagerCarryCapacity;
 }
