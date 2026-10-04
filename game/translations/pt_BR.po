@@ -194,6 +194,9 @@ msgstr "Posicionando: {0}. Clique no mapa para posicionar; botão direito ou Esc
 msgid "HUD_SELECTED_UNITS"
 msgstr "{0} unidades selecionadas"
 
+msgid "HUD_PAUSE"
+msgstr "Pausar (Esc)"
+
 msgid "HUD_FREE"
 msgstr "Grátis"
 

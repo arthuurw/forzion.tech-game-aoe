@@ -5,8 +5,8 @@ using Godot;
 namespace Forzion.Game;
 
 /// <summary>
-/// The HUD: a bar at the top with the human Player's Resources, population, Faction and Age,
-/// and a panel at the bottom with the selection and the orders it takes, beside the
+/// The HUD: a bar at the top with the human Player's Resources, population, Faction and Age
+/// and a button that pauses the match, and a panel at the bottom with the selection and the orders it takes, beside the
 /// <see cref="MinimapView"/>. What each shows comes from <see cref="PlayerStatus"/> and
 /// <see cref="SelectionPanel"/>, and each button calls <see cref="PlayerControl"/>, which
 /// sends the command; this node only lays them out. Texts come from the project's translations.
@@ -46,6 +46,10 @@ public partial class Hud : CanvasLayer
     /// <summary>The input whose selection the HUD shows and through which its buttons give orders.</summary>
     [Export]
     public SelectionInput SelectionInput { get; set; } = null!;
+
+    /// <summary>The pause that the top bar's pause button opens.</summary>
+    [Export]
+    public PauseMenu PauseMenu { get; set; } = null!;
 
     private PlayerControl PlayerControl => SelectionInput.PlayerControl;
 
@@ -126,6 +130,10 @@ public partial class Hud : CanvasLayer
 
         age = NewLabel("", 18, new Color(1f, 0.95f, 0.8f));
         row.AddChild(age);
+
+        var pause = new Button { Name = "Pause", Text = Tr(HudTexts.Pause), FocusMode = Godot.Control.FocusModeEnum.None };
+        pause.Pressed += PauseMenu.Pause;
+        row.AddChild(pause);
 
         return bar;
     }

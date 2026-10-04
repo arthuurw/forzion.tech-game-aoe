@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/MatchView.cs" id="1_match"]
 [ext_resource type="Script" path="res://scripts/RtsCamera.cs" id="2_camera"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://scripts/WorldBarsOverlay.cs" id="7_bars"]
 [ext_resource type="Script" path="res://scripts/Hud.cs" id="8_hud"]
 [ext_resource type="Script" path="res://scripts/MinimapView.cs" id="9_minimap"]
+[ext_resource type="Script" path="res://scripts/PauseMenu.cs" id="10_pause"]
 
 [sub_resource type="Environment" id="Environment_main"]
 background_mode = 1
@@ -36,6 +37,11 @@ MatchView = NodePath("../MatchView")
 [node name="Camera" type="Camera3D" parent="CameraRig"]
 current = true
 fov = 40.0
+
+[node name="PauseMenu" type="CanvasLayer" parent="." node_paths=PackedStringArray("MatchView")]
+layer = 4
+script = ExtResource("10_pause")
+MatchView = NodePath("../MatchView")
 
 [node name="SelectionInput" type="CanvasLayer" parent="." node_paths=PackedStringArray("MatchView", "Camera")]
 script = ExtResource("3_selection")
@@ -66,11 +72,12 @@ MatchView = NodePath("../../MatchView")
 SelectionInput = NodePath("../../SelectionInput")
 Camera = NodePath("../../CameraRig/Camera")
 
-[node name="Hud" type="CanvasLayer" parent="." node_paths=PackedStringArray("MatchView", "SelectionInput")]
+[node name="Hud" type="CanvasLayer" parent="." node_paths=PackedStringArray("MatchView", "SelectionInput", "PauseMenu")]
 layer = 2
 script = ExtResource("8_hud")
 MatchView = NodePath("../MatchView")
 SelectionInput = NodePath("../SelectionInput")
+PauseMenu = NodePath("../PauseMenu")
 
 [node name="Minimap" type="CanvasLayer" parent="."]
 layer = 2
