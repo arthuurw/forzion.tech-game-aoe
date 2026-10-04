@@ -22,36 +22,26 @@ public class MatchDriverTests
     [Fact]
     public void Units_standing_on_one_Cell_are_drawn_apart_side_by_side_across_it()
     {
-        var cell = BesideFirstHome();
-        var stacked = new StartingUnit(UnitKind.Villager, cell);
-        var driver = NewDriver(out var match, PlainConfig(firstExtras: [stacked, stacked, stacked]));
-        var centre = MapPosition.CentreOf(cell);
-
-        var drawn = match.State.Units.Where(unit => unit.Position == centre).Select(driver.PositionOf).ToList();
+        var drawn = DrawnStack(3, out var centre);
 
         // Half a Cell apart: as far as two unit placeholders are wide. In one row across the
         // map, so that a camera looking along the map's Y sees none behind another.
         Assert.Equal(3, drawn.Count);
         Assert.All(drawn, point => Assert.Equal(drawn[0].Y, point.Y));
         Assert.All(Pairs(drawn), pair => Assert.True(Distance(pair.First, pair.Second) >= 0.5 - 1e-9));
-        Assert.All(drawn, point => Assert.True(Distance(point, PointOf(centre)) <= 0.5));
+        Assert.All(drawn, point => Assert.True(Distance(point, centre) <= 0.5));
     }
 
     [Fact]
     public void A_row_of_a_stack_behind_another_is_drawn_between_the_units_in_front()
     {
-        var cell = BesideFirstHome();
-        var stacked = new StartingUnit(UnitKind.Villager, cell);
-        var driver = NewDriver(out var match, PlainConfig(firstExtras: [stacked, stacked, stacked, stacked, stacked]));
-        var centre = MapPosition.CentreOf(cell);
-
-        var drawn = match.State.Units.Where(unit => unit.Position == centre).Select(driver.PositionOf).ToList();
+        var drawn = DrawnStack(5, out var centre);
 
         // Three in front and two behind, none straight behind another, all on the Cell.
         Assert.Equal(5, drawn.Count);
         Assert.Equal(5, drawn.Select(point => Math.Round(point.X, 6)).Distinct().Count());
         Assert.All(Pairs(drawn), pair => Assert.True(Distance(pair.First, pair.Second) >= 0.5 - 1e-9));
-        Assert.All(drawn, point => Assert.True(Math.Abs(point.X - PointOf(centre).X) <= 0.5 && Math.Abs(point.Y - PointOf(centre).Y) <= 0.5));
+        Assert.All(drawn, point => Assert.True(Math.Abs(point.X - centre.X) <= 0.5 && Math.Abs(point.Y - centre.Y) <= 0.5));
     }
 
     [Fact]
@@ -66,8 +56,8 @@ public class MatchDriverTests
 
         TickUntil(driver, () => !walker.IsMoving && walker.Position.Cell == cell);
 
-        // In the frame the walker stops, the unit already there has moved off the centre no
-        // faster than a Villager walks, 0.1 Cell in a tick; a second later the two stand apart.
+        // In the frame the walker stops, one tick of real time later, the unit already there
+        // has slid at most 0.1 Cell off the centre; a second later the two stand apart.
         Assert.True(Distance(driver.PositionOf(standing), centre) <= 0.1 + 1e-9);
         driver.Advance(1);
         Assert.True(Distance(driver.PositionOf(standing), driver.PositionOf(walker)) >= 0.5 - 1e-9);
@@ -134,6 +124,20 @@ public class MatchDriverTests
     }
 
     private static UnitState FirstVillager(Match match) => match.State.Units.First(unit => unit.Owner == FirstPlayer);
+
+    /// <summary>
+    /// Where the driver of a new match draws <paramref name="count"/> Villagers of the first
+    /// Player standing on one Cell, in ascending ID order, and the centre of that Cell.
+    /// </summary>
+    private static List<MapPoint> DrawnStack(int count, out MapPoint centre)
+    {
+        var cell = BesideFirstHome();
+        var driver = NewDriver(out var match, PlainConfig(firstExtras: [.. Enumerable.Repeat(new StartingUnit(UnitKind.Villager, cell), count)]));
+        var position = MapPosition.CentreOf(cell);
+        centre = PointOf(position);
+
+        return match.State.Units.Where(unit => unit.Position == position).Select(driver.PositionOf).ToList();
+    }
 
     private static double Distance(MapPoint from, MapPoint to) => Math.Sqrt(Math.Pow(to.X - from.X, 2) + Math.Pow(to.Y - from.Y, 2));
 
