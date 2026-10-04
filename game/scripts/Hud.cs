@@ -6,17 +6,21 @@ namespace Forzion.Game;
 
 /// <summary>
 /// The HUD: a bar at the top with the human Player's Resources, population, Faction and Age,
-/// and a panel at the bottom with the selection and the orders it takes. What each shows
-/// comes from <see cref="PlayerStatus"/> and <see cref="SelectionPanel"/>, and each button
-/// calls <see cref="PlayerControl"/>, which sends the command; this node only lays them out.
-/// Texts come from the project's translations.
+/// and a panel at the bottom with the selection and the orders it takes, beside the
+/// <see cref="MinimapView"/>. What each shows comes from <see cref="PlayerStatus"/> and
+/// <see cref="SelectionPanel"/>, and each button calls <see cref="PlayerControl"/>, which
+/// sends the command; this node only lays them out. Texts come from the project's translations.
 /// </summary>
 public partial class Hud : CanvasLayer
 {
-    private const int PanelHeight = 210;
+    /// <summary>Height of the panel at the bottom of the screen, in pixels.</summary>
+    public const int PanelHeight = 210;
+
     private const int MostUnitsShown = 24;
 
-    private static readonly Color PanelColour = new(0.08f, 0.09f, 0.11f, 0.88f);
+    /// <summary>The background of the HUD's bars and panels.</summary>
+    public static readonly Color PanelColour = new(0.08f, 0.09f, 0.11f, 0.88f);
+
     private static readonly Color HintColour = new(0.8f, 0.85f, 0.95f);
 
     // The panel is rebuilt only when what it holds changes, and its buttons act on press, so a
@@ -132,6 +136,9 @@ public partial class Hud : CanvasLayer
         bottom.AddThemeStyleboxOverride("panel", PanelStyle());
         bottom.SetAnchorsAndOffsetsPreset(Godot.Control.LayoutPreset.BottomWide);
         bottom.OffsetTop = -PanelHeight;
+
+        // The minimap takes the bottom right corner.
+        bottom.OffsetRight = -MinimapView.FrameWidth;
 
         bottomContent = new HBoxContainer { Name = "Content" };
         bottomContent.AddThemeConstantOverride("separation", 24);
