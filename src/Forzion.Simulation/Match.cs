@@ -53,11 +53,12 @@ public sealed class Match
 
     /// <summary>What placing a building of the given kind costs, paid in full when it is placed.</summary>
     /// <exception cref="ArgumentOutOfRangeException">Players do not place buildings of that kind.</exception>
-    public static Cost BuildingCost(BuildingKind kind) => Balance.BuildingCost(kind);
+    public static Cost BuildingCost(BuildingKind kind) =>
+        Balance.Of(kind).Cost ?? throw new ArgumentOutOfRangeException(nameof(kind), kind, "Players do not place this kind of building.");
 
     /// <summary>Side of the square footprint of a building of the given kind, in Cells.</summary>
     /// <exception cref="ArgumentOutOfRangeException">The kind is not a <see cref="BuildingKind"/>.</exception>
-    public static int BuildingSize(BuildingKind kind) => Balance.BuildingSize(kind);
+    public static int BuildingSize(BuildingKind kind) => Balance.Of(kind).Size;
 
     /// <summary>
     /// Whether a building of the given kind fits with its footprint starting on

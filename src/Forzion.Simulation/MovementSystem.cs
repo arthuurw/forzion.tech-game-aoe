@@ -110,7 +110,7 @@ internal sealed class MovementSystem : ISystem
     private static void Advance(UnitState unit)
     {
         var position = unit.Position;
-        var remaining = Balance.Speed(unit.Kind) / Fix64.FromInt(Match.TicksPerSecond);
+        var remaining = Balance.Of(unit.Kind).Speed / Fix64.FromInt(Match.TicksPerSecond);
 
         // What is left of the tick's distance after reaching a Cell centre is spent towards
         // the next one, so a unit covers the same distance every tick.

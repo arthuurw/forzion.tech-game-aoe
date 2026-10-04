@@ -66,10 +66,10 @@ public sealed class UnitState
     public int GatherProgress { get; internal set; }
 
     /// <summary>Hit points the unit has when whole.</summary>
-    public int MaxHitPoints => Balance.HitPoints(Kind);
+    public int MaxHitPoints => Balance.Of(Kind).HitPoints;
 
     /// <summary>Whether the unit fights: military units do, Villagers do not.</summary>
-    public bool CanAttack => Balance.Attack(Kind) is not null;
+    public bool CanAttack => Balance.Of(Kind).Attack is not null;
 
     /// <summary>Hit points left. The unit dies when they reach zero.</summary>
     public int HitPoints { get; internal set; }

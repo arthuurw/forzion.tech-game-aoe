@@ -48,7 +48,7 @@ public sealed class BuildingState
     public int Height { get; }
 
     /// <summary>Hit points the building has when whole.</summary>
-    public int MaxHitPoints => Balance.HitPoints(Kind);
+    public int MaxHitPoints => Balance.Of(Kind).HitPoints;
 
     /// <summary>Hit points left. The building is destroyed when they reach zero.</summary>
     public int HitPoints { get; internal set; }
@@ -60,7 +60,7 @@ public sealed class BuildingState
     /// Ticks of Villager work the building takes to complete. Each Villager building it adds
     /// one tick of work per tick, so two finish it in half the time.
     /// </summary>
-    public int BuildTime => Balance.BuildTime(Kind);
+    public int BuildTime => Balance.Of(Kind).BuildTime;
 
     /// <summary>Whether the building is complete. Until then it is a construction site and does nothing but block its Cells.</summary>
     public bool IsComplete => BuildProgress == BuildTime;

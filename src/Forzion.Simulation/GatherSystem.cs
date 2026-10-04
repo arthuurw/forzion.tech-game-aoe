@@ -161,7 +161,7 @@ internal sealed class GatherSystem : ISystem
 
         villager.GatherProgress++;
 
-        if (villager.GatherProgress < Balance.GatherTicksPerUnit(source.Kind))
+        if (villager.GatherProgress < Balance.Of(source.Kind).GatherTicksPerUnit)
         {
             return;
         }

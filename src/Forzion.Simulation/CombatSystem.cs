@@ -20,7 +20,7 @@ internal sealed class CombatSystem : ISystem
 
         foreach (var unit in state.Units)
         {
-            if (Balance.Attack(unit.Kind) is not { } attack)
+            if (Balance.Of(unit.Kind).Attack is not { } attack)
             {
                 continue;
             }

@@ -36,7 +36,7 @@ public sealed class MatchState
 
         foreach (var (cell, kind) in generated.Sources)
         {
-            AddResourceSource(kind, cell, Balance.SourceAmount(kind));
+            AddResourceSource(kind, cell, Balance.Of(kind).SourceAmount);
         }
 
         foreach (var player in players)
@@ -88,7 +88,7 @@ public sealed class MatchState
     /// </summary>
     public int PopulationLimitOf(PlayerId player) => buildings
         .Where(building => building.Owner == player && building.IsComplete)
-        .Sum(building => Balance.PopulationProvided(building.Kind));
+        .Sum(building => Balance.Of(building.Kind).PopulationProvided);
 
     /// <summary>The Player with the given ID, or null when the match has no such Player.</summary>
     internal PlayerState? FindPlayer(PlayerId id) =>
@@ -151,7 +151,7 @@ public sealed class MatchState
     /// </summary>
     internal bool CanPlace(BuildingKind kind, CellPosition origin)
     {
-        var size = Balance.BuildingSize(kind);
+        var size = Balance.Of(kind).Size;
 
         for (var y = origin.Y; y < origin.Y + size; y++)
         {

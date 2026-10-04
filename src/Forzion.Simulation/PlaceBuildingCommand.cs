@@ -34,16 +34,15 @@ public sealed record PlaceBuildingCommand(
             return;
         }
 
-        // Each Player starts with its Town Center and never places another.
-        if (Kind is not (BuildingKind.House or BuildingKind.Storehouse or BuildingKind.Barracks))
+        // Kinds Players do not place have no cost, and a value outside the enum is no kind at all.
+        if (!Enum.IsDefined(Kind) || Balance.Of(Kind).Cost is not { } cost)
         {
             context.Reject(this, RejectionReason.BuildingNotPlaceable);
 
             return;
         }
 
-        var size = Balance.BuildingSize(Kind);
-        var cost = Balance.BuildingCost(Kind);
+        var size = Balance.Of(Kind).Size;
 
         if (!context.State.CanPlace(Kind, Origin))
         {
