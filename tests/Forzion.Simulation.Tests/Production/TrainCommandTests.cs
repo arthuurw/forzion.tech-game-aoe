@@ -78,4 +78,12 @@ public class TrainCommandTests
         Assert.Equal(BuildingKind.Barracks, Match.TrainedAt(UnitKind.RangedSoldier));
         Assert.Equal(BuildingKind.Barracks, Match.TrainedAt(UnitKind.HeavySoldier));
     }
+
+    [Fact]
+    public void Only_the_Town_Center_and_the_Barracks_train_units()
+    {
+        Assert.Equal(
+            [BuildingKind.TownCenter, BuildingKind.Barracks],
+            Enum.GetValues<BuildingKind>().Where(Match.Trains));
+    }
 }

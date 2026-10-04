@@ -442,6 +442,52 @@ public class PlayerControlTests
     }
 
     [Fact]
+    public void Right_clicking_the_ground_with_the_Barracks_selected_sets_its_rally_point()
+    {
+        var control = NewControl(out var match);
+        var barracks = BuildNearHome(match, BuildingKind.Barracks);
+        control.Select(OverCentreOf(barracks), OverCentreOf(barracks));
+        var cell = FreeCellAwayFromUnits(match);
+
+        control.OrderAt(Over(MapPosition.CentreOf(cell)));
+        Tick(match);
+
+        Assert.Equal(cell, barracks.RallyPoint);
+    }
+
+    // A House trains no units, so it has no rally point to set: the right button sends nothing,
+    // rather than an order sure to come back as a refusal notice.
+    [Fact]
+    public void Right_clicking_the_ground_with_a_House_selected_sends_nothing()
+    {
+        var control = NewControl(out var match);
+        var house = BuildNearHome(match, BuildingKind.House);
+        control.Select(OverCentreOf(house), OverCentreOf(house));
+        Assert.Equal([house.Id], control.Selected);
+
+        control.OrderAt(Over(MapPosition.CentreOf(FreeCellAwayFromUnits(match))));
+        var events = Tick(match);
+
+        Assert.DoesNotContain(events, matchEvent => matchEvent is CommandRejected);
+        Assert.Null(house.RallyPoint);
+    }
+
+    [Fact]
+    public void Right_clicking_the_ground_with_a_construction_site_selected_sends_nothing()
+    {
+        var control = NewControl(out var match);
+        var site = PlaceHouse(match);
+        control.Select(OverCentreOf(site), OverCentreOf(site));
+        Assert.Equal([site.Id], control.Selected);
+
+        control.OrderAt(Over(MapPosition.CentreOf(FreeCellAwayFromUnits(match))));
+        var events = Tick(match);
+
+        Assert.DoesNotContain(events, matchEvent => matchEvent is CommandRejected);
+        Assert.Null(site.RallyPoint);
+    }
+
+    [Fact]
     public void The_placement_preview_centres_the_chosen_building_on_the_mouse_and_is_valid_on_free_ground()
     {
         var control = NewControl(out var match);
@@ -564,6 +610,23 @@ public class PlayerControlTests
         Assert.False(house.IsComplete);
 
         return house;
+    }
+
+    /// <summary>
+    /// Places a building of the given kind near the first Player's Town Center, with all its
+    /// Villagers as builders, and runs ticks until it is complete. Returns the building.
+    /// </summary>
+    private BuildingState BuildNearHome(Match match, BuildingKind kind)
+    {
+        var origin = FreeOriginNearFirstHome(match, kind);
+        var builders = UnitsOf(match, FirstPlayer).Select(unit => unit.Id).ToList();
+        match.Enqueue(new PlaceBuildingCommand(FirstPlayer, kind, origin, builders));
+        Tick(match);
+
+        var building = match.State.Buildings.Single(each => each.Origin == origin);
+        TickUntil(driver, () => building.IsComplete);
+
+        return building;
     }
 
     private PlayerControl NewControl(out Match match, Func<ScreenPoint, SightLine?>? camera = null, MatchConfig? config = null)
