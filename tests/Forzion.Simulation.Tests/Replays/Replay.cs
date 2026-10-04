@@ -29,14 +29,7 @@ internal static class Replay
 
         for (var tick = 0; tick < limit && !match.State.IsOver; tick++)
         {
-            foreach (var scheduled in commands)
-            {
-                if (scheduled.Tick == tick)
-                {
-                    match.Enqueue(scheduled.Command);
-                }
-            }
-
+            EnqueueAt(match, commands, tick);
             match.Tick();
             events.AddRange(match.Events);
         }
@@ -58,18 +51,23 @@ internal static class Replay
 
         for (var tick = 0; tick < ticks; tick++)
         {
-            foreach (var scheduled in commands)
-            {
-                if (scheduled.Tick == tick)
-                {
-                    match.Enqueue(scheduled.Command);
-                }
-            }
-
+            EnqueueAt(match, commands, tick);
             match.Tick();
             hashes.Add(match.StateHash);
         }
 
         return hashes;
+    }
+
+    /// <summary>Enqueues, in list order, the commands sent once the match has simulated <paramref name="tick"/> ticks.</summary>
+    private static void EnqueueAt(Match match, IReadOnlyList<ScheduledCommand> commands, int tick)
+    {
+        foreach (var scheduled in commands)
+        {
+            if (scheduled.Tick == tick)
+            {
+                match.Enqueue(scheduled.Command);
+            }
+        }
     }
 }
