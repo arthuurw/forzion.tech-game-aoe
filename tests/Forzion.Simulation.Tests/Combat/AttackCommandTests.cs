@@ -69,7 +69,7 @@ public class AttackCommandTests
     [Fact]
     public void An_attack_on_an_entity_that_is_neither_a_unit_nor_a_building_is_rejected()
     {
-        var match = MatchWithSoldier();
+        var match = TestArmies.MatchWithSoldier();
         var soldier = Battle.Last(match);
 
         AssertRejected(match, new AttackCommand(First, [soldier.Id], match.State.ResourceSources[0].Id), RejectionReason.UnknownTarget);
@@ -79,7 +79,7 @@ public class AttackCommandTests
     [Fact]
     public void An_attack_on_the_Players_own_unit_or_building_is_rejected()
     {
-        var match = MatchWithSoldier();
+        var match = TestArmies.MatchWithSoldier();
         var soldier = Battle.Last(match);
 
         AssertRejected(match, new AttackCommand(First, [soldier.Id], Battle.MiddleVillager(match, First).Id), RejectionReason.OwnTarget);
@@ -89,7 +89,7 @@ public class AttackCommandTests
     [Fact]
     public void An_attack_naming_a_unit_that_does_not_exist_still_sends_the_others()
     {
-        var match = MatchWithSoldier();
+        var match = TestArmies.MatchWithSoldier();
         var soldier = Battle.Last(match);
         var target = Battle.TownCenter(match, Second).Id;
         match.Enqueue(new AttackCommand(First, [new EntityId(100_000), soldier.Id], target));
@@ -103,7 +103,7 @@ public class AttackCommandTests
     [Fact]
     public void An_attack_naming_no_unit_that_exists_is_rejected()
     {
-        var match = MatchWithSoldier();
+        var match = TestArmies.MatchWithSoldier();
         var target = Battle.TownCenter(match, Second).Id;
 
         AssertRejected(match, new AttackCommand(First, [new EntityId(100_000)], target), RejectionReason.UnknownUnit);
@@ -144,7 +144,7 @@ public class AttackCommandTests
     [Fact]
     public void An_attack_by_another_Players_unit_is_rejected_and_sends_none_of_its_units()
     {
-        var match = MatchWithSoldier();
+        var match = TestArmies.MatchWithSoldier();
         var soldier = Battle.Last(match);
         var foreign = Battle.MiddleVillager(match, Second);
         var target = Battle.TownCenter(match, Second).Id;
@@ -156,7 +156,7 @@ public class AttackCommandTests
     [Fact]
     public void An_attack_by_soldiers_and_Villagers_sends_the_soldiers_and_leaves_the_Villagers_to_what_they_were_doing()
     {
-        var match = MatchWithSoldier();
+        var match = TestArmies.MatchWithSoldier();
         var soldier = Battle.Last(match);
         var villager = Battle.MiddleVillager(match, First);
         var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Wood);
@@ -177,7 +177,7 @@ public class AttackCommandTests
     [Fact]
     public void An_attack_by_Villagers_alone_is_rejected()
     {
-        var match = MatchWithSoldier();
+        var match = TestArmies.MatchWithSoldier();
         var villager = Battle.MiddleVillager(match, First);
         var target = Battle.TownCenter(match, Second).Id;
 
@@ -188,8 +188,8 @@ public class AttackCommandTests
     [Fact]
     public void A_rejected_attack_leaves_the_state_as_if_it_had_not_been_sent()
     {
-        var withRejection = MatchWithSoldier();
-        var without = MatchWithSoldier();
+        var withRejection = TestArmies.MatchWithSoldier();
+        var without = TestArmies.MatchWithSoldier();
         withRejection.Enqueue(new AttackCommand(
             First, [Battle.Last(withRejection).Id], Battle.TownCenter(withRejection, First).Id));
 
@@ -202,8 +202,8 @@ public class AttackCommandTests
     [Fact]
     public void An_attack_makes_the_hash_diverge_from_a_match_without_it()
     {
-        var withAttack = MatchWithSoldier();
-        var without = MatchWithSoldier();
+        var withAttack = TestArmies.MatchWithSoldier();
+        var without = TestArmies.MatchWithSoldier();
         withAttack.Enqueue(new AttackCommand(
             First, [Battle.Last(withAttack).Id], Battle.TownCenter(withAttack, Second).Id));
 
@@ -214,10 +214,6 @@ public class AttackCommandTests
     }
 
     /// <summary>A match in which the first Player has a melee soldier beside its own Town Center.</summary>
-    private static Match MatchWithSoldier() =>
-        Battle.Create(first: plain =>
-            [new StartingUnit(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, First, -2, 0))]);
-
     private static void AssertRejected(Match match, AttackCommand command, RejectionReason reason)
     {
         match.Enqueue(command);

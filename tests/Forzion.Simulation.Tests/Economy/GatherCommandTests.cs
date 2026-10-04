@@ -196,9 +196,9 @@ public class GatherCommandTests
     [Fact]
     public void A_gather_by_Villagers_and_soldiers_sends_the_Villagers_and_leaves_the_soldiers_to_what_they_were_doing()
     {
-        var match = MatchWithSoldier();
+        var match = TestArmies.MatchWithSoldier();
         var villager = Walk.MiddleVillager(match);
-        var soldier = match.State.UnitsOf(TestMatches.FirstPlayer).Single(unit => unit.Kind == UnitKind.MeleeSoldier);
+        var soldier = match.State.SoldierOf(TestMatches.FirstPlayer);
         var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Wood);
         match.Enqueue(new MoveCommand(
             TestMatches.FirstPlayer, [soldier.Id], new CellPosition(soldier.Position.Cell.X - 6, soldier.Position.Cell.Y)));
@@ -219,8 +219,8 @@ public class GatherCommandTests
     [Fact]
     public void A_gather_by_soldiers_alone_is_rejected_and_sends_none_of_them()
     {
-        var match = MatchWithSoldier();
-        var soldier = match.State.UnitsOf(TestMatches.FirstPlayer).Single(unit => unit.Kind == UnitKind.MeleeSoldier);
+        var match = TestArmies.MatchWithSoldier();
+        var soldier = match.State.SoldierOf(TestMatches.FirstPlayer);
         var source = Gather.NearestSource(match.State, soldier.Position.Cell, ResourceKind.Wood);
         var command = new GatherCommand(TestMatches.FirstPlayer, [soldier.Id], source.Id);
         match.Enqueue(command);
@@ -439,11 +439,4 @@ public class GatherCommandTests
     }
 
     /// <summary>The default two-Player match, the first Player starting with a melee soldier beside its Town Center.</summary>
-    private static Match MatchWithSoldier()
-    {
-        var plain = TestMatches.TwoPlayerMatch();
-
-        return Match.Create(TestArmies.Config(
-            first: [new StartingUnit(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, TestMatches.FirstPlayer, -2, 0))]));
-    }
 }
