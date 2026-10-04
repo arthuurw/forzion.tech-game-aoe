@@ -29,6 +29,31 @@ public class RepathTests
         Assert.DoesNotContain(visited, house.Contains);
     }
 
+    // A diagonal step needs both Cells it passes between free: a building on one of them
+    // closes the step even though no Cell of the path is under it.
+    [Fact]
+    public void A_unit_whose_diagonal_step_a_new_building_cuts_the_corner_of_finds_another_way()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        Site.Stockpile(match, TestMatches.FirstPlayer, Match.BuildingCost(BuildingKind.House).Wood);
+        var walker = Site.VillagersOf(match, TestMatches.FirstPlayer)[0];
+        match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [walker.Id], new CellPosition(match.State.Map.Width / 2, match.State.Map.Height / 2)));
+        match.Tick();
+        var destination = walker.Path[^1];
+        var (origin, from, to) = OriginBesideADiagonalStep(match, walker);
+        var house = MapProbe.Square(origin, Match.BuildingSize(BuildingKind.House)).ToHashSet();
+
+        Assert.DoesNotContain(walker.Path, house.Contains);
+
+        match.Enqueue(new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.House, origin, []));
+        var visited = Walk.UntilStopped(match, walker);
+
+        Assert.Equal(CellKind.Building, match.State.Map[origin]);
+        Assert.Equal(MapPosition.CentreOf(destination), walker.Position);
+        Assert.DoesNotContain(visited.Zip(visited.Skip(1)), step => step == (from, to));
+        Assert.All(visited.Zip(visited.Skip(1)), step => Assert.False(CutsCorner(step.First, step.Second, house)));
+    }
+
     [Fact]
     public void A_Villager_carrying_its_load_whose_way_new_buildings_block_still_delivers_it_and_goes_back_to_its_source()
     {
@@ -157,6 +182,46 @@ public class RepathTests
 
         return Enumerable.Range(1, most).SelectMany(count => From(0, count));
     }
+
+    /// <summary>
+    /// The origin of a House that can be placed now beside a diagonal step of the unit's path
+    /// well ahead of it, over one of the two Cells the step passes between and over no Cell of
+    /// the path, with the two Cells of that step.
+    /// </summary>
+    private static (CellPosition Origin, CellPosition From, CellPosition To) OriginBesideADiagonalStep(Match match, UnitState unit)
+    {
+        var size = Match.BuildingSize(BuildingKind.House);
+        var path = unit.Path;
+        var avoided = path.Append(unit.Position.Cell).ToHashSet();
+
+        for (var index = 4; index < path.Count - 1; index++)
+        {
+            var (from, to) = (path[index - 1], path[index]);
+
+            if (from.X == to.X || from.Y == to.Y)
+            {
+                continue;
+            }
+
+            foreach (var corner in new[] { new CellPosition(to.X, from.Y), new CellPosition(from.X, to.Y) })
+            {
+                foreach (var origin in MapProbe.Square(new CellPosition(corner.X - size + 1, corner.Y - size + 1), size))
+                {
+                    if (match.CanPlace(BuildingKind.House, origin) && !MapProbe.Square(origin, size).Any(avoided.Contains))
+                    {
+                        return (origin, from, to);
+                    }
+                }
+            }
+        }
+
+        throw new InvalidOperationException("No House fits beside a diagonal step of the path.");
+    }
+
+    /// <summary>Whether the step is diagonal and passes between Cells one of which is <paramref name="blocked"/>.</summary>
+    private static bool CutsCorner(CellPosition from, CellPosition to, HashSet<CellPosition> blocked) =>
+        from.X != to.X && from.Y != to.Y
+        && (blocked.Contains(new CellPosition(to.X, from.Y)) || blocked.Contains(new CellPosition(from.X, to.Y)));
 
     /// <summary>
     /// The origin of a House that can be placed over a Cell of the path well ahead of the
