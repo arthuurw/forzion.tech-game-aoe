@@ -54,6 +54,39 @@ internal static class TestMatches
         PlainConfig(secondExtras: [new StartingUnit(UnitKind.MeleeSoldier, BesideFirstHome())]);
 
     /// <summary>
+    /// The plain match, with each Player in <paramref name="besiegers"/> starting with two melee
+    /// soldiers on the flanks of the other Player's Town Center, already ordered to attack it.
+    /// </summary>
+    public static Match Siege(params PlayerId[] besiegers)
+    {
+        var plain = Match.Create(PlainConfig());
+
+        List<StartingUnit> Flanks(PlayerId besieger)
+        {
+            if (!besiegers.Contains(besieger))
+            {
+                return [];
+            }
+
+            var townCenter = TownCenterOf(plain, besieger == FirstPlayer ? SecondPlayer : FirstPlayer);
+            var centre = new CellPosition(townCenter.Origin.X + (townCenter.Width / 2), townCenter.Origin.Y + (townCenter.Height / 2));
+
+            return [new(UnitKind.MeleeSoldier, centre with { X = centre.X - 2 }), new(UnitKind.MeleeSoldier, centre with { X = centre.X + 2 })];
+        }
+
+        var match = Match.Create(PlainConfig(Flanks(FirstPlayer), Flanks(SecondPlayer)));
+
+        foreach (var besieger in besiegers)
+        {
+            var soldiers = match.State.Units.Where(unit => unit.Owner == besieger && unit.Kind == UnitKind.MeleeSoldier);
+            var target = TownCenterOf(match, besieger == FirstPlayer ? SecondPlayer : FirstPlayer);
+            match.Enqueue(new AttackCommand(besieger, soldiers.Select(unit => unit.Id).ToList(), target.Id));
+        }
+
+        return match;
+    }
+
+    /// <summary>
     /// The Cell two left of the centre of the first Player's Town Center: free, and away from
     /// the Villagers' row.
     /// </summary>
