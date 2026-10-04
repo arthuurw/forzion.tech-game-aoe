@@ -30,13 +30,8 @@ public partial class PauseScreen : CanvasLayer
         resume.Name = "Resume";
         resume.Pressed += Resume;
 
-        var mainMenu = Overlays.NewButton(Tr(ScreenTexts.MainMenu));
-        mainMenu.Name = "MainMenu";
-        mainMenu.Pressed += () => GetTree().ChangeSceneToFile(Scenes.MainMenu);
-
-        veil = Overlays.NewVeil();
+        veil = Overlays.NewScreenOverMatch(this, Overlays.NewHeading(Tr(ScreenTexts.Paused), Palette.Heading), resume);
         veil.Visible = false;
-        veil.AddChild(Overlays.NewColumn(Overlays.NewHeading(Tr(ScreenTexts.Paused), Palette.Heading), resume, mainMenu));
         AddChild(veil);
     }
 

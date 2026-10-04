@@ -14,22 +14,15 @@ public partial class EndScreen : CanvasLayer
     private static readonly Color VictoryColour = new(1f, 0.85f, 0.35f);
     private static readonly Color DefeatColour = new(0.95f, 0.35f, 0.3f);
 
-    private ColorRect veil = null!;
+    private bool shown;
 
     /// <summary>The match whose end is shown.</summary>
     [Export]
     public MatchView MatchView { get; set; } = null!;
 
-    public override void _Ready()
-    {
-        veil = Overlays.NewVeil();
-        veil.Visible = false;
-        AddChild(veil);
-    }
-
     public override void _Process(double delta)
     {
-        if (!veil.Visible && MatchOutcomes.For(MatchView.State, MatchView.HumanPlayer) is { } outcome)
+        if (!shown && MatchOutcomes.For(MatchView.State, MatchView.HumanPlayer) is { } outcome)
         {
             ShowOutcome(outcome);
         }
@@ -48,16 +41,12 @@ public partial class EndScreen : CanvasLayer
         playAgain.Name = "PlayAgain";
         playAgain.Pressed += () => GetTree().ReloadCurrentScene();
 
-        var mainMenu = Overlays.NewButton(Tr(ScreenTexts.MainMenu));
-        mainMenu.Name = "MainMenu";
-        mainMenu.Pressed += () => GetTree().ChangeSceneToFile(Scenes.MainMenu);
-
-        veil.AddChild(Overlays.NewColumn(
+        AddChild(Overlays.NewScreenOverMatch(
+            this,
             Overlays.NewHeading(Tr(ScreenTexts.TitleOf(outcome)), colour),
             Overlays.NewText(Tr(ScreenTexts.ReasonOf(outcome)), 24, Palette.Heading),
-            playAgain,
-            mainMenu));
-        veil.Visible = true;
+            playAgain));
+        shown = true;
         playAgain.GrabFocus();
     }
 }

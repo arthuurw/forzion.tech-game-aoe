@@ -1,3 +1,4 @@
+using Forzion.Presentation;
 using Godot;
 
 namespace Forzion.Game;
@@ -12,13 +13,26 @@ public static class Overlays
     public static readonly Color Backdrop = new(0.11f, 0.11f, 0.12f);
 
     /// <summary>What covers the match behind the pause and the end screen: dark, but still see-through.</summary>
-    public static readonly Color Veil = new(0, 0, 0, 0.6f);
+    private static readonly Color Veil = new(0, 0, 0, 0.6f);
 
-    /// <summary>A screen-wide veil that stops the mouse from reaching what lies under it.</summary>
-    public static ColorRect NewVeil()
+    /// <summary>
+    /// A screen over the match: a screen-wide veil that stops the mouse from reaching the match,
+    /// with the given controls in a column in the middle, and under them a button that leaves
+    /// the match for the main menu.
+    /// </summary>
+    /// <param name="screen">The node that shows the screen, whose language and scene tree the button uses.</param>
+    /// <param name="controls">What the screen shows above the main menu button, from the top.</param>
+    public static ColorRect NewScreenOverMatch(Node screen, params Control[] controls)
     {
+        ArgumentNullException.ThrowIfNull(screen);
+
+        var mainMenu = NewButton(screen.Tr(ScreenTexts.MainMenu));
+        mainMenu.Name = "MainMenu";
+        mainMenu.Pressed += () => screen.GetTree().ChangeSceneToFile(Scenes.MainMenu);
+
         var veil = new ColorRect { Name = "Veil", Color = Veil, MouseFilter = Control.MouseFilterEnum.Stop };
         veil.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        veil.AddChild(NewColumn([.. controls, mainMenu]));
 
         return veil;
     }
