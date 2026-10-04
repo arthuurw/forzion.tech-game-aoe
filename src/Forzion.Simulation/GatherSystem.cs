@@ -26,10 +26,16 @@ internal sealed class GatherSystem : ISystem
     /// <summary>
     /// Sends the Villager walking up to the source to gather from it. A load of the source's
     /// Resource is kept, and when it is already full the Villager delivers it first. It stops
-    /// building.
+    /// building. A Villager already gathering from that very source goes on as it was, keeping
+    /// its progress towards the next unit.
     /// </summary>
     public static void GatherFrom(MatchState state, UnitState villager, ResourceSourceState source)
     {
+        if (villager.GatherSource == source.Id && villager.GatherPhase == GatherPhase.Gathering)
+        {
+            return;
+        }
+
         villager.StartGathering(source.Id);
 
         // Taking more on top of a full load would carry past capacity and never deliver.
