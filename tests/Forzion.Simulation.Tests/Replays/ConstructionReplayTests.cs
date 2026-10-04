@@ -83,12 +83,13 @@ public class ConstructionReplayTests
     // and macOS: every system must reach the same hash.
     // When training joined the hash, the model reproduced the value before from the same final
     // state with the layout before, and gave this one with training state added.
-    // Likewise when the rally point joined it.
+    // Likewise when the rally point joined it, and when the Ages joined it: each Player's Age
+    // and its Faction's data, and each building's Age Advance underway.
     // When main's gatherers and builders, walking to the Cell beside their target with the
-    // shortest way to it, met training here, no code that writes the hash changed: the layout
+    // shortest way to it, met the Ages here, no code that writes the hash changed: the layout
     // is the one above, and this value is the outcome of both behaviours, each covered by its
     // own behaviour tests.
-    private const ulong ExpectedFinalHash = 15971444253746325592UL;
+    private const ulong ExpectedFinalHash = 18266266117491796180UL;
 
     [Fact]
     public void A_recorded_replay_of_construction_reaches_the_recorded_final_hash()

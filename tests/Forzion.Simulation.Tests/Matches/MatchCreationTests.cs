@@ -1,3 +1,5 @@
+using Forzion.Simulation.Tests.Ages;
+
 namespace Forzion.Simulation.Tests.Matches;
 
 public class MatchCreationTests
@@ -16,7 +18,8 @@ public class MatchCreationTests
         var config = new MatchConfig(
             Seed: 7,
             Map: new MapConfig(32, 32),
-            Players: [new PlayerConfig(new FactionId(5)), new PlayerConfig(new FactionId(3))]);
+            Players: [new PlayerConfig(new FactionId(5)), new PlayerConfig(new FactionId(3))],
+            Factions: [TestFactions.OneAge(3), TestFactions.OneAge(5)]);
 
         var match = Match.Create(config);
 
@@ -25,12 +28,12 @@ public class MatchCreationTests
             first =>
             {
                 Assert.Equal(new PlayerId(1), first.Id);
-                Assert.Equal(new FactionId(5), first.Faction);
+                Assert.Equal(new FactionId(5), first.Faction.Id);
             },
             second =>
             {
                 Assert.Equal(new PlayerId(2), second.Id);
-                Assert.Equal(new FactionId(3), second.Faction);
+                Assert.Equal(new FactionId(3), second.Faction.Id);
             });
     }
 

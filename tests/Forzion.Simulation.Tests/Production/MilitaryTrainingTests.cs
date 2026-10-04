@@ -1,3 +1,4 @@
+using Forzion.Simulation.Tests.Ages;
 using Forzion.Simulation.Tests.Combat;
 using Forzion.Simulation.Tests.Matches;
 
@@ -45,10 +46,12 @@ public class MilitaryTrainingTests
     }
 
     [Fact]
-    public void A_Barracks_trains_a_heavy_soldier()
+    public void A_Barracks_trains_a_heavy_soldier_once_the_Player_is_in_Age_II()
     {
         var match = TestMatches.TwoPlayerMatch();
+        Advance.ToNextAge(match, TestMatches.FirstPlayer);
         var barracks = Train.Complete(match, TestMatches.FirstPlayer, BuildingKind.Barracks);
+        Advance.Afford(match, TestMatches.FirstPlayer, Match.UnitCost(UnitKind.HeavySoldier));
         match.Enqueue(new TrainCommand(TestMatches.FirstPlayer, barracks.Id, UnitKind.HeavySoldier));
 
         var trained = Train.Run(match, Match.TrainTime(UnitKind.HeavySoldier)).Select(happened => happened.Event).OfType<UnitTrained>().Single();

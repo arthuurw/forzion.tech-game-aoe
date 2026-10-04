@@ -91,7 +91,13 @@ public class ReplayTests
     // The rally point then followed the training progress, as whether the building has one and its
     // Cell ((0, 0) for none); the model again reproduced the value before with the layout before,
     // gave this one and matched the match's own hash at every tick of the replays.
-    private const ulong ExpectedFinalHash = 16204813214023181089UL;
+    // The Ages then followed: after each Player's Resources, its Age and its Faction's data (the
+    // number of Ages, then for each Age its Food, Wood and Gold cost, its advance time, and the
+    // count and kinds, ascending, of the units and then of the buildings it unlocks), and after
+    // each building's rally point whether it makes an Age Advance and its progress (0 for none).
+    // The model reproduced the value before from the same final state with the layout before,
+    // gave this one and matched the match's own hash at every tick of the replays.
+    private const ulong ExpectedFinalHash = 12710804084540612125UL;
 
     // Seed 3 is one whose first scattering of obstacles cuts the Players apart and is drawn again.
     // When walled-in sources began to be dropped, the value was recomputed by the same model of
@@ -102,8 +108,8 @@ public class ReplayTests
     // gave the value before with them taken out of each Player's stock, and this one with them in.
     // With training in the hash, the model reproduced the value before with the layout before and
     // gave this one.
-    // Likewise with the rally point.
-    private const ulong ExpectedInitialHashOfSeed3 = 14288579479582643681UL;
+    // Likewise with the rally point, and with the Ages.
+    private const ulong ExpectedInitialHashOfSeed3 = 12312972687657254917UL;
 
     [Fact]
     public void A_recorded_replay_reaches_the_recorded_final_hash()

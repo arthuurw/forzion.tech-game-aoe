@@ -9,10 +9,11 @@ namespace Forzion.Simulation;
 /// <remarks>
 /// The command is rejected, placing nothing and paying nothing, when a builder belongs to
 /// another Player, when builders are named and none of them exists or none of them is a
-/// Villager, when Players do not place that kind of building, when a Cell of the footprint is
-/// outside the map, is not free or has a unit standing on it, or when the Player cannot afford
-/// the cost. A builder that does not exist, because it died after the order was given, is
-/// skipped; so is a builder that is not a Villager, which goes on with whatever it was doing.
+/// Villager, when Players do not place that kind of building, when the Player's Age has not
+/// unlocked that kind in its Faction, when a Cell of the footprint is outside the map, is not
+/// free or has a unit standing on it, or when the Player cannot afford the cost. A builder that
+/// does not exist, because it died after the order was given, is skipped; so is a builder that
+/// is not a Villager, which goes on with whatever it was doing.
 /// </remarks>
 /// <param name="Kind">The kind of building to place.</param>
 /// <param name="Origin">The Cell of the footprint with the lowest X and Y.</param>
@@ -38,6 +39,13 @@ public sealed record PlaceBuildingCommand(
         if (!Enum.IsDefined(Kind) || Balance.Of(Kind).Cost is not { } cost)
         {
             context.Reject(this, RejectionReason.BuildingNotPlaceable);
+
+            return;
+        }
+
+        if (!issuer.Faction.Unlocks(Kind, issuer.Age))
+        {
+            context.Reject(this, RejectionReason.BuildingLocked);
 
             return;
         }

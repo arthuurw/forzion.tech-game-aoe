@@ -4,13 +4,18 @@ namespace Forzion.Simulation;
 /// <param name="Seed">Seed of the match's random generator.</param>
 /// <param name="Map">The map the match is played on.</param>
 /// <param name="Players">The Players, in order: the first receives <see cref="PlayerId"/> 1, the second 2, and so on.</param>
-public sealed record MatchConfig(ulong Seed, MapConfig Map, IReadOnlyList<PlayerConfig> Players);
+/// <param name="Factions">
+/// The Factions the Players may control, each with an ID of its own, or null for the Factions
+/// of the game (<see cref="Simulation.Factions.All"/>).
+/// </param>
+public sealed record MatchConfig(
+    ulong Seed, MapConfig Map, IReadOnlyList<PlayerConfig> Players, IReadOnlyList<Faction>? Factions = null);
 
 /// <param name="Width">Width of the map in Cells.</param>
 /// <param name="Height">Height of the map in Cells.</param>
 public sealed record MapConfig(int Width, int Height);
 
-/// <param name="Faction">The Faction the Player controls.</param>
+/// <param name="Faction">The ID of the Faction the Player controls, one of the match's Factions.</param>
 /// <param name="ExtraUnits">
 /// Units the Player starts with on top of what every Player starts with. Each must stand on a
 /// free Cell of the map. A Skirmish leaves it empty: it lets tests and replays start with

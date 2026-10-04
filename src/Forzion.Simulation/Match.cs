@@ -27,6 +27,9 @@ public sealed class Match
     //   next one on.
     // - Training after them, so a unit trained in a tick stands still until the next one, as
     //   any unit placed on the map does.
+    // - Age Advance after training. No other system reads the Ages or the advances underway,
+    //   and a Town Center destroyed in combat has left the match before it runs, so its place
+    //   among them changes no outcome; commands read the Age the tick after it is reached.
     // - Waiting after the systems that free Cells or complete drop-off points: Villagers
     //   waiting for a way choose theirs again once the tick has opened what it opens.
     // - Defeat last, after every removal of the tick: a Player whose Town Center falls is
@@ -38,6 +41,7 @@ public sealed class Match
         new GatherSystem(),
         new ConstructionSystem(),
         new TrainingSystem(),
+        new AgeAdvanceSystem(),
         new WaitingSystem(),
         new DefeatSystem(),
     ];
@@ -52,8 +56,8 @@ public sealed class Match
     /// Town Center, starting Villagers and starting Resources.
     /// </summary>
     /// <exception cref="ArgumentException">
-    /// The configuration has fewer than one or more than two Players, or a map less than 32
-    /// Cells wide or high.
+    /// The configuration has fewer than one or more than two Players, a map less than 32 Cells
+    /// wide or high, two Factions with the same ID, or a Player of a Faction it does not have.
     /// </exception>
     public static Match Create(MatchConfig config) => new(config);
 

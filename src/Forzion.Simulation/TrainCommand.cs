@@ -8,7 +8,8 @@ namespace Forzion.Simulation;
 /// <remarks>
 /// The command is rejected, queueing nothing and paying nothing, when the building is not in
 /// the match, belongs to another Player or is a construction site, when the building does not
-/// train units of that kind, when the Player cannot afford the cost, or when the unit would
+/// train units of that kind, when the Player's Age has not unlocked that kind in its Faction,
+/// when the Player cannot afford the cost, or when the unit would
 /// take the Player's population past its population limit. The unit takes its place in the
 /// population as it joins the queue, so a limit that falls afterwards, when a House is
 /// destroyed, does not stop the units already queued.
@@ -27,6 +28,13 @@ public sealed record TrainCommand(PlayerId Player, EntityId Building, UnitKind K
         if (!Enum.IsDefined(Kind) || Balance.Of(Kind).TrainedAt != building.Kind)
         {
             context.Reject(this, RejectionReason.BuildingCannotTrainUnit);
+
+            return;
+        }
+
+        if (!issuer.Faction.Unlocks(Kind, issuer.Age))
+        {
+            context.Reject(this, RejectionReason.UnitLocked);
 
             return;
         }
