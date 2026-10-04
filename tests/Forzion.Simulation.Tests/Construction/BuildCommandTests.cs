@@ -71,9 +71,9 @@ public class BuildCommandTests
     [Fact]
     public void A_build_order_given_to_Villagers_and_soldiers_sends_the_Villagers_and_leaves_the_soldiers_to_what_they_were_doing()
     {
-        var match = MatchWithSoldier();
+        var match = TestArmies.MatchWithSoldier();
         var villager = Site.VillagersOf(match, TestMatches.FirstPlayer)[0];
-        var soldier = match.State.UnitsOf(TestMatches.FirstPlayer).Single(unit => unit.Kind == UnitKind.MeleeSoldier);
+        var soldier = match.State.SoldierOf(TestMatches.FirstPlayer);
         var house = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.House, []);
         match.Enqueue(new MoveCommand(
             TestMatches.FirstPlayer, [soldier.Id], new CellPosition(soldier.Position.Cell.X - 6, soldier.Position.Cell.Y)));
@@ -92,8 +92,8 @@ public class BuildCommandTests
     [Fact]
     public void A_build_order_given_to_soldiers_alone_is_rejected_and_sends_none_of_them()
     {
-        var match = MatchWithSoldier();
-        var soldier = match.State.UnitsOf(TestMatches.FirstPlayer).Single(unit => unit.Kind == UnitKind.MeleeSoldier);
+        var match = TestArmies.MatchWithSoldier();
+        var soldier = match.State.SoldierOf(TestMatches.FirstPlayer);
         var house = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.House, []);
         var command = new BuildCommand(TestMatches.FirstPlayer, [soldier.Id], house.Id);
         match.Enqueue(command);
@@ -106,13 +106,6 @@ public class BuildCommandTests
     }
 
     /// <summary>The default two-Player match, the first Player starting with a melee soldier beside its Town Center.</summary>
-    private static Match MatchWithSoldier()
-    {
-        var plain = TestMatches.TwoPlayerMatch();
-
-        return Match.Create(TestArmies.Config(
-            first: [new StartingUnit(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, TestMatches.FirstPlayer, -2, 0))]));
-    }
 
     /// <summary>
     /// Places a House of the first Player with no builder in two equal matches, sends the

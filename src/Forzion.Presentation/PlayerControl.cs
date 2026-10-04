@@ -88,7 +88,8 @@ public sealed class PlayerControl
     /// Sends the selected units of the Player the order that fits what the mouse points at,
     /// as a command the next tick applies: gather from a resource source, attack a unit or
     /// building of another Player, build an unfinished building of the Player, otherwise walk
-    /// to the Cell under the mouse. Nothing is sent while no unit is selected. The command goes
+    /// to the Cell under the mouse. Units none of which can attack walk up to an enemy instead
+    /// of being refused an attack. Nothing is sent while no unit is selected. The command goes
     /// out even when the match will refuse it; the refusal comes back as a
     /// <see cref="CommandRejected"/> event.
     /// </summary>
@@ -109,11 +110,14 @@ public sealed class PlayerControl
     private Command OrderFor(IReadOnlyList<EntityId> units, object? target, CellPosition ground) => target switch
     {
         ResourceSourceState source => new GatherCommand(player, units, source.Id),
-        UnitState enemy when enemy.Owner != player => new AttackCommand(player, units, enemy.Id),
-        BuildingState enemy when enemy.Owner != player => new AttackCommand(player, units, enemy.Id),
+        UnitState enemy when enemy.Owner != player && AnyCanAttack(units) => new AttackCommand(player, units, enemy.Id),
+        BuildingState enemy when enemy.Owner != player && AnyCanAttack(units) => new AttackCommand(player, units, enemy.Id),
         BuildingState site when !site.IsComplete => new BuildCommand(player, units, site.Id),
         _ => new MoveCommand(player, units, ground),
     };
+
+    private bool AnyCanAttack(IReadOnlyList<EntityId> units) =>
+        driver.Match.State.Units.Any(unit => unit.CanAttack && units.Contains(unit.Id));
 
     private bool IsUnitOfPlayer(EntityId id) =>
         driver.Match.State.Units.Any(unit => unit.Id == id && unit.Owner == player);

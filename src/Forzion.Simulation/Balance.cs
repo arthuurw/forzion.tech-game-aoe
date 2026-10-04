@@ -168,5 +168,5 @@ internal static class Balance
 /// target's position, or to the nearest point of a building's footprint.
 /// </param>
 /// <param name="IntervalTicks">Ticks spent within range for each hit, which lands at the end of them.</param>
-/// <param name="PerceptionRadius">How far, in Cells, an idle unit notices an enemy unit and attacks it.</param>
+/// <param name="PerceptionRadius">How far, in Cells, an idle unit notices an enemy unit or building and attacks it.</param>
 internal sealed record AttackStats(int Damage, Fix64 Range, int IntervalTicks, Fix64 PerceptionRadius);

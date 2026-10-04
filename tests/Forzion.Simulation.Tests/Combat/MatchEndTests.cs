@@ -101,7 +101,7 @@ public class MatchEndTests
     [Fact]
     public void A_match_with_a_single_Player_does_not_end_on_its_own()
     {
-        var match = Match.Create(new MatchConfig(1, new MapConfig(64, 48), [new PlayerConfig(TestMatches.FirstFaction)]));
+        var match = Match.Create(TestMatches.SinglePlayerConfig());
 
         var events = Battle.Run(match, 10);
 

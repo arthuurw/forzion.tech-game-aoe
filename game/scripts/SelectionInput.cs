@@ -100,16 +100,7 @@ public partial class SelectionInput : CanvasLayer
         var origin = Camera.ProjectRayOrigin(screen);
         var direction = Camera.ProjectRayNormal(screen);
 
-        if (direction.Y >= -1e-4f)
-        {
-            return null;
-        }
-
-        // Along the ray the height changes by direction.Y per step: dividing by it gives the
-        // step that changes the height by one unit.
-        var perHeight = direction / direction.Y;
-        var ground = origin - (perHeight * origin.Y);
-
-        return new SightLine(new MapPoint(ground.X, ground.Z), new MapPoint(perHeight.X, perHeight.Z));
+        return SightLine.FromRay(
+            new WorldVector(origin.X, origin.Y, origin.Z), new WorldVector(direction.X, direction.Y, direction.Z));
     }
 }
