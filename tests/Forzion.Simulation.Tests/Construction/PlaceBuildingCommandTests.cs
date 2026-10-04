@@ -134,12 +134,37 @@ public class PlaceBuildingCommandTests
     }
 
     [Fact]
-    public void Placing_a_building_with_a_soldier_as_builder_is_rejected_and_changes_nothing()
+    public void Placing_a_building_with_Villagers_and_soldiers_as_builders_sends_the_Villagers_and_leaves_the_soldiers_to_what_they_were_doing()
     {
-        var withRejection = Match.Create(WithSoldier());
-        var without = Match.Create(WithSoldier());
-        var soldier = withRejection.State.UnitsOf(TestMatches.FirstPlayer).Single(unit => unit.Kind == UnitKind.MeleeSoldier);
-        var command = AffordableHouseWith(withRejection, without, soldier.Id);
+        var match = TestArmies.MatchWithSoldier();
+        var villager = Site.VillagersOf(match, TestMatches.FirstPlayer)[0];
+        var soldier = match.State.SoldierOf(TestMatches.FirstPlayer);
+        Site.Stockpile(match, TestMatches.FirstPlayer, Match.BuildingCost(BuildingKind.House).Wood);
+        var origin = Site.FreeOriginNear(match.State, match.State.Buildings[0].Origin, Match.BuildingSize(BuildingKind.House));
+        var destination = TestArmies.WalkAway(match, soldier);
+
+        match.Enqueue(new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.House, origin, [soldier.Id, villager.Id]));
+        match.Tick();
+        var house = match.State.Buildings[^1];
+
+        Assert.Empty(match.Events);
+        Assert.Equal(BuildingKind.House, house.Kind);
+        Assert.Equal(house.Id, villager.ConstructionSite);
+        Assert.Null(soldier.ConstructionSite);
+        Assert.Equal(destination, soldier.Path[^1]);
+    }
+
+    [Fact]
+    public void Placing_a_building_with_soldiers_alone_as_builders_is_rejected_and_changes_nothing()
+    {
+        var withRejection = TestArmies.MatchWithSoldier();
+        var without = TestArmies.MatchWithSoldier();
+        Site.Stockpile(withRejection, TestMatches.FirstPlayer, Match.BuildingCost(BuildingKind.House).Wood);
+        Site.Stockpile(without, TestMatches.FirstPlayer, Match.BuildingCost(BuildingKind.House).Wood);
+        var soldier = withRejection.State.SoldierOf(TestMatches.FirstPlayer);
+        var origin = Site.FreeOriginNear(withRejection.State, withRejection.State.Buildings[0].Origin, Match.BuildingSize(BuildingKind.House));
+        var command = new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.House, origin, [soldier.Id]);
+        withRejection.Enqueue(command);
 
         withRejection.Tick();
         without.Tick();
@@ -147,10 +172,6 @@ public class PlaceBuildingCommandTests
         Assert.Equal([new CommandRejected(command, RejectionReason.UnitCannotBuild)], withRejection.Events);
         Assert.Equal(without.StateHash, withRejection.StateHash);
     }
-
-    /// <summary>The default two-Player configuration, the first Player starting with a melee soldier beside its Town Center.</summary>
-    private static MatchConfig WithSoldier() => TestArmies.Config(
-        first: [new StartingUnit(UnitKind.MeleeSoldier, TestArmies.BesideHome(TestMatches.TwoPlayerMatch(), TestMatches.FirstPlayer, -2, 0))]);
 
     /// <summary>
     /// Gives the first Player of both matches the Wood for a House and enqueues, in

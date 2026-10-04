@@ -28,6 +28,9 @@ public sealed class ResourceSourceState
     /// <summary>How much of the Resource is left to gather.</summary>
     public int Amount { get; internal set; }
 
+    /// <summary>Whether the given Cell lies beside the source, by a side or by a corner.</summary>
+    internal bool IsBeside(CellPosition cell) => cell.Touches(Cell);
+
     internal void WriteTo(StateHasher hasher)
     {
         hasher.Write(Id.Value);

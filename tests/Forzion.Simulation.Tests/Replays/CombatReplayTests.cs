@@ -21,7 +21,7 @@ public class CombatReplayTests
         var second = TestMatches.SecondPlayer;
         IEnumerable<(int X, int Y)> flanks = [(-2, -1), (-2, 0), (-2, 1), (2, -1), (2, 0), (2, 1)];
 
-        return TestArmies.Config(
+        return TestMatches.TwoPlayerConfig(
             Seed,
             first:
             [

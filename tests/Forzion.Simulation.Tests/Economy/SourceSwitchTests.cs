@@ -1,3 +1,4 @@
+using Forzion.Simulation.Tests.Maps;
 using Forzion.Simulation.Tests.Matches;
 using Forzion.Simulation.Tests.Movement;
 
@@ -13,7 +14,7 @@ public class SourceSwitchTests
     {
         var match = TestMatches.TwoPlayerMatch(TwoFoodSourcesEachSeed);
         var villagers = OwnVillagers(match);
-        var first = Gather.NearestSource(match.State, Walk.MiddleVillager(match).Position.Cell, ResourceKind.Food);
+        var first = Gather.NearestSource(match.State, TestMatches.MiddleVillager(match).Position.Cell, ResourceKind.Food);
         var next = match.State.ResourceSources
             .Where(source => source.Kind == ResourceKind.Food && source != first)
             .OrderBy(source => Walk.SquaredDistance(source.Cell, first.Cell))
@@ -21,17 +22,17 @@ public class SourceSwitchTests
         var nextInitial = next.Amount;
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, villagers.Select(villager => villager.Id).ToList(), first.Id));
 
-        Gather.Until(match, () => Gather.FindSource(match.State, first.Id) is null);
+        TestMatches.TickUntil(match, () => Gather.FindSource(match.State, first.Id) is null);
 
         // Both of the Player's Food sources lie beside its Town Center: the next one is nearby.
         Assert.True(Walk.SquaredDistance(first.Cell, next.Cell) <= 10 * 10);
         Assert.All(villagers, villager => Assert.Equal(next.Id, villager.GatherSource));
 
         // With no further command, they gather from it.
-        Gather.Until(match, () => next.Amount < nextInitial);
+        TestMatches.TickUntil(match, () => next.Amount < nextInitial);
 
         Assert.Contains(villagers, villager =>
-            villager.GatherPhase == GatherPhase.Gathering && Gather.Touch(villager.Position.Cell, next.Cell));
+            villager.GatherPhase == GatherPhase.Gathering && MapProbe.Touch(villager.Position.Cell, next.Cell));
     }
 
     [Fact]
@@ -50,7 +51,7 @@ public class SourceSwitchTests
         Assert.Equal(2, own.Count);
         Assert.All(food.Except(own), source => Assert.True(Walk.SquaredDistance(source.Cell, home) > 40 * 40));
 
-        Gather.Until(match, () =>
+        TestMatches.TickUntil(match, () =>
             own.All(source => Gather.FindSource(match.State, source.Id) is null)
             && villagers.All(villager => villager.GatherPhase == GatherPhase.None && !villager.IsMoving));
 

@@ -5,15 +5,8 @@ namespace Forzion.Simulation.Tests.Combat;
 /// <summary>Helpers of the combat tests, built on the simulation's public interface only.</summary>
 internal static class Battle
 {
-    /// <summary>More ticks than any fight in the combat tests takes.</summary>
-    public const int TickLimit = 20_000;
-
     // Two Cells to either side of the Town Center's centre: free, and away from the Villagers' row.
     private static readonly (int X, int Y)[] SiegeOffsets = [(-2, -1), (-2, 0), (-2, 1), (2, -1), (2, 0), (2, 1)];
-
-    /// <summary>The middle one of the Player's starting Villagers, which stands beside the middle of the Town Center.</summary>
-    public static UnitState MiddleVillager(Match match, PlayerId player) =>
-        match.State.Units.Where(unit => unit.Owner == player && unit.Kind == UnitKind.Villager).ElementAt(1);
 
     public static BuildingState TownCenter(Match match, PlayerId player) =>
         match.State.Buildings.First(building => building.Owner == player);
@@ -29,7 +22,7 @@ internal static class Battle
     {
         var plain = TestMatches.TwoPlayerMatch(seed);
 
-        return Match.Create(TestArmies.Config(seed, first?.Invoke(plain), second?.Invoke(plain)));
+        return Match.Create(TestMatches.TwoPlayerConfig(seed, first?.Invoke(plain), second?.Invoke(plain)));
     }
 
     /// <summary>
@@ -87,22 +80,6 @@ internal static class Battle
 
     /// <summary>The last unit of the match: the last extra unit of the last Player given any.</summary>
     public static UnitState Last(Match match) => match.State.Units[^1];
-
-    /// <summary>Ticks the match until the condition holds and returns the ticks it took.</summary>
-    public static int TickUntil(Match match, Func<bool> condition)
-    {
-        for (var tick = 1; tick <= TickLimit; tick++)
-        {
-            match.Tick();
-
-            if (condition())
-            {
-                return tick;
-            }
-        }
-
-        throw new InvalidOperationException($"The condition still did not hold after {TickLimit} ticks.");
-    }
 
     /// <summary>Ticks the match the given number of times and returns the events of every tick, in order.</summary>
     public static List<MatchEvent> Run(Match match, int ticks)

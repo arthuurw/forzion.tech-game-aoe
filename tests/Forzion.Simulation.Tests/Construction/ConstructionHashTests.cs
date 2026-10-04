@@ -1,4 +1,3 @@
-using Forzion.Simulation.Tests.Economy;
 using Forzion.Simulation.Tests.Matches;
 using Forzion.Simulation.Tests.Movement;
 
@@ -33,7 +32,7 @@ public class ConstructionHashTests
     {
         var earlier = BesideHouse(out var house);
         var later = BesideHouse(out _);
-        var villager = Walk.MiddleVillager(earlier);
+        var villager = TestMatches.MiddleVillager(earlier);
         earlier.Enqueue(new BuildCommand(TestMatches.FirstPlayer, [villager.Id], house.Id));
         earlier.Tick();
         later.Tick();
@@ -41,7 +40,7 @@ public class ConstructionHashTests
         later.Tick();
         earlier.Tick();
 
-        var other = Walk.MiddleVillager(later);
+        var other = TestMatches.MiddleVillager(later);
         Assert.Equal(other.Position, villager.Position);
         Assert.Equal(other.ConstructionSite, villager.ConstructionSite);
         Assert.NotEqual(later.State.Buildings[^1].BuildProgress, house.BuildProgress);
@@ -59,7 +58,7 @@ public class ConstructionHashTests
 
         for (var tick = 0; !house.IsComplete; tick++)
         {
-            Assert.True(tick < Gather.TickLimit);
+            Assert.True(tick < TestMatches.TickLimit);
             first.Tick();
             second.Tick();
 
@@ -80,7 +79,7 @@ public class ConstructionHashTests
     private static Match BesideHouse(out BuildingState house)
     {
         var match = WithHouse(out house);
-        var villager = Walk.MiddleVillager(match);
+        var villager = TestMatches.MiddleVillager(match);
         var beside = new CellPosition(house.Origin.X - 1, house.Origin.Y);
         match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], beside));
         Walk.UntilStopped(match, villager);

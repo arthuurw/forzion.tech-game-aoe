@@ -110,8 +110,11 @@ public class ProductionReplayTests
     // the hash of the final state as the public interface shows it, and it matched the
     // match's own hash at every tick of this replay, while queues held units of several kinds
     // and buildings had rally points. CI runs this on Windows, Linux and macOS: every system
-    // must reach the same hash.
-    private const ulong ExpectedFinalHash = 10324659297031690069UL;
+    // must reach the same hash. When main's gatherers and builders, walking to the Cell beside
+    // their target with the shortest way to it, met training here, no code that writes the
+    // hash changed: the layout is the one above, and this value is the outcome of both
+    // behaviours, each covered by its own behaviour tests.
+    private const ulong ExpectedFinalHash = 13632556205960934370UL;
 
     [Fact]
     public void A_recorded_replay_of_production_reaches_the_recorded_final_hash()

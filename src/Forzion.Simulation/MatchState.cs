@@ -36,7 +36,7 @@ public sealed class MatchState
 
         foreach (var (cell, kind) in generated.Sources)
         {
-            AddResourceSource(kind, cell, Balance.SourceAmount(kind));
+            AddResourceSource(kind, cell, Balance.Of(kind).SourceAmount);
         }
 
         foreach (var player in players)
@@ -88,7 +88,7 @@ public sealed class MatchState
     /// </summary>
     public int PopulationLimitOf(PlayerId player) => buildings
         .Where(building => building.Owner == player && building.IsComplete)
-        .Sum(building => Balance.PopulationProvided(building.Kind));
+        .Sum(building => Balance.Of(building.Kind).PopulationProvided);
 
     /// <summary>
     /// How many units the Player has, counting those in the training queues of its buildings:
@@ -107,6 +107,14 @@ public sealed class MatchState
 
     /// <summary>The building with the given ID, or null when the match has no such building.</summary>
     internal BuildingState? FindBuilding(EntityId id) => buildings.Find(building => building.Id == id);
+
+    /// <summary>
+    /// The unit or the building with the given ID: one of the two, the other null, or both
+    /// null when the match has no such unit or building. Units and buildings share one
+    /// sequence of IDs, so no ID names one of each.
+    /// </summary>
+    public (UnitState? Unit, BuildingState? Building) FindUnitOrBuilding(EntityId id) =>
+        FindUnit(id) is { } unit ? (unit, null) : (null, FindBuilding(id));
 
     /// <summary>The resource source with the given ID, or null when the match has no such source.</summary>
     internal ResourceSourceState? FindResourceSource(EntityId id) => resourceSources.Find(source => source.Id == id);
@@ -136,16 +144,13 @@ public sealed class MatchState
     /// Adds a building on free Cells and marks them occupied. IDs only grow, so appending
     /// keeps the collection in ID order.
     /// </summary>
-    internal BuildingState AddBuilding(PlayerId owner, BuildingKind kind, CellPosition origin, int width, int height)
+    internal BuildingState AddBuilding(PlayerId owner, BuildingKind kind, CellPosition origin)
     {
-        var building = new BuildingState(NextEntityId(), owner, kind, origin, width, height);
+        var building = new BuildingState(NextEntityId(), owner, kind, origin);
 
-        for (var y = origin.Y; y < origin.Y + height; y++)
+        foreach (var cell in building.Footprint.Cells)
         {
-            for (var x = origin.X; x < origin.X + width; x++)
-            {
-                Map[new CellPosition(x, y)] = CellKind.Building;
-            }
+            Map[cell] = CellKind.Building;
         }
 
         buildings.Add(building);
@@ -159,25 +164,15 @@ public sealed class MatchState
     /// </summary>
     internal bool CanPlace(BuildingKind kind, CellPosition origin)
     {
-        var size = Balance.BuildingSize(kind);
+        var footprint = Footprint.Of(kind, origin);
 
-        for (var y = origin.Y; y < origin.Y + size; y++)
+        if (!footprint.Cells.All(Map.IsFree))
         {
-            for (var x = origin.X; x < origin.X + size; x++)
-            {
-                var cell = new CellPosition(x, y);
-
-                if (!Map.IsFree(cell))
-                {
-                    return false;
-                }
-            }
+            return false;
         }
 
         // A unit inside the footprint would be walled in by it.
-        return !units.Any(unit =>
-            unit.Position.Cell.X >= origin.X && unit.Position.Cell.X < origin.X + size
-            && unit.Position.Cell.Y >= origin.Y && unit.Position.Cell.Y < origin.Y + size);
+        return !units.Any(unit => footprint.Contains(unit.Position.Cell));
     }
 
     /// <summary>Adds a unit. IDs only grow, so appending keeps the collection in ID order.</summary>
@@ -201,12 +196,9 @@ public sealed class MatchState
 
         foreach (var building in destroyedBuildings)
         {
-            for (var y = building.Origin.Y; y < building.Origin.Y + building.Height; y++)
+            foreach (var cell in building.Footprint.Cells)
             {
-                for (var x = building.Origin.X; x < building.Origin.X + building.Width; x++)
-                {
-                    Map[new CellPosition(x, y)] = CellKind.Free;
-                }
+                Map[cell] = CellKind.Free;
             }
         }
 
@@ -284,12 +276,7 @@ public sealed class MatchState
     {
         var reach = Balance.TownCenterSize / 2;
 
-        var townCenter = AddBuilding(
-            player,
-            BuildingKind.TownCenter,
-            new CellPosition(home.X - reach, home.Y - reach),
-            Balance.TownCenterSize,
-            Balance.TownCenterSize);
+        var townCenter = AddBuilding(player, BuildingKind.TownCenter, new CellPosition(home.X - reach, home.Y - reach));
 
         townCenter.BuildProgress = townCenter.BuildTime;
 
@@ -319,7 +306,7 @@ public sealed class PlayerState
 
         foreach (var kind in Enum.GetValues<ResourceKind>())
         {
-            Receive(kind, Balance.StartingAmount(kind));
+            Receive(kind, Balance.Of(kind).StartingAmount);
         }
     }
 

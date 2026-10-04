@@ -6,10 +6,10 @@ namespace Forzion.Simulation;
 /// </summary>
 /// <remarks>
 /// The command is rejected as a whole, sending none of its units, when any of the units
-/// belongs to another Player or is not a Villager, when none of them exists, or when the
-/// building is not in the match, belongs to another Player or is already complete. A unit
+/// belongs to another Player, when none of them exists or none of them is a Villager, or when
+/// the building is not in the match, belongs to another Player or is already complete. A unit
 /// that does not exist, because it died after the order was given, is skipped and the others
-/// still set out.
+/// still set out; so is a unit that is not a Villager, which goes on with whatever it was doing.
 /// </remarks>
 /// <param name="Units">The Villagers to send.</param>
 /// <param name="Building">The construction site to build.</param>
@@ -18,17 +18,11 @@ public sealed record BuildCommand(PlayerId Player, IReadOnlyList<EntityId> Units
 {
     internal override void Execute(TickContext context, PlayerState issuer)
     {
-        var units = OrderedUnits.Find(context, this, issuer, Units);
+        var units = CommandedUnits.Find(
+            context, this, issuer, Units, unit => unit.CanBuild, RejectionReason.UnitCannotBuild);
 
         if (units is null)
         {
-            return;
-        }
-
-        if (units.Any(unit => unit.Kind != UnitKind.Villager))
-        {
-            context.Reject(this, RejectionReason.UnitCannotBuild);
-
             return;
         }
 

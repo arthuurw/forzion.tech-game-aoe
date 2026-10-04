@@ -69,7 +69,7 @@ public class MilitaryTrainingTests
 
         Assert.True(heavy.MaxHitPoints > melee.MaxHitPoints);
 
-        Battle.TickUntil(match, () => Battle.Unit(match, melee.Id) is null || Battle.Unit(match, heavy.Id) is null);
+        TestMatches.TickUntil(match, () => Battle.Unit(match, melee.Id) is null || Battle.Unit(match, heavy.Id) is null);
 
         Assert.Same(heavy, Battle.Unit(match, heavy.Id));
         Assert.Null(Battle.Unit(match, melee.Id));

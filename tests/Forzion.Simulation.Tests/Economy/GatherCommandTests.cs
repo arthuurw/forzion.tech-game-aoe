@@ -1,3 +1,4 @@
+using Forzion.Simulation.Tests.Maps;
 using Forzion.Simulation.Tests.Matches;
 using Forzion.Simulation.Tests.Movement;
 
@@ -9,17 +10,46 @@ public class GatherCommandTests
     public void A_Villager_ordered_to_gather_walks_up_to_the_source_and_takes_from_it()
     {
         var match = TestMatches.TwoPlayerMatch();
-        var villager = Walk.MiddleVillager(match);
+        var villager = TestMatches.MiddleVillager(match);
         var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Food);
         var before = source.Amount;
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
 
-        Gather.Until(match, () => villager.Load.Amount > 0);
+        TestMatches.TickUntil(match, () => villager.Load.Amount > 0);
 
-        Assert.True(Gather.Touch(villager.Position.Cell, source.Cell));
+        Assert.True(MapProbe.Touch(villager.Position.Cell, source.Cell));
         Assert.Equal(ResourceKind.Food, villager.Load.Resource);
         Assert.Equal(before - villager.Load.Amount, source.Amount);
         Assert.Equal(source.Id, villager.GatherSource);
+    }
+
+    [Fact]
+    public void A_Villager_ordered_to_gather_walks_to_the_Cell_beside_the_source_with_the_shortest_way_to_it()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var map = match.State.Map;
+        var villager = TestMatches.MiddleVillager(match);
+        var reachable = MapProbe.ReachableFrom(map, villager.Position.Cell);
+
+        // A source in the corner of a square of reachable Cells: from the opposite corner, the
+        // Cell beside the source's corner is one diagonal step away, while the Cells beside its
+        // sides, nearer to it in a straight line, are two steps away.
+        var source = match.State.ResourceSources
+            .OrderBy(each => Walk.SquaredDistance(each.Cell, villager.Position.Cell))
+            .ThenBy(each => each.Id.Value)
+            .First(each =>
+                MapProbe.Square(each.Cell, 3).Where(cell => cell != each.Cell).All(reachable.Contains)
+                && reachable.Contains(new CellPosition(each.Cell.X + 2, each.Cell.Y + 2)));
+        var corner = new CellPosition(source.Cell.X + 1, source.Cell.Y + 1);
+        var start = new CellPosition(source.Cell.X + 2, source.Cell.Y + 2);
+        match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], start));
+        Walk.UntilStopped(match, villager);
+        Assert.Equal(start, villager.Position.Cell);
+
+        match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
+        match.Tick();
+
+        Assert.Equal([corner], villager.Path);
     }
 
     [Fact]
@@ -28,34 +58,27 @@ public class GatherCommandTests
         var match = TestMatches.TwoPlayerMatch();
         var player = match.State.Players[0];
         var townCenter = match.State.Buildings[0];
-        var villager = Walk.MiddleVillager(match);
+        var villager = TestMatches.MiddleVillager(match);
         var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Food);
         var initial = source.Amount;
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
 
-        var load = 0;
-        Gather.Until(match, () =>
-        {
-            var delivered = Gather.Delivered(player, ResourceKind.Food) > 0;
-            load = delivered ? load : villager.Load.Amount;
-
-            return delivered;
-        });
+        var load = Gather.LargestLoadUntilDelivery(match, villager);
 
         // The first delivery: a full load, handed over beside the Town Center.
         Assert.True(load > 1);
         Assert.Equal(load, Gather.Delivered(player, ResourceKind.Food));
         Assert.Equal(0, villager.Load.Amount);
-        Assert.True(Gather.Touches(townCenter, villager.Position.Cell));
+        Assert.True(MapProbe.IsBeside(townCenter, villager.Position.Cell));
 
         // With no further command, back to the source for more.
-        Gather.Until(match, () => villager.Load.Amount > 0);
+        TestMatches.TickUntil(match, () => villager.Load.Amount > 0);
 
-        Assert.True(Gather.Touch(villager.Position.Cell, source.Cell));
+        Assert.True(MapProbe.Touch(villager.Position.Cell, source.Cell));
         Assert.Equal(initial, source.Amount + villager.Load.Amount + Gather.Delivered(player, ResourceKind.Food));
 
         // And the next trip brings another load of the same size.
-        Gather.Until(match, () => Gather.Delivered(player, ResourceKind.Food) > load);
+        TestMatches.TickUntil(match, () => Gather.Delivered(player, ResourceKind.Food) > load);
 
         Assert.Equal(2 * load, Gather.Delivered(player, ResourceKind.Food));
     }
@@ -64,11 +87,8 @@ public class GatherCommandTests
     public void A_Villager_stops_taking_from_the_source_once_it_carries_a_full_load()
     {
         var match = TestMatches.TwoPlayerMatch();
-        var villager = Walk.MiddleVillager(match);
-        var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Food);
-        match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
 
-        Gather.Until(match, () => villager.GatherPhase == GatherPhase.ToDropOffPoint);
+        var (villager, source) = Gather.UntilFirstFullLoad(match);
 
         // Walking away to deliver: neither the load nor the source changes on the way.
         var load = villager.Load.Amount;
@@ -76,7 +96,7 @@ public class GatherCommandTests
 
         for (var tick = 0; villager.GatherPhase == GatherPhase.ToDropOffPoint; tick++)
         {
-            Assert.True(tick < Gather.TickLimit);
+            Assert.True(tick < TestMatches.TickLimit);
             Assert.Equal(load, villager.Load.Amount);
             Assert.Equal(left, source.Amount);
 
@@ -90,10 +110,10 @@ public class GatherCommandTests
     public void Gather_progress_counts_the_ticks_spent_towards_the_next_unit_and_restarts_when_one_is_taken()
     {
         var match = TestMatches.TwoPlayerMatch();
-        var villager = Walk.MiddleVillager(match);
+        var villager = TestMatches.MiddleVillager(match);
         var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Food);
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
-        Gather.Until(match, () => villager.GatherPhase == GatherPhase.Gathering);
+        TestMatches.TickUntil(match, () => villager.GatherPhase == GatherPhase.Gathering);
 
         Assert.Equal(0, villager.GatherProgress);
 
@@ -105,11 +125,35 @@ public class GatherCommandTests
         }
     }
 
+    // A player clicking the source again and again must not keep the Villager from gathering.
+    [Fact]
+    public void A_gathering_Villager_ordered_again_to_the_same_source_keeps_its_progress()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var villager = TestMatches.MiddleVillager(match);
+        var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Food);
+        match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
+        TestMatches.TickUntil(match, () => villager.GatherPhase == GatherPhase.Gathering);
+        TestMatches.TickUntil(match, () => villager.GatherProgress == 5);
+
+        for (var order = 0; villager.Load.Amount == 0; order++)
+        {
+            Assert.True(order < 10, "The repeated order kept the Villager from taking a unit.");
+            var progress = villager.GatherProgress;
+
+            match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
+            match.Tick();
+
+            Assert.Equal(GatherPhase.Gathering, villager.GatherPhase);
+            Assert.True(villager.Load.Amount > 0 || villager.GatherProgress == progress + 1);
+        }
+    }
+
     [Fact]
     public void A_gather_from_a_source_that_does_not_exist_is_rejected()
     {
         var match = TestMatches.TwoPlayerMatch();
-        var villager = Walk.MiddleVillager(match);
+        var villager = TestMatches.MiddleVillager(match);
         var command = new GatherCommand(TestMatches.FirstPlayer, [villager.Id], match.State.Buildings[0].Id);
         match.Enqueue(command);
 
@@ -124,7 +168,7 @@ public class GatherCommandTests
     public void A_unit_that_no_longer_exists_is_skipped_and_the_other_units_of_the_gather_set_out()
     {
         var match = TestMatches.TwoPlayerMatch();
-        var villager = Walk.MiddleVillager(match);
+        var villager = TestMatches.MiddleVillager(match);
         var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Wood);
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [new EntityId(100_000), villager.Id], source.Id));
 
@@ -139,7 +183,7 @@ public class GatherCommandTests
     public void A_gather_by_units_none_of_which_exist_is_rejected()
     {
         var match = TestMatches.TwoPlayerMatch();
-        var source = Gather.NearestSource(match.State, Walk.MiddleVillager(match).Position.Cell, ResourceKind.Wood);
+        var source = Gather.NearestSource(match.State, TestMatches.MiddleVillager(match).Position.Cell, ResourceKind.Wood);
         var command = new GatherCommand(TestMatches.FirstPlayer, [new EntityId(100_000), new EntityId(100_001)], source.Id);
         match.Enqueue(command);
 
@@ -152,7 +196,7 @@ public class GatherCommandTests
     public void A_gather_by_another_Players_unit_is_rejected_and_sends_none_of_its_units()
     {
         var match = TestMatches.TwoPlayerMatch();
-        var own = Walk.MiddleVillager(match);
+        var own = TestMatches.MiddleVillager(match);
         var foreign = match.State.UnitsOf(TestMatches.SecondPlayer).First();
         var source = Gather.NearestSource(match.State, own.Position.Cell, ResourceKind.Wood);
         var command = new GatherCommand(TestMatches.FirstPlayer, [own.Id, foreign.Id], source.Id);
@@ -166,21 +210,37 @@ public class GatherCommandTests
     }
 
     [Fact]
-    public void A_gather_by_a_soldier_is_rejected_and_sends_none_of_its_units()
+    public void A_gather_by_Villagers_and_soldiers_sends_the_Villagers_and_leaves_the_soldiers_to_what_they_were_doing()
     {
-        var plain = TestMatches.TwoPlayerMatch();
-        var match = Match.Create(TestArmies.Config(
-            first: [new StartingUnit(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, TestMatches.FirstPlayer, -2, 0))]));
-        var villager = Walk.MiddleVillager(match);
-        var soldier = match.State.UnitsOf(TestMatches.FirstPlayer).Single(unit => unit.Kind == UnitKind.MeleeSoldier);
+        var match = TestArmies.MatchWithSoldier();
+        var villager = TestMatches.MiddleVillager(match);
+        var soldier = match.State.SoldierOf(TestMatches.FirstPlayer);
         var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Wood);
-        var command = new GatherCommand(TestMatches.FirstPlayer, [villager.Id, soldier.Id], source.Id);
+        var destination = TestArmies.WalkAway(match, soldier);
+
+        match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [soldier.Id, villager.Id], source.Id));
+        match.Tick();
+
+        Assert.Empty(match.Events);
+        Assert.Equal(source.Id, villager.GatherSource);
+        Assert.Equal(GatherPhase.ToSource, villager.GatherPhase);
+        Assert.Equal(GatherPhase.None, soldier.GatherPhase);
+        Assert.Null(soldier.GatherSource);
+        Assert.Equal(destination, soldier.Path[^1]);
+    }
+
+    [Fact]
+    public void A_gather_by_soldiers_alone_is_rejected_and_sends_none_of_them()
+    {
+        var match = TestArmies.MatchWithSoldier();
+        var soldier = match.State.SoldierOf(TestMatches.FirstPlayer);
+        var source = Gather.NearestSource(match.State, soldier.Position.Cell, ResourceKind.Wood);
+        var command = new GatherCommand(TestMatches.FirstPlayer, [soldier.Id], source.Id);
         match.Enqueue(command);
 
         match.Tick();
 
         Assert.Equal([new CommandRejected(command, RejectionReason.UnitCannotGather)], match.Events);
-        Assert.Equal(GatherPhase.None, villager.GatherPhase);
         Assert.Equal(GatherPhase.None, soldier.GatherPhase);
         Assert.False(soldier.IsMoving);
     }
@@ -190,7 +250,7 @@ public class GatherCommandTests
     {
         var withRejection = TestMatches.TwoPlayerMatch();
         var without = TestMatches.TwoPlayerMatch();
-        var villager = Walk.MiddleVillager(withRejection);
+        var villager = TestMatches.MiddleVillager(withRejection);
         var foreign = withRejection.State.UnitsOf(TestMatches.SecondPlayer).First();
         var source = Gather.NearestSource(withRejection.State, villager.Position.Cell, ResourceKind.Gold);
         withRejection.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id, foreign.Id], source.Id));
@@ -205,11 +265,11 @@ public class GatherCommandTests
     public void A_gathering_Villager_ordered_to_move_stops_gathering_and_keeps_its_load()
     {
         var match = TestMatches.TwoPlayerMatch();
-        var villager = Walk.MiddleVillager(match);
+        var villager = TestMatches.MiddleVillager(match);
         var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Food);
         var destination = Walk.BehindTownCenter(match);
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
-        Gather.Until(match, () => villager.Load.Amount > 1);
+        TestMatches.TickUntil(match, () => villager.Load.Amount > 1);
         var load = villager.Load.Amount;
         var left = source.Amount;
 
@@ -233,14 +293,14 @@ public class GatherCommandTests
     {
         var match = TestMatches.TwoPlayerMatch();
         var player = match.State.Players[0];
-        var villager = Walk.MiddleVillager(match);
+        var villager = TestMatches.MiddleVillager(match);
         var food = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Food);
         var wood = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Wood);
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], food.Id));
-        Gather.Until(match, () => villager.Load.Amount > 1);
+        TestMatches.TickUntil(match, () => villager.Load.Amount > 1);
 
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], wood.Id));
-        Gather.Until(match, () => villager.Load.Resource == ResourceKind.Wood);
+        TestMatches.TickUntil(match, () => villager.Load.Resource == ResourceKind.Wood);
 
         Assert.Equal(new Load(ResourceKind.Wood, 1), villager.Load);
         Assert.Equal(0, Gather.Delivered(player, ResourceKind.Food));
@@ -251,10 +311,7 @@ public class GatherCommandTests
     {
         var match = TestMatches.TwoPlayerMatch();
         var player = match.State.Players[0];
-        var villager = Walk.MiddleVillager(match);
-        var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Food);
-        match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
-        Gather.Until(match, () => villager.GatherPhase == GatherPhase.ToDropOffPoint);
+        var (villager, source) = Gather.UntilFirstFullLoad(match);
         var full = villager.Load.Amount;
 
         // Already on its way when the order comes.
@@ -263,16 +320,16 @@ public class GatherCommandTests
         Assert.Equal(GatherPhase.ToDropOffPoint, villager.GatherPhase);
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
 
-        var largest = FirstDelivery(match, villager);
+        var largest = Gather.LargestLoadUntilDelivery(match, villager);
 
         Assert.Equal(full, largest);
         Assert.Equal(full, Gather.Delivered(player, ResourceKind.Food));
-        Assert.True(Gather.Touches(match.State.Buildings[0], villager.Position.Cell));
+        Assert.True(MapProbe.IsBeside(match.State.Buildings[0], villager.Position.Cell));
 
         // And back to the source for the next load.
-        Gather.Until(match, () => villager.Load.Amount > 0);
+        TestMatches.TickUntil(match, () => villager.Load.Amount > 0);
 
-        Assert.True(Gather.Touch(villager.Position.Cell, source.Cell));
+        Assert.True(MapProbe.Touch(villager.Position.Cell, source.Cell));
         Assert.Equal(source.Id, villager.GatherSource);
     }
 
@@ -281,20 +338,17 @@ public class GatherCommandTests
     {
         var match = TestMatches.TwoPlayerMatch();
         var player = match.State.Players[0];
-        var villager = Walk.MiddleVillager(match);
-        var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Food);
-        match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
-        Gather.Until(match, () => villager.GatherPhase == GatherPhase.ToDropOffPoint);
+        var (villager, source) = Gather.UntilFirstFullLoad(match);
         var full = villager.Load.Amount;
         match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], Walk.BehindTownCenter(match)));
         Walk.UntilStopped(match, villager);
 
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
-        var largest = FirstDelivery(match, villager);
+        var largest = Gather.LargestLoadUntilDelivery(match, villager);
 
         Assert.Equal(full, largest);
         Assert.Equal(full, Gather.Delivered(player, ResourceKind.Food));
-        Assert.True(Gather.Touches(match.State.Buildings[0], villager.Position.Cell));
+        Assert.True(MapProbe.IsBeside(match.State.Buildings[0], villager.Position.Cell));
     }
 
     [Fact]
@@ -302,31 +356,22 @@ public class GatherCommandTests
     {
         var match = TestMatches.TwoPlayerMatch();
         var player = match.State.Players[0];
-        var villager = Walk.MiddleVillager(match);
-        var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Food);
-        var initial = source.Amount;
-        match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
-        Gather.Until(match, () => villager.GatherPhase == GatherPhase.ToDropOffPoint);
+        var initial = Gather.NearestSource(match.State, TestMatches.MiddleVillager(match).Position.Cell, ResourceKind.Food).Amount;
+        var (villager, source) = Gather.UntilFirstFullLoad(match);
         var full = villager.Load.Amount;
-        Gather.Until(match, () => villager.Load.Amount == 2);
+        TestMatches.TickUntil(match, () => villager.Load.Amount == 2);
         match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [villager.Id], Walk.BehindTownCenter(match)));
         Walk.UntilStopped(match, villager);
 
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
-        Gather.Until(match, () => villager.Load.Amount != 2);
+        TestMatches.TickUntil(match, () => villager.Load.Amount != 2);
 
         // The next unit taken adds to the load it already carried.
         Assert.Equal(new Load(ResourceKind.Food, 3), villager.Load);
 
         // And the load it delivers is full, not larger.
         var delivered = Gather.Delivered(player, ResourceKind.Food);
-        var largest = 0;
-        Gather.Until(match, () =>
-        {
-            largest = Math.Max(largest, villager.Load.Amount);
-
-            return Gather.Delivered(player, ResourceKind.Food) > delivered;
-        });
+        var largest = Gather.LargestLoadUntilDelivery(match, villager);
 
         Assert.Equal(full, largest);
         Assert.Equal(delivered + full, Gather.Delivered(player, ResourceKind.Food));
@@ -350,10 +395,7 @@ public class GatherCommandTests
         var match = TestMatches.TwoPlayerMatch();
         var player = match.State.Players[0];
         var townCenter = match.State.Buildings[0];
-        var villager = Walk.MiddleVillager(match);
-        var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Food);
-        match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
-        Gather.Until(match, () => villager.GatherPhase == GatherPhase.ToDropOffPoint);
+        var (villager, source) = Gather.UntilFirstFullLoad(match);
         var full = villager.Load.Amount;
 
         // Six Cells out from the middle of the Town Center: inside the clearing around it and
@@ -366,28 +408,9 @@ public class GatherCommandTests
         Assert.Equal(start, villager.Position.Cell);
 
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
-        FirstDelivery(match, villager);
+        Gather.LargestLoadUntilDelivery(match, villager);
 
         Assert.Equal(full, Gather.Delivered(player, ResourceKind.Food));
-        Assert.True(Gather.Touches(townCenter, villager.Position.Cell));
-    }
-
-    /// <summary>
-    /// Ticks the match until the first Player receives Food and returns the largest load the
-    /// Villager carried on the way, failing after <see cref="Gather.TickLimit"/> ticks.
-    /// </summary>
-    private static int FirstDelivery(Match match, UnitState villager)
-    {
-        var player = match.State.Players[0];
-        var largest = villager.Load.Amount;
-
-        Gather.Until(match, () =>
-        {
-            largest = Math.Max(largest, villager.Load.Amount);
-
-            return Gather.Delivered(player, ResourceKind.Food) > 0;
-        });
-
-        return largest;
+        Assert.True(MapProbe.IsBeside(townCenter, villager.Position.Cell));
     }
 }
