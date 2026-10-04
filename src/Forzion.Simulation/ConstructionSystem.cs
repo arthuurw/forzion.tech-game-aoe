@@ -14,7 +14,7 @@ internal sealed class ConstructionSystem : ISystem
     public static void Build(MapState map, UnitState villager, BuildingState site)
     {
         villager.StartBuilding(site.Id);
-        WalkUpTo(map, villager, site);
+        WalkUpToSite(map, villager, site);
     }
 
     /// <summary>
@@ -23,12 +23,12 @@ internal sealed class ConstructionSystem : ISystem
     /// lowest index. A Villager that cannot reach any Cell beside the site stays where it is,
     /// and <see cref="Run"/> then finds it short of the site.
     /// </summary>
-    public static void WalkUpTo(MapState map, UnitState villager, BuildingState site) =>
+    public static void WalkUpToSite(MapState map, UnitState villager, BuildingState site) =>
         MovementSystem.WalkToNearest(map, villager, site.IsBeside);
 
     /// <summary>
-    /// Releases the Villagers building a site that has left the match: they stop building and
-    /// stand idle on the Cell they are in, keeping whatever they carry.
+    /// Releases the Villagers building a site that is complete or has left the match: they
+    /// stop building and stand idle on the Cell they are in, keeping whatever they carry.
     /// </summary>
     public static void ReleaseBuilders(MatchState state, EntityId site)
     {
@@ -77,13 +77,6 @@ internal sealed class ConstructionSystem : ISystem
         }
 
         context.Emit(new BuildingCompleted(site.Id));
-
-        foreach (var unit in context.State.Units)
-        {
-            if (unit.ConstructionSite == site.Id)
-            {
-                unit.StopBuilding();
-            }
-        }
+        ReleaseBuilders(context.State, site.Id);
     }
 }

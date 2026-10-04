@@ -57,7 +57,7 @@ internal sealed class MovementSystem : ISystem
             // point or the site, and a Villager that stops away from them stands idle.
             if (unit.GatherPhase == GatherPhase.ToSource)
             {
-                GatherSystem.WalkUpToSource(state, unit);
+                GatherSystem.WalkUpToSource(state.Map, unit, state.FindResourceSource(unit.GatherSource!.Value)!);
             }
             else if (unit.GatherPhase == GatherPhase.ToDropOffPoint)
             {
@@ -65,7 +65,7 @@ internal sealed class MovementSystem : ISystem
             }
             else if (unit.ConstructionSite is { } site)
             {
-                ConstructionSystem.WalkUpTo(state.Map, unit, state.FindBuilding(site)!);
+                ConstructionSystem.WalkUpToSite(state.Map, unit, state.FindBuilding(site)!);
             }
             else
             {

@@ -40,7 +40,7 @@ internal sealed class GatherSystem : ISystem
             return;
         }
 
-        WalkUpToSource(state, villager);
+        WalkUpToSource(state.Map, villager, source);
     }
 
     /// <summary>
@@ -49,10 +49,10 @@ internal sealed class GatherSystem : ISystem
     /// that cannot reach any Cell beside the source stays where it is, and
     /// <see cref="ReachSource"/> then finds it short of the source.
     /// </summary>
-    public static void WalkUpToSource(MatchState state, UnitState villager)
+    public static void WalkUpToSource(MapState map, UnitState villager, ResourceSourceState source)
     {
         villager.GatherPhase = GatherPhase.ToSource;
-        MovementSystem.WalkToNearest(state.Map, villager, state.FindResourceSource(villager.GatherSource!.Value)!.IsBeside);
+        MovementSystem.WalkToNearest(map, villager, source.IsBeside);
     }
 
     /// <summary>
