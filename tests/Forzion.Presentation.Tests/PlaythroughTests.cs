@@ -58,7 +58,7 @@ public class PlaythroughTests
         control.OrderAt(OverSourceNearHome(ResourceKind.Gold));
 
         // The builders, one click each where it is drawn, to the Food and the Wood. They
-        // finish the Barracks standing on one Cell, drawn apart around it.
+        // finish the Barracks standing on one Cell, drawn side by side.
         ClickOn(builders[0]);
         control.OrderAt(OverSourceNearHome(ResourceKind.Food));
         ClickOn(builders[1]);
