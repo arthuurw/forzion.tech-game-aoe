@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/MatchView.cs" id="1_match"]
 [ext_resource type="Script" path="res://scripts/RtsCamera.cs" id="2_camera"]
@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://scripts/Hud.cs" id="8_hud"]
 [ext_resource type="Script" path="res://scripts/MinimapView.cs" id="9_minimap"]
 [ext_resource type="Script" path="res://scripts/PauseMenu.cs" id="10_pause"]
+[ext_resource type="Script" path="res://scripts/EndScreen.cs" id="11_end"]
 
 [sub_resource type="Environment" id="Environment_main"]
 background_mode = 1
@@ -98,4 +99,9 @@ CameraRig = NodePath("../../CameraRig")
 [node name="NoticeBoard" type="CanvasLayer" parent="." node_paths=PackedStringArray("MatchView")]
 layer = 3
 script = ExtResource("5_notices")
+MatchView = NodePath("../MatchView")
+
+[node name="EndScreen" type="CanvasLayer" parent="." node_paths=PackedStringArray("MatchView")]
+layer = 5
+script = ExtResource("11_end")
 MatchView = NodePath("../MatchView")
