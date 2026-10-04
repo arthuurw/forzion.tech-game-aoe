@@ -16,7 +16,10 @@ public static class HudTexts
     /// <summary>Label of the button that orders the Age Advance; <c>{0}</c> is the name of the next Age.</summary>
     public const string AdvanceTo = "HUD_ADVANCE_TO";
 
-    /// <summary>Label of an Age Advance underway; <c>{0}</c> is the name of the Age it leads to.</summary>
+    /// <summary>
+    /// Label of an Age Advance underway; <c>{0}</c> is the name of the Age it leads to and
+    /// <c>{1}</c> how far along it is, as <see cref="Percent"/> writes it.
+    /// </summary>
     public const string AdvancingTo = "HUD_ADVANCING_TO";
 
     /// <summary>Why a choice is unavailable; <c>{0}</c> is the name of the Age that unlocks it.</summary>
@@ -107,6 +110,17 @@ public static class HudTexts
             .ToList();
 
         return parts.Count == 0 ? translate(Free) : string.Join(translate(CostSeparator), parts);
+    }
+
+    /// <summary>The label of an Age Advance underway, such as <c>Avançando para a Era dos Engenhos 40%</c>.</summary>
+    /// <param name="ageNameKey">Key of the name of the Age the advance leads to.</param>
+    /// <param name="progress">How far along the advance is, from 0 to 1.</param>
+    /// <param name="translate">Gives the text of a key in the language shown.</param>
+    public static string AdvancingText(string ageNameKey, double progress, Func<string, string> translate)
+    {
+        ArgumentNullException.ThrowIfNull(translate);
+
+        return Format(translate, AdvancingTo, translate(ageNameKey), Percent(progress, translate));
     }
 
     /// <summary>

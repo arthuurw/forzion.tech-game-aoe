@@ -65,6 +65,14 @@ public class HudTextsTests
     }
 
     [Fact]
+    public void An_Age_Advance_underway_reads_with_the_name_of_the_Age_and_how_far_along_it_is()
+    {
+        var texts = TranslationTable.Load("pt_BR");
+
+        Assert.Equal("Avançando para a Era dos Engenhos 40%", HudTexts.AdvancingText("FACTION_PORTUGUESE_AGE_2", 0.4, key => texts[key]));
+    }
+
+    [Fact]
     public void A_text_with_two_arguments_reads_as_the_Portuguese_translation_puts_them()
     {
         var texts = TranslationTable.Load("pt_BR");

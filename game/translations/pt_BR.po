@@ -157,9 +157,9 @@ msgstr "População"
 msgid "HUD_ADVANCE_TO"
 msgstr "Avançar para a {0}"
 
-# {0}: nome da Era a que o Avanço leva.
+# {0}: nome da Era a que o Avanço leva; {1}: quanto já avançou, em porcentagem.
 msgid "HUD_ADVANCING_TO"
-msgstr "Avançando para a {0}"
+msgstr "Avançando para a {0} {1}"
 
 # {0}: nome da Era que libera.
 msgid "HUD_LOCKED_UNTIL"

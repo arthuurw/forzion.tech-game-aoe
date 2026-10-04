@@ -159,7 +159,7 @@ public partial class Hud : CanvasLayer
 
         if (advance is not null)
         {
-            ageAdvanceLabel.Text = $"{Format(HudTexts.AdvancingTo, Tr(advance.AgeNameKey))} {Percent(advance.Progress)}";
+            ageAdvanceLabel.Text = HudTexts.AdvancingText(advance.AgeNameKey, advance.Progress, key => Tr(key));
             ageAdvanceBar.Value = advance.Progress;
         }
     }
@@ -277,7 +277,7 @@ public partial class Hud : CanvasLayer
         {
             if (panel.Building?.AgeAdvance is { Progress: { } progress } underway)
             {
-                label.Text = $"{Format(HudTexts.AdvancingTo, Tr(underway.AgeNameKey))} {Percent(progress)}";
+                label.Text = HudTexts.AdvancingText(underway.AgeNameKey, progress, key => Tr(key));
                 bar.Value = progress;
             }
         });
