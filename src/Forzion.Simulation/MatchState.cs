@@ -122,6 +122,13 @@ public sealed class MatchState
     internal BuildingState? FindBuilding(EntityId id) => buildings.Find(building => building.Id == id);
 
     /// <summary>
+    /// The Player's Town Center, or null once it has none. Town Centers are not placed, so a
+    /// Player has at most the one it starts with.
+    /// </summary>
+    internal BuildingState? TownCenterOf(PlayerId player) =>
+        buildings.Find(building => building.Owner == player && building.Kind == BuildingKind.TownCenter);
+
+    /// <summary>
     /// The unit or the building with the given ID: one of the two, the other null, or both
     /// null when the match has no such unit or building. Units and buildings share one
     /// sequence of IDs, so no ID names one of each.

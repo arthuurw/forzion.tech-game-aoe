@@ -470,8 +470,7 @@ internal sealed class AiScript
             ? townCenter.Footprint.Centre
             : new CellPosition(state.Map.Width / 2, state.Map.Height / 2);
 
-    private BuildingState? TownCenter() =>
-        state.Buildings.FirstOrDefault(building => building.Owner == player.Id && building.Kind == BuildingKind.TownCenter);
+    private BuildingState? TownCenter() => state.TownCenterOf(player.Id);
 
     private IEnumerable<BuildingState> OwnBuildings(BuildingKind kind) =>
         state.Buildings.Where(building => building.Owner == player.Id && building.Kind == kind);
