@@ -361,11 +361,11 @@ internal sealed class AiScript
 
     /// <summary>
     /// Sends each Villager that needs a new job (<see cref="NeedsNewJob"/>), in ID order, to
-    /// gather the Resource whose gatherers are fewest
-    /// for its share (<see cref="Balance.AiGatherShare"/>), from a source drawn among the
-    /// nearest of that Resource to the Player's drop-off points. When even that source lies
-    /// farther than <see cref="Balance.AiStorehouseDistance"/> from all of them, the Villager
-    /// first places a Storehouse by it, one at a time, and is sent to gather once it is idle again.
+    /// gather the Resource whose gatherers are fewest for its share
+    /// (<see cref="Balance.AiGatherShare"/>), from a source drawn among the nearest of that
+    /// Resource to the Player's drop-off points. When even that source lies farther than
+    /// <see cref="Balance.AiStorehouseDistance"/> from all of them, the Villager first places a
+    /// Storehouse by it, one at a time, and is sent to gather once it is Idle again.
     /// </summary>
     private void SendVillagersToGather()
     {
