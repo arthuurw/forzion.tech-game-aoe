@@ -25,6 +25,8 @@ public sealed class Match
     //   arrived. A Villager does one or the other, never both, so their order between
     //   themselves only decides that a Storehouse completed in a tick takes loads from the
     //   next one on.
+    // - Training after them, so a unit trained in a tick stands still until the next one, as
+    //   any unit placed on the map does.
     // - Waiting after the systems that free Cells or complete drop-off points: Villagers
     //   waiting for a way choose theirs again once the tick has opened what it opens.
     // - Defeat last, after every removal of the tick: a Player whose Town Center falls is
@@ -35,6 +37,7 @@ public sealed class Match
         new MovementSystem(),
         new GatherSystem(),
         new ConstructionSystem(),
+        new TrainingSystem(),
         new WaitingSystem(),
         new DefeatSystem(),
     ];
@@ -46,7 +49,7 @@ public sealed class Match
 
     /// <summary>
     /// Creates a match at tick zero: generates its map from the seed and gives each Player a
-    /// Town Center and starting Villagers.
+    /// Town Center, starting Villagers and starting Resources.
     /// </summary>
     /// <exception cref="ArgumentException">
     /// The configuration has fewer than one or more than two Players, or a map less than 32
@@ -58,6 +61,14 @@ public sealed class Match
     /// <exception cref="ArgumentOutOfRangeException">Players do not place buildings of that kind.</exception>
     public static Cost BuildingCost(BuildingKind kind) =>
         Balance.Of(kind).Cost ?? throw new ArgumentOutOfRangeException(nameof(kind), kind, "Players do not place this kind of building.");
+
+    /// <summary>What training a unit of the given kind costs, paid in full when it joins a training queue.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">The kind is not a <see cref="UnitKind"/>.</exception>
+    public static Cost UnitCost(UnitKind kind) => Balance.Of(kind).Cost;
+
+    /// <summary>Ticks a building spends training a unit of the given kind, from when the unit heads its training queue.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">The kind is not a <see cref="UnitKind"/>.</exception>
+    public static int TrainTime(UnitKind kind) => Balance.Of(kind).TrainTime;
 
     /// <summary>Side of the square footprint of a building of the given kind, in Cells.</summary>
     /// <exception cref="ArgumentOutOfRangeException">The kind is not a <see cref="BuildingKind"/>.</exception>

@@ -68,14 +68,17 @@ public class EconomyReplayTests
     // by a model of the layout (see ReplayTests): from the same final state it gave the value
     // before with the layout before, and the new one with the new layout, and it matched the
     // match's own hash at every tick of this replay. CI runs this on Windows, Linux and macOS:
-    // every system must reach the same hash. When Villagers began to walk to the free Cell
-    // beside their source with the shortest way to it, the layout stayed the same: the model,
-    // which reproduced the values recorded in the other replays left unchanged, gave this one
-    // and matched the match's own hash at every tick, and the final state still showed the
-    // first Player idle once its second Food source ran out, the second Player gathering Food
-    // and Gold, and every Resource taken from a source in a Player's stock or a load, but for
-    // the load dropped on the switch to Food.
-    private const ulong ExpectedFinalHash = 4099921261291809943UL;
+    // every system must reach the same hash. With starting Resources, the model gave the value
+    // before with them taken out of each Player's stock, and this one with them in: the
+    // gathering itself did not change.
+    // When training joined the hash, the model reproduced the value before from the same final
+    // state with the layout before, and gave this one with training state added.
+    // Likewise when the rally point joined it.
+    // When main's gatherers and builders, walking to the Cell beside their target with the
+    // shortest way to it, met training here, no code that writes the hash changed: the layout
+    // is the one above, and this value is the outcome of both behaviours, each covered by its
+    // own behaviour tests.
+    private const ulong ExpectedFinalHash = 14479207488372184671UL;
 
     [Fact]
     public void A_recorded_replay_of_gathering_reaches_the_recorded_final_hash()

@@ -18,6 +18,17 @@ internal static class Gather
     public static ResourceSourceState? FindSource(MatchState state, EntityId id) =>
         state.ResourceSources.SingleOrDefault(source => source.Id == id);
 
+    // Read once from a new match: every Player starts with the same Resources.
+    private static readonly int[] StartingAmounts = Enum.GetValues<ResourceKind>()
+        .Select(Match.Create(TestMatches.SinglePlayerConfig()).State.Players[0].AmountOf)
+        .ToArray();
+
+    /// <summary>
+    /// How much of the Resource the Player holds beyond what it started the match with: all it
+    /// has had delivered, as long as it has spent none of it.
+    /// </summary>
+    public static int Delivered(PlayerState player, ResourceKind kind) => player.AmountOf(kind) - StartingAmounts[(int)kind];
+
     /// <summary>
     /// Sends the first Player's middle Villager to gather the Food nearest to it and ticks the
     /// match until the Villager carries a full load and sets out to deliver it.

@@ -65,7 +65,7 @@ public class EconomyHashTests
             Assert.Equal(first.StateHash, second.StateHash);
         }
 
-        Assert.True(first.State.Players[0].AmountOf(ResourceKind.Food) > 0);
+        Assert.True(Gather.Delivered(first.State.Players[0], ResourceKind.Food) > 0);
     }
 
     /// <summary>A match whose middle Villager has walked to a Cell beside the Food source nearest to it.</summary>

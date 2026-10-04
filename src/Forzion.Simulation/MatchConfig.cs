@@ -13,7 +13,8 @@ public sealed record MapConfig(int Width, int Height);
 /// <param name="Faction">The Faction the Player controls.</param>
 /// <param name="ExtraUnits">
 /// Units the Player starts with on top of what every Player starts with. Each must stand on a
-/// free Cell of the map.
+/// free Cell of the map. A Skirmish leaves it empty: it lets tests and replays start with
+/// soldiers without training them first.
 /// </param>
 public sealed record PlayerConfig(FactionId Faction, IReadOnlyList<StartingUnit>? ExtraUnits = null);
 

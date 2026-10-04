@@ -71,23 +71,24 @@ public class ConstructionReplayTests
 
     // The construction itself comes from this implementation; what an independent model of
     // the hash layout confirmed is that this is the hash of the final state as the public
-    // interface shows it, with a complete House and Storehouse, the Barracks refused, the
-    // second Player's Villagers gathering again and the first Player's idle once the Wood
-    // near them ran out. When construction and combat met in the hash, the model gave the
-    // value before from the same final state with the layout before, and this one with
-    // combat state added, and it matched the match's own hash at every tick. When builders came
-    // to walk to the Cell beside the site with the shortest way to it, the hash layout stayed
-    // the same: the model, run on the new build, matched the match's own hash at every tick and
-    // gave this value, and the final state still showed the House and Storehouse complete, the
-    // Barracks refused and both Players' Villagers as above. When Villagers began to walk to
-    // the free Cell beside their source with the shortest way to it, the first Player had the
-    // Wood for the Barracks when it was ordered, so it was placed, and its builder called off
-    // to the House left it unfinished; the second Player's Villagers too stand idle at the end,
-    // once the Wood near them ran out. The layout stayed the same: the model gave this value
-    // and matched the match's own hash at every tick, and the final state held every unit of
-    // Wood taken from a source in a Player's stock, a load or the cost of a site. CI runs this
-    // on Windows, Linux and macOS: every system must reach the same hash.
-    private const ulong ExpectedFinalHash = 10115864156868803705UL;
+    // interface shows it, with a complete House and Storehouse, the Barracks left unfinished
+    // and both Players' Villagers gathering Wood again. When construction and combat met in
+    // the hash, the model gave the value before from the same final state with the layout
+    // before, and this one with combat state added, and it matched the match's own hash at
+    // every tick. When Players began the match with starting Resources, the Barracks, refused
+    // until then for want of Wood, was placed instead and its builder called off to the House;
+    // the layout stayed the same and the model, which first reproduced the values before of
+    // the other replays from their new states with the starting Resources taken out, gave
+    // this one and matched the match's own hash at every tick. CI runs this on Windows, Linux
+    // and macOS: every system must reach the same hash.
+    // When training joined the hash, the model reproduced the value before from the same final
+    // state with the layout before, and gave this one with training state added.
+    // Likewise when the rally point joined it.
+    // When main's gatherers and builders, walking to the Cell beside their target with the
+    // shortest way to it, met training here, no code that writes the hash changed: the layout
+    // is the one above, and this value is the outcome of both behaviours, each covered by its
+    // own behaviour tests.
+    private const ulong ExpectedFinalHash = 15971444253746325592UL;
 
     [Fact]
     public void A_recorded_replay_of_construction_reaches_the_recorded_final_hash()

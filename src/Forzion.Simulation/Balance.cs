@@ -47,17 +47,37 @@ internal static class Balance
     /// </summary>
     public const int ObstacleWalkSpread = 33;
 
-    private static readonly UnitStats Villager = new(Speed: Fix64.FromInt(2), HitPoints: 25, Attack: null);
+    private static readonly UnitStats Villager = new(
+        Speed: Fix64.FromInt(2),
+        HitPoints: 25,
+        Attack: null,
+        Cost: new Cost(50, 0, 0),
+        TrainTime: 15 * Match.TicksPerSecond,
+        TrainedAt: BuildingKind.TownCenter);
 
     private static readonly UnitStats MeleeSoldier = new(
         Speed: Fix64.FromInt(2),
         HitPoints: 45,
-        Attack: new AttackStats(Damage: 6, Range: Fix64.One, AttackInterval: 20, PerceptionRadius: Fix64.FromInt(6)));
+        Attack: new AttackStats(Damage: 6, Range: Fix64.One, AttackInterval: 20, PerceptionRadius: Fix64.FromInt(6)),
+        Cost: new Cost(60, 0, 20),
+        TrainTime: 20 * Match.TicksPerSecond,
+        TrainedAt: BuildingKind.Barracks);
 
     private static readonly UnitStats RangedSoldier = new(
         Speed: Fix64.FromInt(2),
         HitPoints: 30,
-        Attack: new AttackStats(Damage: 4, Range: Fix64.FromInt(5), AttackInterval: 30, PerceptionRadius: Fix64.FromInt(7)));
+        Attack: new AttackStats(Damage: 4, Range: Fix64.FromInt(5), AttackInterval: 30, PerceptionRadius: Fix64.FromInt(7)),
+        Cost: new Cost(0, 25, 45),
+        TrainTime: 18 * Match.TicksPerSecond,
+        TrainedAt: BuildingKind.Barracks);
+
+    private static readonly UnitStats HeavySoldier = new(
+        Speed: Fix64.FromInt(2),
+        HitPoints: 80,
+        Attack: new AttackStats(Damage: 10, Range: Fix64.One, AttackInterval: 20, PerceptionRadius: Fix64.FromInt(6)),
+        Cost: new Cost(70, 0, 30),
+        TrainTime: 25 * Match.TicksPerSecond,
+        TrainedAt: BuildingKind.Barracks);
 
     private static readonly BuildingStats TownCenter = new(
         Size: TownCenterSize, HitPoints: 600, Cost: null, BuildTime: 60 * Match.TicksPerSecond, PopulationProvided: 5);
@@ -71,11 +91,11 @@ internal static class Balance
     private static readonly BuildingStats Barracks = new(
         Size: 3, HitPoints: 300, Cost: new Cost(0, 100, 0), BuildTime: 30 * Match.TicksPerSecond, PopulationProvided: 0);
 
-    private static readonly ResourceStats Food = new(SourceAmount: 300, GatherTicksPerUnit: 10);
+    private static readonly ResourceStats Food = new(StartingAmount: 200, SourceAmount: 300, GatherTicksPerUnit: 10);
 
-    private static readonly ResourceStats Wood = new(SourceAmount: 300, GatherTicksPerUnit: 12);
+    private static readonly ResourceStats Wood = new(StartingAmount: 200, SourceAmount: 300, GatherTicksPerUnit: 12);
 
-    private static readonly ResourceStats Gold = new(SourceAmount: 400, GatherTicksPerUnit: 16);
+    private static readonly ResourceStats Gold = new(StartingAmount: 100, SourceAmount: 400, GatherTicksPerUnit: 16);
 
     /// <summary>The balance values of a unit of the given kind.</summary>
     public static UnitStats Of(UnitKind kind) => kind switch
@@ -83,6 +103,7 @@ internal static class Balance
         UnitKind.Villager => Villager,
         UnitKind.MeleeSoldier => MeleeSoldier,
         UnitKind.RangedSoldier => RangedSoldier,
+        UnitKind.HeavySoldier => HeavySoldier,
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
@@ -95,6 +116,9 @@ internal static class Balance
         BuildingKind.Barracks => Barracks,
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
+
+    /// <summary>Whether a complete building of the given kind trains units: whether some kind of unit is trained at it.</summary>
+    public static bool Trains(BuildingKind kind) => Enum.GetValues<UnitKind>().Any(unit => Of(unit).TrainedAt == kind);
 
     /// <summary>The balance values of the given Resource.</summary>
     public static ResourceStats Of(ResourceKind kind) => kind switch
@@ -120,7 +144,10 @@ internal static class Balance
 /// <param name="Speed">How far the unit walks, in Cells per second.</param>
 /// <param name="HitPoints">Hit points of the unit when it is whole.</param>
 /// <param name="Attack">How the unit fights, or null when it cannot attack.</param>
-internal sealed record UnitStats(Fix64 Speed, int HitPoints, AttackStats? Attack);
+/// <param name="Cost">What training the unit costs, paid in full when it joins a training queue.</param>
+/// <param name="TrainTime">Ticks a building spends training the unit.</param>
+/// <param name="TrainedAt">The kind of building that trains the unit.</param>
+internal sealed record UnitStats(Fix64 Speed, int HitPoints, AttackStats? Attack, Cost Cost, int TrainTime, BuildingKind TrainedAt);
 
 /// <summary>The balance values of a kind of building.</summary>
 /// <param name="Size">Side of the building's square footprint, in Cells.</param>
@@ -140,9 +167,10 @@ internal sealed record UnitStats(Fix64 Speed, int HitPoints, AttackStats? Attack
 internal sealed record BuildingStats(int Size, int HitPoints, Cost? Cost, int BuildTime, int PopulationProvided);
 
 /// <summary>The balance values of a Resource.</summary>
+/// <param name="StartingAmount">How much of the Resource each Player starts the match with.</param>
 /// <param name="SourceAmount">How much a new source of the Resource holds.</param>
 /// <param name="GatherTicksPerUnit">Ticks a Villager spends gathering one unit of the Resource.</param>
-internal sealed record ResourceStats(int SourceAmount, int GatherTicksPerUnit);
+internal sealed record ResourceStats(int StartingAmount, int SourceAmount, int GatherTicksPerUnit);
 
 /// <summary>How a unit fights.</summary>
 /// <param name="Damage">Hit points one hit takes from the target.</param>
