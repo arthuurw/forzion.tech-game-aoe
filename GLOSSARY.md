@@ -170,9 +170,6 @@ Unidade militar corpo a corpo mais forte, liberada pela Era II. É um tipo de un
 Quanto dano uma unidade ou construção ainda aguenta. Ao chegar a zero, ela sai do mapa no mesmo tick.
 _Avoid_: HP, saúde, energia
 
-**Barra de vida** (`Hit Point Bar`):
-Barra desenhada sobre uma unidade ou construção selecionada ou ferida, preenchida na proporção dos Pontos de vida que restam.
-
 **Alvo** (`Target`):
 A unidade ou construção inimiga que uma unidade militar está atacando.
 
@@ -201,6 +198,27 @@ _Avoid_: Mata, bosque, árvores
 
 **Água** (`Water`):
 Obstáculo que ocupa Células inteiras: Unidades não a atravessam e Construções não são erguidas sobre ela.
+
+## Tela
+
+**HUD** (`Hud`):
+Os controles desenhados sobre a Partida: a barra do topo, com os Recursos, a População sobre o Limite de população, a Era e o Avanço de Era em andamento do Jogador, e embaixo o Painel de seleção. Existe só na tela: os botões da HUD dão ordens, e a Partida as aceita ou recusa.
+_Avoid_: Interface, UI
+
+**Painel de seleção** (`Selection Panel`):
+Parte de baixo da HUD que mostra a Seleção: as unidades com seus Pontos de vida, ou a construção com seus Pontos de vida, sua Obra, sua Fila de treino e as ordens que aceita. Com Aldeões selecionados, oferece as construções que eles podem posicionar.
+
+**Prévia de posicionamento** (`Placement Preview`):
+A construção escolhida no Painel de seleção, desenhada sob o mouse onde seria posicionada: verde onde o local está livre e vermelha onde não está. Mostra só se o local está livre, e não se o Jogador pode pagar o Custo.
+
+**Barra sobre o mapa** (`World Bar`):
+Barra desenhada sobre uma unidade ou construção, acima de onde ela está no mapa e do mesmo tamanho em qualquer zoom. Há dois tipos (`WorldBarKind`): a Barra de vida e a Barra de obra.
+
+**Barra de vida** (`Hit Point Bar`):
+Barra sobre o mapa de uma unidade ou construção selecionada ou ferida, preenchida na proporção dos Pontos de vida que restam.
+
+**Barra de obra** (`Construction Bar`):
+Barra sobre o mapa de cada Obra, preenchida na proporção do trabalho de construção já feito.
 
 ## Nomes dos Portugueses
 
