@@ -41,7 +41,7 @@ public sealed record PlayerStatus(
             state.PopulationOf(player),
             state.PopulationLimitOf(player),
             faction.NameKey,
-            faction.Ages[playerState.Age - 1].NameKey,
+            playerState.CurrentAge.NameKey,
             AgeAdvanceProgress.Of(state, playerState));
     }
 }

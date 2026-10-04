@@ -119,7 +119,7 @@ public sealed record SelectionPanel(
         {
             if (unlockedIn(later))
             {
-                return faction.Ages[later - 1].NameKey;
+                return faction.AgeAt(later).NameKey;
             }
         }
 

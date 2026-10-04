@@ -96,6 +96,6 @@ public static class HudTexts
         return events
             .OfType<AgeAdvanced>()
             .Where(advance => advance.Player == player)
-            .Select(advance => faction.Ages[advance.Age - 1].NameKey);
+            .Select(advance => faction.AgeAt(advance.Age).NameKey);
     }
 }

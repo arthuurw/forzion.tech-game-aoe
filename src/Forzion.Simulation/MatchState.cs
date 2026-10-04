@@ -334,12 +334,14 @@ public sealed class PlayerState
     /// </summary>
     public int Age { get; internal set; } = 1;
 
+    /// <summary>The Age of the Player's Faction that the Player is in: what it is called and what it unlocked.</summary>
+    public FactionAge CurrentAge => Faction.AgeAt(Age);
+
     /// <summary>
     /// The Age of the Player's Faction that an Age Advance would take it to, or null when the
-    /// Player is in the Faction's last Age. Ages are numbered from 1 and listed from index 0, so
-    /// the next Age is listed at the current number.
+    /// Player is in the Faction's last Age.
     /// </summary>
-    public FactionAge? NextAge => Age < Faction.Ages.Count ? Faction.Ages[Age] : null;
+    public FactionAge? NextAge => Age < Faction.Ages.Count ? Faction.AgeAt(Age + 1) : null;
 
     /// <summary>Whether the Player has been defeated. A defeated Player stays in the state.</summary>
     public bool IsDefeated { get; internal set; }

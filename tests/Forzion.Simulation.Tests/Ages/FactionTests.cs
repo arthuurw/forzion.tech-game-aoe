@@ -51,6 +51,34 @@ public class FactionTests
     }
 
     [Fact]
+    public void An_Age_of_a_Faction_is_found_by_its_number_from_1()
+    {
+        var faction = TestFactions.ThreeAges;
+
+        Assert.Equal(faction.Ages, [faction.AgeAt(1), faction.AgeAt(2), faction.AgeAt(3)]);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(4)]
+    public void A_number_outside_the_Ages_of_a_Faction_names_no_Age(int number)
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => TestFactions.ThreeAges.AgeAt(number));
+    }
+
+    [Fact]
+    public void A_Player_is_in_the_Age_of_its_Faction_that_its_number_names_and_can_advance_to_the_one_after()
+    {
+        var match = TestFactions.ThreeAgeMatch();
+        var player = match.State.Players[0];
+
+        Advance.ToNextAge(match, player.Id);
+
+        Assert.Same(TestFactions.ThreeAges.Ages[1], player.CurrentAge);
+        Assert.Same(TestFactions.ThreeAges.Ages[2], player.NextAge);
+    }
+
+    [Fact]
     public void The_Portuguese_have_two_Ages_and_a_name_for_each_of_their_units()
     {
         var portuguese = Factions.Portuguese;
