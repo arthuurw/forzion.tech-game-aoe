@@ -41,19 +41,20 @@ public sealed class PlayerControl
     }
 
     /// <summary>
-    /// The selected entities, in ascending ID order. A selected unit that dies, or building
-    /// that is destroyed, leaves the selection for good.
+    /// The selected entities still in the match, in ascending ID order. A selected unit that
+    /// dies, or building that is destroyed, leaves the selection for good: the match never
+    /// gives its ID to another entity.
     /// </summary>
+    /// <remarks>Reading it changes nothing; the IDs of the gone stay behind until the next selection replaces them.</remarks>
     public IReadOnlyList<EntityId> Selected
     {
         get
         {
             var state = driver.State;
 
-            selected.RemoveAll(id =>
-                !state.Units.Any(unit => unit.Id == id) && !state.Buildings.Any(building => building.Id == id));
-
-            return selected;
+            return selected
+                .Where(id => state.Units.Any(unit => unit.Id == id) || state.Buildings.Any(building => building.Id == id))
+                .ToList();
         }
     }
 
