@@ -48,7 +48,7 @@ public partial class SelectionMarkers : Node3D
         var state = MatchView.State;
         shown.Clear();
 
-        foreach (var id in SelectionInput.Control.Selected)
+        foreach (var id in SelectionInput.PlayerControl.Selected)
         {
             var placed = PlaceRing(id, state);
 

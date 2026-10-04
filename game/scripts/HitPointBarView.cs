@@ -51,7 +51,7 @@ public partial class HitPointBarView : CanvasLayer
 
     private void DrawBars()
     {
-        foreach (var bar in HitPointBars.Shown(MatchView.Driver, SelectionInput.Control.Selected))
+        foreach (var bar in HitPointBars.Shown(MatchView.Driver, SelectionInput.PlayerControl.Selected))
         {
             var top = bar.OverBuilding ? Placeholders.BuildingTop : Placeholders.UnitTop;
             var above = WorldSpace.ToWorld(bar.Position, top + Clearance);
