@@ -1,3 +1,5 @@
+using Forzion.Simulation.Tests.Matches;
+
 namespace Forzion.Simulation.Tests.Replays;
 
 /// <summary>A command and the tick at which it is sent: it is enqueued once the match has simulated that many ticks, so the following tick applies it.</summary>
@@ -19,22 +21,22 @@ internal static class Replay
     /// <summary>
     /// Runs the match until it ends, enqueuing each command as <see cref="Run"/> does, and
     /// returns how it ended with every event of every tick, in order. Fails the test when the
-    /// match has not ended after <paramref name="limit"/> ticks.
+    /// match has not ended after <see cref="TestMatches.WholeMatchLimit"/> ticks.
     /// </summary>
     public static (ReplayEnd End, IReadOnlyList<MatchEvent> Events) RunToEnd(
-        MatchConfig config, IReadOnlyList<ScheduledCommand> commands, int limit)
+        MatchConfig config, IReadOnlyList<ScheduledCommand> commands)
     {
         var match = Match.Create(config);
         var events = new List<MatchEvent>();
 
-        for (var tick = 0; tick < limit && !match.State.IsOver; tick++)
+        for (var tick = 0; tick < TestMatches.WholeMatchLimit && !match.State.IsOver; tick++)
         {
             EnqueueAt(match, commands, tick);
             match.Tick();
             events.AddRange(match.Events);
         }
 
-        Assert.True(match.State.IsOver, $"The match did not end within {limit} ticks.");
+        Assert.True(match.State.IsOver, $"The match did not end within {TestMatches.WholeMatchLimit} ticks.");
 
         return (new ReplayEnd(match.State.Tick, match.State.Winner, match.StateHash), events);
     }

@@ -12,9 +12,6 @@ public class AiReplayTests
 {
     private const ulong Seed = 2026;
 
-    // Twenty minutes of play: far more than either match takes.
-    private const int Limit = 20 * 60 * Match.TicksPerSecond;
-
     private static MatchConfig Config() => AiMatches.Config(firstIsAi: true, secondIsAi: true, Seed);
 
     [Fact]
@@ -48,7 +45,7 @@ public class AiReplayTests
     [Fact]
     public void A_recorded_match_of_an_AI_Player_against_one_who_does_nothing_reaches_its_recorded_end()
     {
-        var (end, _) = Replay.RunToEnd(AiMatches.Config(firstIsAi: false, secondIsAi: true, Seed), [], Limit);
+        var (end, _) = Replay.RunToEnd(AiMatches.Config(firstIsAi: false, secondIsAi: true, Seed), []);
 
         Assert.Equal(ExpectedEndAgainstIdlePlayer, end);
     }
@@ -79,7 +76,7 @@ public class AiReplayTests
     [Fact]
     public void A_recorded_match_of_two_AI_Players_reaches_its_recorded_end_after_both_reached_Age_II()
     {
-        var (end, events) = Replay.RunToEnd(Config(), [], Limit);
+        var (end, events) = Replay.RunToEnd(Config(), []);
 
         Assert.Equal(ExpectedEnd, end);
         Assert.Equal(

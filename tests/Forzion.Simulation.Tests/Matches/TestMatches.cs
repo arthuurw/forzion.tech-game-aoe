@@ -6,6 +6,9 @@ internal static class TestMatches
     /// <summary>More ticks than any test waits for a condition.</summary>
     public const int TickLimit = 20_000;
 
+    /// <summary>Twenty minutes of play: more ticks than any whole match of the tests takes to end.</summary>
+    public const int WholeMatchLimit = 20 * 60 * Match.TicksPerSecond;
+
     public static readonly FactionId FirstFaction = new(1);
 
     public static readonly PlayerId FirstPlayer = new(1);

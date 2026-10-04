@@ -10,9 +10,6 @@ public class RecordedMatchReplayTests
 {
     private const ulong Seed = 2026;
 
-    // Twenty minutes of play: far more than the match takes.
-    private const int Limit = 20 * 60 * Match.TicksPerSecond;
-
     private static readonly PlayerId First = TestMatches.FirstPlayer;
 
     private static readonly PlayerId Second = TestMatches.SecondPlayer;
@@ -102,7 +99,7 @@ public class RecordedMatchReplayTests
     [Fact]
     public void The_recorded_commands_are_all_accepted_and_the_first_Player_wins_in_Age_II_with_heavy_soldiers()
     {
-        var (end, events) = Replay.RunToEnd(Config(), Commands(), Limit);
+        var (end, events) = Replay.RunToEnd(Config(), Commands());
 
         Assert.Empty(events.OfType<CommandRejected>());
         Assert.Equal([new AgeAdvanced(First, 2)], events.OfType<AgeAdvanced>());
@@ -128,7 +125,7 @@ public class RecordedMatchReplayTests
     [Fact]
     public void A_recorded_match_reaches_its_recorded_end()
     {
-        var (end, _) = Replay.RunToEnd(Config(), Commands(), Limit);
+        var (end, _) = Replay.RunToEnd(Config(), Commands());
 
         Assert.Equal(ExpectedEnd, end);
     }
