@@ -5,10 +5,10 @@ namespace Forzion.Presentation;
 /// <summary>How the match ended for a Player, as the end screen shows it.</summary>
 public enum MatchOutcome
 {
-    /// <summary>The Player is the winner.</summary>
+    /// <summary>The Player is the winner: the only one not defeated when the match ended.</summary>
     Victory,
 
-    /// <summary>The Player was defeated, or the match ended without the Player winning it.</summary>
+    /// <summary>The Player was defeated, whether another Player won or the match ended without a winner.</summary>
     Defeat,
 }
 
