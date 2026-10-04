@@ -132,6 +132,47 @@ public class MatchDriverTests
         Assert.Empty(driver.Advance(OneTick / 2));
     }
 
+    [Fact]
+    public void While_paused_the_time_that_passes_runs_no_tick()
+    {
+        var driver = NewDriver(out var match);
+        driver.Advance(OneTick);
+
+        driver.IsPaused = true;
+        driver.Advance(OneTick * 5);
+
+        Assert.Equal(1, match.State.Tick);
+    }
+
+    [Fact]
+    public void A_walking_unit_stays_drawn_where_it_was_while_paused()
+    {
+        var driver = NewDriver(out var match);
+        var villager = FirstVillager(match);
+        match.Enqueue(new MoveCommand(FirstPlayer, [villager.Id], new CellPosition(32, 24)));
+        driver.Advance(OneTick * 2.5);
+        var drawn = driver.PositionOf(villager);
+
+        driver.IsPaused = true;
+        driver.Advance(OneTick * 0.4);
+
+        Assert.Equal(drawn, driver.PositionOf(villager));
+    }
+
+    [Fact]
+    public void Once_resumed_the_match_goes_on_from_where_it_stopped_without_making_up_the_time_paused()
+    {
+        var driver = NewDriver(out var match);
+        driver.Advance(OneTick * 1.5);
+        driver.IsPaused = true;
+        driver.Advance(10);
+
+        driver.IsPaused = false;
+        driver.Advance(OneTick);
+
+        Assert.Equal(2, match.State.Tick);
+    }
+
     private static UnitState FirstVillager(Match match) => match.State.Units.First(unit => unit.Owner == FirstPlayer);
 
     /// <summary>
