@@ -20,6 +20,29 @@ internal static class MapProbe
     public static CellPosition Mirror(MapState map, CellPosition cell) =>
         new(map.Width - 1 - cell.X, map.Height - 1 - cell.Y);
 
+    /// <summary>Whether the two Cells touch, by a side or by a corner.</summary>
+    public static bool Touch(CellPosition a, CellPosition b) =>
+        a != b && Math.Abs(a.X - b.X) <= 1 && Math.Abs(a.Y - b.Y) <= 1;
+
+    /// <summary>Whether the Cell touches one of the footprint's Cells, by a side or by a corner, without being one of them.</summary>
+    public static bool IsBeside(IReadOnlySet<CellPosition> footprint, CellPosition cell) =>
+        !footprint.Contains(cell) && footprint.Any(other => Touch(cell, other));
+
+    /// <summary>Whether the Cell touches the building's footprint, by a side or by a corner, without being under it.</summary>
+    public static bool IsBeside(BuildingState building, CellPosition cell) => IsBeside(Footprint(building).ToHashSet(), cell);
+
+    /// <summary>The Cells of the square of the given side whose lowest corner is <paramref name="origin"/>.</summary>
+    public static IEnumerable<CellPosition> Square(CellPosition origin, int side)
+    {
+        for (var y = origin.Y; y < origin.Y + side; y++)
+        {
+            for (var x = origin.X; x < origin.X + side; x++)
+            {
+                yield return new CellPosition(x, y);
+            }
+        }
+    }
+
     /// <summary>Whether the two Cells share a side.</summary>
     public static bool AreNeighbours(CellPosition a, CellPosition b) =>
         Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y) == 1;
@@ -36,9 +59,11 @@ internal static class MapProbe
 
     /// <summary>
     /// The Cells a unit starting on <paramref name="start"/> can walk to, moving between free
-    /// Cells that share a side.
+    /// Cells that share a side, with the <paramref name="blocked"/> Cells taken as well: those
+    /// of a building not yet placed.
     /// </summary>
-    public static HashSet<CellPosition> ReachableFrom(MapState map, CellPosition start)
+    public static HashSet<CellPosition> ReachableFrom(
+        MapState map, CellPosition start, IReadOnlySet<CellPosition>? blocked = null)
     {
         var reached = new HashSet<CellPosition> { start };
         var frontier = new Queue<CellPosition>([start]);
@@ -47,7 +72,7 @@ internal static class MapProbe
         {
             foreach (var next in NeighboursOf(map, frontier.Dequeue()))
             {
-                if (map[next] == CellKind.Free && reached.Add(next))
+                if (map[next] == CellKind.Free && blocked?.Contains(next) != true && reached.Add(next))
                 {
                     frontier.Enqueue(next);
                 }

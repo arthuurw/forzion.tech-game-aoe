@@ -11,15 +11,15 @@ public class MovementHashTests
         var far = TestMatches.TwoPlayerMatch();
         var destination = Walk.BehindTownCenter(near);
         var besideDestination = new CellPosition(destination.X - 1, destination.Y);
-        near.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [Walk.MiddleVillager(near).Id], besideDestination));
-        far.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [Walk.MiddleVillager(far).Id], destination));
+        near.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [TestMatches.MiddleVillager(near).Id], besideDestination));
+        far.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [TestMatches.MiddleVillager(far).Id], destination));
 
         near.Tick();
         far.Tick();
 
         // Both set out the same way around the Town Center, so only what is left of the walk tells them apart.
         Assert.Equal(near.State.Units.Select(unit => unit.Position), far.State.Units.Select(unit => unit.Position));
-        Assert.NotEqual(Walk.MiddleVillager(near).Path, Walk.MiddleVillager(far).Path);
+        Assert.NotEqual(TestMatches.MiddleVillager(near).Path, TestMatches.MiddleVillager(far).Path);
         Assert.NotEqual(near.StateHash, far.StateHash);
     }
 
@@ -29,7 +29,7 @@ public class MovementHashTests
         var withMove = TestMatches.TwoPlayerMatch();
         var without = TestMatches.TwoPlayerMatch();
         withMove.Enqueue(new MoveCommand(
-            TestMatches.FirstPlayer, [Walk.MiddleVillager(withMove).Id], Walk.BehindTownCenter(withMove)));
+            TestMatches.FirstPlayer, [TestMatches.MiddleVillager(withMove).Id], Walk.BehindTownCenter(withMove)));
 
         withMove.Tick();
         without.Tick();
@@ -43,9 +43,9 @@ public class MovementHashTests
         var first = TestMatches.TwoPlayerMatch();
         var second = TestMatches.TwoPlayerMatch();
         first.Enqueue(new MoveCommand(
-            TestMatches.FirstPlayer, [Walk.MiddleVillager(first).Id], Walk.BehindTownCenter(first)));
+            TestMatches.FirstPlayer, [TestMatches.MiddleVillager(first).Id], Walk.BehindTownCenter(first)));
         second.Enqueue(new MoveCommand(
-            TestMatches.FirstPlayer, [Walk.MiddleVillager(second).Id], Walk.BehindTownCenter(second)));
+            TestMatches.FirstPlayer, [TestMatches.MiddleVillager(second).Id], Walk.BehindTownCenter(second)));
 
         for (var tick = 0; tick < 100; tick++)
         {
@@ -55,6 +55,6 @@ public class MovementHashTests
             Assert.Equal(first.StateHash, second.StateHash);
         }
 
-        Assert.False(Walk.MiddleVillager(first).IsMoving);
+        Assert.False(TestMatches.MiddleVillager(first).IsMoving);
     }
 }

@@ -17,7 +17,7 @@ public class RepathTests
         match.Tick();
         var destination = walker.Path[^1];
         var origin = OriginAcross(match, walker.Path);
-        var house = Site.Square(origin, Match.BuildingSize(BuildingKind.House)).ToList();
+        var house = MapProbe.Square(origin, Match.BuildingSize(BuildingKind.House)).ToList();
 
         Assert.Contains(walker.Path, house.Contains);
 
@@ -27,6 +27,30 @@ public class RepathTests
         Assert.Equal(CellKind.Building, match.State.Map[origin]);
         Assert.Equal(MapPosition.CentreOf(destination), walker.Position);
         Assert.DoesNotContain(visited, house.Contains);
+    }
+
+    // A diagonal step needs both Cells it passes between free: a building on one of them
+    // closes the step even though no Cell of the path is under it.
+    [Fact]
+    public void A_unit_whose_diagonal_step_a_new_building_cuts_the_corner_of_finds_another_way()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        Site.Stockpile(match, TestMatches.FirstPlayer, Match.BuildingCost(BuildingKind.House).Wood);
+        var walker = Site.VillagersOf(match, TestMatches.FirstPlayer)[0];
+        match.Enqueue(new MoveCommand(TestMatches.FirstPlayer, [walker.Id], new CellPosition(match.State.Map.Width / 2, match.State.Map.Height / 2)));
+        match.Tick();
+        var destination = walker.Path[^1];
+        var origin = OriginBesideADiagonalStep(match, walker);
+        var house = MapProbe.Square(origin, Match.BuildingSize(BuildingKind.House)).ToHashSet();
+
+        Assert.DoesNotContain(walker.Path, house.Contains);
+
+        match.Enqueue(new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.House, origin, []));
+        var visited = Walk.UntilStopped(match, walker);
+
+        Assert.Equal(CellKind.Building, match.State.Map[origin]);
+        Assert.Equal(MapPosition.CentreOf(destination), walker.Position);
+        Assert.All(visited.Zip(visited.Skip(1)), step => Assert.False(CutsCorner(step.First, step.Second, house)));
     }
 
     [Fact]
@@ -40,12 +64,12 @@ public class RepathTests
         var carrier = Site.VillagersOf(match, TestMatches.FirstPlayer)[1];
         var source = Gather.NearestSource(state, AwayFrom(townCenter), ResourceKind.Wood);
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [carrier.Id], source.Id));
-        Gather.Until(match, () => carrier.GatherPhase == GatherPhase.ToDropOffPoint);
+        TestMatches.TickUntil(match, () => carrier.GatherPhase == GatherPhase.ToDropOffPoint);
 
-        PlaceHouses(match, HousesHemmingIn(match, carrier, cell => Gather.Touches(townCenter, cell)));
+        PlaceHouses(match, HousesHemmingIn(match, carrier, cell => MapProbe.IsBeside(townCenter, cell)));
         var wood = player.AmountOf(ResourceKind.Wood);
         var load = carrier.Load.Amount;
-        Gather.Until(match, () => carrier.GatherPhase != GatherPhase.ToDropOffPoint);
+        TestMatches.TickUntil(match, () => carrier.GatherPhase != GatherPhase.ToDropOffPoint);
 
         Assert.Equal(wood + load, player.AmountOf(ResourceKind.Wood));
         Assert.Equal(GatherPhase.ToSource, carrier.GatherPhase);
@@ -63,11 +87,11 @@ public class RepathTests
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
         match.Tick();
 
-        PlaceHouses(match, HousesHemmingIn(match, villager, cell => Gather.Touch(cell, source.Cell)));
-        Gather.Until(match, () => villager.GatherPhase != GatherPhase.ToSource);
+        PlaceHouses(match, HousesHemmingIn(match, villager, cell => MapProbe.Touch(cell, source.Cell)));
+        TestMatches.TickUntil(match, () => villager.GatherPhase != GatherPhase.ToSource);
 
         Assert.Equal(GatherPhase.Gathering, villager.GatherPhase);
-        Assert.True(Gather.Touch(villager.Position.Cell, source.Cell));
+        Assert.True(MapProbe.Touch(villager.Position.Cell, source.Cell));
     }
 
     [Fact]
@@ -86,12 +110,12 @@ public class RepathTests
         match.Tick();
         var site = state.Buildings[^1];
 
-        PlaceHouses(match, HousesHemmingIn(match, builder, cell => Gather.Touches(site, cell)));
+        PlaceHouses(match, HousesHemmingIn(match, builder, cell => MapProbe.IsBeside(site, cell)));
         Walk.UntilStopped(match, builder);
         match.Tick();
 
         Assert.Equal(site.Id, builder.ConstructionSite);
-        Assert.True(Gather.Touches(site, builder.Position.Cell));
+        Assert.True(MapProbe.IsBeside(site, builder.Position.Cell));
         Assert.True(site.BuildProgress > 0);
     }
 
@@ -121,20 +145,20 @@ public class RepathTests
     {
         var size = Match.BuildingSize(BuildingKind.House);
         var destination = unit.Path[^1];
-        var candidates = Site.Square(new CellPosition(destination.X - 3, destination.Y - 3), 6)
+        var candidates = MapProbe.Square(new CellPosition(destination.X - 3, destination.Y - 3), 6)
             .Where(origin => match.CanPlace(BuildingKind.House, origin))
             .ToList();
 
         foreach (var houses in Combinations(candidates, 3))
         {
-            var blocked = houses.SelectMany(origin => Site.Square(origin, size)).ToList();
+            var blocked = houses.SelectMany(origin => MapProbe.Square(origin, size)).ToList();
 
             if (!blocked.Contains(destination) || blocked.Distinct().Count() < blocked.Count)
             {
                 continue;
             }
 
-            var reachable = ReachableAround(match.State.Map, unit.Position.Cell, blocked.ToHashSet());
+            var reachable = MapProbe.ReachableFrom(match.State.Map, unit.Position.Cell, blocked.ToHashSet());
             var nearest = reachable.Min(cell => Walk.SquaredDistance(cell, destination));
 
             if (reachable.Any(isWanted)
@@ -159,27 +183,44 @@ public class RepathTests
     }
 
     /// <summary>
-    /// The Cells a unit on <paramref name="start"/> can walk to, moving between free Cells that
-    /// share a side, once the <paramref name="blocked"/> Cells are taken as well.
+    /// The origin of a House that can be placed now beside a diagonal step of the unit's path
+    /// well ahead of it, over one of the two Cells the step passes between and over no Cell of
+    /// the path.
     /// </summary>
-    private static HashSet<CellPosition> ReachableAround(MapState map, CellPosition start, HashSet<CellPosition> blocked)
+    private static CellPosition OriginBesideADiagonalStep(Match match, UnitState unit)
     {
-        var reached = new HashSet<CellPosition> { start };
-        var frontier = new Queue<CellPosition>([start]);
+        var size = Match.BuildingSize(BuildingKind.House);
+        var path = unit.Path;
+        var avoided = path.Append(unit.Position.Cell).ToHashSet();
 
-        while (frontier.Count > 0)
+        for (var index = 4; index < path.Count - 1; index++)
         {
-            foreach (var next in MapProbe.NeighboursOf(map, frontier.Dequeue()))
+            var (from, to) = (path[index - 1], path[index]);
+
+            if (from.X == to.X || from.Y == to.Y)
             {
-                if (map[next] == CellKind.Free && !blocked.Contains(next) && reached.Add(next))
+                continue;
+            }
+
+            foreach (var corner in new[] { new CellPosition(to.X, from.Y), new CellPosition(from.X, to.Y) })
+            {
+                foreach (var origin in MapProbe.Square(new CellPosition(corner.X - size + 1, corner.Y - size + 1), size))
                 {
-                    frontier.Enqueue(next);
+                    if (match.CanPlace(BuildingKind.House, origin) && !MapProbe.Square(origin, size).Any(avoided.Contains))
+                    {
+                        return origin;
+                    }
                 }
             }
         }
 
-        return reached;
+        throw new InvalidOperationException("No House fits beside a diagonal step of the path.");
     }
+
+    /// <summary>Whether the step is diagonal and passes between Cells one of which is <paramref name="blocked"/>.</summary>
+    private static bool CutsCorner(CellPosition from, CellPosition to, HashSet<CellPosition> blocked) =>
+        from.X != to.X && from.Y != to.Y
+        && (blocked.Contains(new CellPosition(to.X, from.Y)) || blocked.Contains(new CellPosition(from.X, to.Y)));
 
     /// <summary>
     /// The origin of a House that can be placed over a Cell of the path well ahead of the
@@ -191,9 +232,9 @@ public class RepathTests
 
         for (var index = 4; index < path.Count - 3; index++)
         {
-            foreach (var origin in Site.Square(new CellPosition(path[index].X - size + 1, path[index].Y - size + 1), size))
+            foreach (var origin in MapProbe.Square(new CellPosition(path[index].X - size + 1, path[index].Y - size + 1), size))
             {
-                if (match.CanPlace(BuildingKind.House, origin) && !Site.Square(origin, size).Contains(path[^1]))
+                if (match.CanPlace(BuildingKind.House, origin) && !MapProbe.Square(origin, size).Contains(path[^1]))
                 {
                     return origin;
                 }

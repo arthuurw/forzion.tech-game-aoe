@@ -20,11 +20,12 @@ public class ConstructionReplayTests
     /// </summary>
     private static ScheduledCommand[] Commands()
     {
-        var state = TestMatches.TwoPlayerMatch(Seed).State;
+        var match = TestMatches.TwoPlayerMatch(Seed);
+        var state = match.State;
         var first = state.UnitsOf(TestMatches.FirstPlayer).Select(unit => unit.Id).ToList();
         var second = state.UnitsOf(TestMatches.SecondPlayer).ToList();
-        var firstWood = Gather.NearestSource(state, state.Units[1].Position.Cell, ResourceKind.Wood);
-        var secondWood = Gather.NearestSource(state, second[1].Position.Cell, ResourceKind.Wood);
+        var firstWood = Gather.NearestSource(state, TestMatches.MiddleVillager(match).Position.Cell, ResourceKind.Wood);
+        var secondWood = Gather.NearestSource(state, TestMatches.MiddleVillager(match, TestMatches.SecondPlayer).Position.Cell, ResourceKind.Wood);
         var house = Site.FreeOriginNear(state, state.Buildings[0].Origin, Match.BuildingSize(BuildingKind.House));
         var storehouse = Site.FreeOriginNear(state, secondWood.Cell, Match.BuildingSize(BuildingKind.Storehouse));
         var barracks = Site.FreeOriginNear(state, firstWood.Cell, Match.BuildingSize(BuildingKind.Barracks));

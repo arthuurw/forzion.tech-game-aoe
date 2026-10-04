@@ -9,7 +9,7 @@ public class ExtraUnitsTests
         var west = TestArmies.BesideHome(plain, TestMatches.FirstPlayer, -2, 0);
         var east = TestArmies.BesideHome(plain, TestMatches.SecondPlayer, 2, 0);
 
-        var match = Match.Create(TestArmies.Config(
+        var match = Match.Create(TestMatches.TwoPlayerConfig(
             first: [new StartingUnit(UnitKind.MeleeSoldier, west)],
             second: [new StartingUnit(UnitKind.RangedSoldier, east)]));
 
@@ -38,7 +38,7 @@ public class ExtraUnitsTests
         var plain = TestMatches.TwoPlayerMatch();
         var cell = TestArmies.BesideHome(plain, TestMatches.FirstPlayer, -2, 0);
 
-        var match = Match.Create(TestArmies.Config(first: [new StartingUnit(UnitKind.MeleeSoldier, cell)]));
+        var match = Match.Create(TestMatches.TwoPlayerConfig(first: [new StartingUnit(UnitKind.MeleeSoldier, cell)]));
 
         Assert.NotEqual(plain.StateHash, match.StateHash);
     }
@@ -49,14 +49,14 @@ public class ExtraUnitsTests
         var plain = TestMatches.TwoPlayerMatch();
         var underTownCenter = plain.State.Buildings[0].Origin;
 
-        Assert.Throws<ArgumentException>(() => Match.Create(TestArmies.Config(
+        Assert.Throws<ArgumentException>(() => Match.Create(TestMatches.TwoPlayerConfig(
             first: [new StartingUnit(UnitKind.MeleeSoldier, underTownCenter)])));
     }
 
     [Fact]
     public void An_extra_unit_outside_the_map_is_refused()
     {
-        Assert.Throws<ArgumentException>(() => Match.Create(TestArmies.Config(
+        Assert.Throws<ArgumentException>(() => Match.Create(TestMatches.TwoPlayerConfig(
             first: [new StartingUnit(UnitKind.MeleeSoldier, new CellPosition(-1, 0))])));
     }
 }

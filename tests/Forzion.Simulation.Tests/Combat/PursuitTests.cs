@@ -13,11 +13,11 @@ public class PursuitTests
         var match = Battle.Create(first: plain =>
             [new StartingUnit(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, Second, -2, 0))]);
         var soldier = Battle.Last(match);
-        var villager = Battle.MiddleVillager(match, Second);
+        var villager = TestMatches.MiddleVillager(match, Second);
         var start = soldier.Position;
         match.Enqueue(new AttackCommand(First, [soldier.Id], villager.Id));
 
-        Battle.TickUntil(match, () => villager.HitPoints < villager.MaxHitPoints);
+        TestMatches.TickUntil(match, () => villager.HitPoints < villager.MaxHitPoints);
 
         // The two started nearly three Cells apart; a melee soldier strikes from beside its target.
         Assert.True(Battle.Distance(start, villager.Position) > 2);
@@ -31,13 +31,13 @@ public class PursuitTests
         var match = Battle.Create(first: plain =>
             [new StartingUnit(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, Second, -2, 0))]);
         var soldier = Battle.Last(match);
-        var villager = Battle.MiddleVillager(match, Second);
+        var villager = TestMatches.MiddleVillager(match, Second);
         var start = villager.Position;
         var middleOfMap = new CellPosition(match.State.Map.Width / 2, match.State.Map.Height / 2);
         match.Enqueue(new MoveCommand(Second, [villager.Id], middleOfMap));
         match.Enqueue(new AttackCommand(First, [soldier.Id], villager.Id));
 
-        Battle.TickUntil(match, () => villager.HitPoints < villager.MaxHitPoints);
+        TestMatches.TickUntil(match, () => villager.HitPoints < villager.MaxHitPoints);
 
         // The villager walked off towards the middle of the map, away from the soldier.
         Assert.True(Battle.Distance(start, villager.Position) > 10);
@@ -50,11 +50,11 @@ public class PursuitTests
         var match = Battle.Create(first: plain =>
             [new StartingUnit(UnitKind.RangedSoldier, TestArmies.BesideHome(plain, First, 2, 0))]);
         var archer = Battle.Last(match);
-        var villager = Battle.MiddleVillager(match, Second);
+        var villager = TestMatches.MiddleVillager(match, Second);
         var start = archer.Position;
         match.Enqueue(new AttackCommand(First, [archer.Id], villager.Id));
 
-        Battle.TickUntil(match, () => villager.HitPoints < villager.MaxHitPoints);
+        TestMatches.TickUntil(match, () => villager.HitPoints < villager.MaxHitPoints);
 
         // It crossed the map, yet hits from well beyond a melee soldier's reach.
         Assert.True(Battle.Distance(start, villager.Position) > 20);
@@ -78,7 +78,7 @@ public class PursuitTests
         }
 
         match.Enqueue(new MoveCommand(First, [soldier.Id], home));
-        Battle.TickUntil(match, () => !soldier.IsMoving);
+        TestMatches.TickUntil(match, () => !soldier.IsMoving);
         Battle.Run(match, 100);
 
         Assert.Null(soldier.Target);
@@ -95,7 +95,7 @@ public class PursuitTests
         var townCenter = Battle.TownCenter(match, Second);
         match.Enqueue(new AttackCommand(First, [soldier.Id], townCenter.Id));
 
-        Battle.TickUntil(match, () => townCenter.HitPoints < townCenter.MaxHitPoints);
+        TestMatches.TickUntil(match, () => townCenter.HitPoints < townCenter.MaxHitPoints);
 
         var cell = soldier.Position.Cell;
         Assert.Equal(CellKind.Free, match.State.Map[cell]);

@@ -1,4 +1,4 @@
-using Forzion.Simulation.Tests.Economy;
+using Forzion.Simulation.Tests.Maps;
 using Forzion.Simulation.Tests.Matches;
 
 namespace Forzion.Simulation.Tests.Construction;
@@ -13,9 +13,9 @@ public class BuildCommandTests
         var house = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.House, []);
         match.Enqueue(new BuildCommand(TestMatches.FirstPlayer, [villager.Id], house.Id));
 
-        Gather.Until(match, () => house.IsComplete);
+        TestMatches.TickUntil(match, () => house.IsComplete);
 
-        Assert.True(Gather.Touches(house, villager.Position.Cell));
+        Assert.True(MapProbe.IsBeside(house, villager.Position.Cell));
         Assert.Null(villager.ConstructionSite);
     }
 
@@ -75,10 +75,7 @@ public class BuildCommandTests
         var villager = Site.VillagersOf(match, TestMatches.FirstPlayer)[0];
         var soldier = match.State.SoldierOf(TestMatches.FirstPlayer);
         var house = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.House, []);
-        match.Enqueue(new MoveCommand(
-            TestMatches.FirstPlayer, [soldier.Id], new CellPosition(soldier.Position.Cell.X - 6, soldier.Position.Cell.Y)));
-        match.Tick();
-        var destination = soldier.Path[^1];
+        var destination = TestArmies.WalkAway(match, soldier);
 
         match.Enqueue(new BuildCommand(TestMatches.FirstPlayer, [soldier.Id, villager.Id], house.Id));
         match.Tick();

@@ -37,14 +37,14 @@ public class AttackCommandTests
         var match = Battle.Create(first: plain =>
             [new StartingUnit(UnitKind.RangedSoldier, TestArmies.BesideHome(plain, Second, -2, 0))]);
         var archer = Battle.Last(match);
-        var villager = Battle.MiddleVillager(match, Second);
+        var villager = TestMatches.MiddleVillager(match, Second);
         var standing = archer.Position;
         match.Enqueue(new AttackCommand(First, [archer.Id], villager.Id));
 
         // Hit points after each tick, starting with those before the first.
         var hitPoints = new List<int> { villager.HitPoints };
 
-        while (Hits().Count < 3 && hitPoints.Count < Battle.TickLimit)
+        while (Hits().Count < 3 && hitPoints.Count < TestMatches.TickLimit)
         {
             match.Tick();
             hitPoints.Add(villager.HitPoints);
@@ -82,7 +82,7 @@ public class AttackCommandTests
         var match = TestArmies.MatchWithSoldier();
         var soldier = Battle.Last(match);
 
-        AssertRejected(match, new AttackCommand(First, [soldier.Id], Battle.MiddleVillager(match, First).Id), RejectionReason.OwnTarget);
+        AssertRejected(match, new AttackCommand(First, [soldier.Id], TestMatches.MiddleVillager(match, First).Id), RejectionReason.OwnTarget);
         AssertRejected(match, new AttackCommand(First, [soldier.Id], Battle.TownCenter(match, First).Id), RejectionReason.OwnTarget);
     }
 
@@ -132,7 +132,7 @@ public class AttackCommandTests
 
         // The order is given while the melee soldier still stands, and reaches the match after it fell.
         var command = new AttackCommand(First, [melee.Id, archer.Id], townCenter);
-        Battle.TickUntil(match, () => melee.HitPoints <= 0 || archer.HitPoints <= 0);
+        TestMatches.TickUntil(match, () => melee.HitPoints <= 0 || archer.HitPoints <= 0);
         Assert.Null(Battle.Unit(match, melee.Id));
         match.Enqueue(command);
         match.Tick();
@@ -146,7 +146,7 @@ public class AttackCommandTests
     {
         var match = TestArmies.MatchWithSoldier();
         var soldier = Battle.Last(match);
-        var foreign = Battle.MiddleVillager(match, Second);
+        var foreign = TestMatches.MiddleVillager(match, Second);
         var target = Battle.TownCenter(match, Second).Id;
 
         AssertRejected(match, new AttackCommand(First, [soldier.Id, foreign.Id], target), RejectionReason.UnitOfAnotherPlayer);
@@ -158,7 +158,7 @@ public class AttackCommandTests
     {
         var match = TestArmies.MatchWithSoldier();
         var soldier = Battle.Last(match);
-        var villager = Battle.MiddleVillager(match, First);
+        var villager = TestMatches.MiddleVillager(match, First);
         var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Wood);
         var target = Battle.TownCenter(match, Second).Id;
         match.Enqueue(new GatherCommand(First, [villager.Id], source.Id));
@@ -178,7 +178,7 @@ public class AttackCommandTests
     public void An_attack_by_Villagers_alone_is_rejected()
     {
         var match = TestArmies.MatchWithSoldier();
-        var villager = Battle.MiddleVillager(match, First);
+        var villager = TestMatches.MiddleVillager(match, First);
         var target = Battle.TownCenter(match, Second).Id;
 
         AssertRejected(match, new AttackCommand(First, [villager.Id], target), RejectionReason.UnitCannotAttack);
