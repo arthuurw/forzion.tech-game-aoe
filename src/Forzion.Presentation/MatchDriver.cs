@@ -8,6 +8,7 @@ namespace Forzion.Presentation;
 /// </summary>
 public sealed class MatchDriver
 {
+    private readonly Match match;
     private readonly TickClock clock;
     private readonly Dictionary<EntityId, MapPoint> positionsBeforeLastTick = [];
 
@@ -18,17 +19,20 @@ public sealed class MatchDriver
         ArgumentNullException.ThrowIfNull(match);
         ArgumentNullException.ThrowIfNull(clock);
 
-        Match = match;
+        this.match = match;
         this.clock = clock;
     }
 
-    /// <summary>The match being driven: read its state and enqueue commands on it, but leave ticking to <see cref="Advance"/>.</summary>
-    public Match Match { get; }
+    /// <summary>The state of the match being driven, as of its last tick.</summary>
+    public MatchState State => match.State;
+
+    /// <summary>Queues a command for the match; the next tick <see cref="Advance"/> runs applies it.</summary>
+    public void Enqueue(Command command) => match.Enqueue(command);
 
     /// <summary>
     /// Lets <paramref name="elapsedSeconds"/> of real time pass, running every tick that
     /// becomes due, and returns the events of all those ticks in the order they happened.
-    /// A frame may run several ticks, and <see cref="Match.Events"/> keeps only the last one's.
+    /// A frame may run several ticks, and the match itself keeps only the last one's events.
     /// </summary>
     public IReadOnlyList<MatchEvent> Advance(double elapsedSeconds)
     {
@@ -38,8 +42,8 @@ public sealed class MatchDriver
         for (var tick = 0; tick < due; tick++)
         {
             RememberPositions();
-            Match.Tick();
-            events.AddRange(Match.Events);
+            match.Tick();
+            events.AddRange(match.Events);
         }
 
         return events;
@@ -74,7 +78,7 @@ public sealed class MatchDriver
     {
         positionsBeforeLastTick.Clear();
 
-        foreach (var unit in Match.State.Units)
+        foreach (var unit in match.State.Units)
         {
             positionsBeforeLastTick[unit.Id] = ToPoint(unit.Position);
         }

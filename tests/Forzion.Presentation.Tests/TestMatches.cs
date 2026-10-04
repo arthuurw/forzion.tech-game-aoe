@@ -38,8 +38,15 @@ internal static class TestMatches
     }
 
     /// <summary>A driver of a new match of the configuration, the plain match by default.</summary>
-    public static MatchDriver NewDriver(MatchConfig? config = null) =>
-        new(Match.Create(config ?? PlainConfig()), new TickClock(Match.TicksPerSecond));
+    public static MatchDriver NewDriver(MatchConfig? config = null) => NewDriver(out _, config);
+
+    /// <summary>A driver of a new match of the configuration, and the match it drives, for the test to read and command.</summary>
+    public static MatchDriver NewDriver(out Match match, MatchConfig? config = null)
+    {
+        match = Match.Create(config ?? PlainConfig());
+
+        return new MatchDriver(match, new TickClock(Match.TicksPerSecond));
+    }
 
     /// <summary>Advances the driver one tick at a time until the condition holds.</summary>
     public static void TickUntil(MatchDriver driver, Func<bool> condition)

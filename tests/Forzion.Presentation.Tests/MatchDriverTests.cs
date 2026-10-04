@@ -10,8 +10,8 @@ public class MatchDriverTests
     [Fact]
     public void Before_any_tick_a_unit_is_drawn_where_it_stands()
     {
-        var driver = NewDriver();
-        var villager = FirstVillager(driver.Match);
+        var driver = NewDriver(out var match);
+        var villager = FirstVillager(match);
 
         var drawn = driver.PositionOf(villager);
 
@@ -22,19 +22,19 @@ public class MatchDriverTests
     [Fact]
     public void Advancing_runs_the_ticks_that_are_due()
     {
-        var driver = NewDriver();
+        var driver = NewDriver(out var match);
 
         driver.Advance(OneTick * 2.5);
 
-        Assert.Equal(2, driver.Match.State.Tick);
+        Assert.Equal(2, match.State.Tick);
     }
 
     [Fact]
     public void A_walking_unit_is_drawn_between_where_it_stood_before_and_after_the_last_tick()
     {
-        var driver = NewDriver();
-        var villager = FirstVillager(driver.Match);
-        driver.Match.Enqueue(new MoveCommand(FirstPlayer, [villager.Id], new CellPosition(32, 24)));
+        var driver = NewDriver(out var match);
+        var villager = FirstVillager(match);
+        match.Enqueue(new MoveCommand(FirstPlayer, [villager.Id], new CellPosition(32, 24)));
 
         driver.Advance(OneTick);
         var beforeLastTick = villager.Position;
@@ -57,23 +57,23 @@ public class MatchDriverTests
     [Fact]
     public void Advancing_reports_the_events_of_every_tick_it_ran_not_only_the_last()
     {
-        var driver = NewDriver();
-        var villager = FirstVillager(driver.Match);
+        var driver = NewDriver(out var match);
+        var villager = FirstVillager(match);
         var outsideTheMap = new MoveCommand(FirstPlayer, [villager.Id], new CellPosition(-1, 0));
-        driver.Match.Enqueue(outsideTheMap);
+        match.Enqueue(outsideTheMap);
 
         var events = driver.Advance(OneTick * 2);
 
-        Assert.Equal(2, driver.Match.State.Tick);
+        Assert.Equal(2, match.State.Tick);
         Assert.Equal([new CommandRejected(outsideTheMap, RejectionReason.DestinationOutsideMap)], events);
     }
 
     [Fact]
     public void A_frame_that_runs_no_tick_reports_no_event()
     {
-        var driver = NewDriver();
-        var villager = FirstVillager(driver.Match);
-        driver.Match.Enqueue(new MoveCommand(FirstPlayer, [villager.Id], new CellPosition(-1, 0)));
+        var driver = NewDriver(out var match);
+        var villager = FirstVillager(match);
+        match.Enqueue(new MoveCommand(FirstPlayer, [villager.Id], new CellPosition(-1, 0)));
         Assert.NotEmpty(driver.Advance(OneTick));
 
         Assert.Empty(driver.Advance(OneTick / 2));

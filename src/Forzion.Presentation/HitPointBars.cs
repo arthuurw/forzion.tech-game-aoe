@@ -17,7 +17,7 @@ public static class HitPointBars
         ArgumentNullException.ThrowIfNull(driver);
         ArgumentNullException.ThrowIfNull(selected);
 
-        var state = driver.Match.State;
+        var state = driver.State;
         var bars = new List<HitPointBar>();
 
         foreach (var unit in state.Units)

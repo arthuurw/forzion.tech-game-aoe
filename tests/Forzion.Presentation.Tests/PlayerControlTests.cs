@@ -9,6 +9,7 @@ public class PlayerControlTests
     private static readonly PickSizes Sizes = new(UnitRadius: 0.4, UnitHeight: 1, BuildingAndSourceHeight: 1.2);
 
     private MatchDriver driver = null!;
+    private Match driven = null!;
 
     [Fact]
     public void Clicking_a_unit_of_the_Player_selects_it()
@@ -418,8 +419,8 @@ public class PlayerControlTests
 
     private PlayerControl NewControl(out Match match, Func<ScreenPoint, SightLine?>? camera = null, MatchConfig? config = null)
     {
-        driver = NewDriver(config);
-        match = driver.Match;
+        driver = NewDriver(out match, config);
+        driven = match;
 
         return new PlayerControl(driver, FirstPlayer, camera ?? TopDown, Sizes);
     }
@@ -433,7 +434,7 @@ public class PlayerControlTests
     /// <summary>Runs one tick of the match, applying the commands sent so far, and returns its events.</summary>
     private IReadOnlyList<MatchEvent> Tick(Match match)
     {
-        Assert.Same(driver.Match, match);
+        Assert.Same(driven, match);
 
         return driver.Advance(1.0 / Match.TicksPerSecond);
     }

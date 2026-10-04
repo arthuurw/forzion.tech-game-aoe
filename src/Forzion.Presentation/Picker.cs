@@ -26,7 +26,7 @@ internal sealed class Picker(MatchDriver driver, PickSizes sizes)
         var middle = sizes.UnitHeight / 2;
         var area = corners.Select(corner => corner.At(middle)).ToList();
 
-        return driver.Match.State.Units.Where(unit => IsInside(driver.PositionOf(unit), area));
+        return driver.State.Units.Where(unit => IsInside(driver.PositionOf(unit), area));
     }
 
     /// <summary>The unit the line points at, the one nearest to the line when several are.</summary>
@@ -38,7 +38,7 @@ internal sealed class Picker(MatchDriver driver, PickSizes sizes)
         var nearestDistance = sizes.UnitRadius;
 
         // Strictly nearer only: on a tie the unit with the lower ID, met first, keeps the pick.
-        foreach (var unit in driver.Match.State.Units)
+        foreach (var unit in driver.State.Units)
         {
             var distance = DistanceToSegment(driver.PositionOf(unit), bottom, top);
 
@@ -74,12 +74,12 @@ internal sealed class Picker(MatchDriver driver, PickSizes sizes)
             }
         }
 
-        foreach (var building in driver.Match.State.Buildings)
+        foreach (var building in driver.State.Buildings)
         {
             Consider(building, building.Origin, building.Width, building.Height);
         }
 
-        foreach (var source in driver.Match.State.ResourceSources)
+        foreach (var source in driver.State.ResourceSources)
         {
             Consider(source, source.Cell, 1, 1);
         }

@@ -45,7 +45,7 @@ public partial class SelectionMarkers : Node3D
 
     public override void _Process(double delta)
     {
-        var state = MatchView.Match.State;
+        var state = MatchView.State;
         shown.Clear();
 
         foreach (var id in SelectionInput.Control.Selected)

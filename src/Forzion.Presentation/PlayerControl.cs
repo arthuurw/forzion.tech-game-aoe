@@ -48,7 +48,7 @@ public sealed class PlayerControl
     {
         get
         {
-            var state = driver.Match.State;
+            var state = driver.State;
 
             selected.RemoveAll(id =>
                 !state.Units.Any(unit => unit.Id == id) && !state.Buildings.Any(building => building.Id == id));
@@ -103,7 +103,7 @@ public sealed class PlayerControl
             return;
         }
 
-        driver.Match.Enqueue(OrderFor(units, picker.At(sight.Value), CellUnder(sight.Value.Ground)));
+        driver.Enqueue(OrderFor(units, picker.At(sight.Value), CellUnder(sight.Value.Ground)));
     }
 
     /// <summary>The command a right-click on <paramref name="target"/> gives.</summary>
@@ -117,10 +117,10 @@ public sealed class PlayerControl
     };
 
     private bool AnyCanAttack(IReadOnlyList<EntityId> units) =>
-        driver.Match.State.Units.Any(unit => unit.CanAttack && units.Contains(unit.Id));
+        driver.State.Units.Any(unit => unit.CanAttack && units.Contains(unit.Id));
 
     private bool IsUnitOfPlayer(EntityId id) =>
-        driver.Match.State.Units.Any(unit => unit.Id == id && unit.Owner == player);
+        driver.State.Units.Any(unit => unit.Id == id && unit.Owner == player);
 
     private static CellPosition CellUnder(MapPoint point) => new((int)Math.Floor(point.X), (int)Math.Floor(point.Y));
 
