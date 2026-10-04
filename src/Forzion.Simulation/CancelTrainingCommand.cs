@@ -20,7 +20,7 @@ public sealed record CancelTrainingCommand(PlayerId Player, EntityId Building, i
 {
     internal override void Execute(TickContext context, PlayerState issuer)
     {
-        if (ProductionBuilding.Find(context, this, issuer, Building) is not { } building)
+        if (OwnCompleteBuilding.FindOrReject(context, this, issuer, Building) is not { } building)
         {
             return;
         }

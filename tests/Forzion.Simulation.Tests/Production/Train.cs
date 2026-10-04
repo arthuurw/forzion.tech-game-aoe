@@ -46,14 +46,16 @@ internal static class Train
     }
 
     /// <summary>
-    /// Prepares two default matches alike with <paramref name="prepare"/>, sends the command it
-    /// returns in one of them only, and checks that it was rejected for <paramref name="reason"/>
-    /// and left the two matches with the same hash.
+    /// Prepares two matches alike with <paramref name="prepare"/>, sends the command it returns
+    /// in one of them only, and checks that it was rejected for <paramref name="reason"/> and
+    /// left the two matches with the same hash. The matches are made by <paramref name="create"/>,
+    /// or are default two-Player matches without it.
     /// </summary>
-    public static void AssertRejected(RejectionReason reason, Func<Match, Command> prepare)
+    public static void AssertRejected(RejectionReason reason, Func<Match, Command> prepare, Func<Match>? create = null)
     {
-        var withRejection = TestMatches.TwoPlayerMatch();
-        var without = TestMatches.TwoPlayerMatch();
+        create ??= () => TestMatches.TwoPlayerMatch();
+        var withRejection = create();
+        var without = create();
         var command = prepare(withRejection);
         prepare(without);
         withRejection.Enqueue(command);

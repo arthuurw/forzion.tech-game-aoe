@@ -18,7 +18,7 @@ public sealed record AgeAdvanceCommand(PlayerId Player, EntityId Building) : Com
 {
     internal override void Execute(TickContext context, PlayerState issuer)
     {
-        if (ProductionBuilding.Find(context, this, issuer, Building) is not { } building)
+        if (OwnCompleteBuilding.FindOrReject(context, this, issuer, Building) is not { } building)
         {
             return;
         }
@@ -37,15 +37,14 @@ public sealed record AgeAdvanceCommand(PlayerId Player, EntityId Building) : Com
             return;
         }
 
-        if (issuer.Age >= issuer.Faction.Ages.Count)
+        if (issuer.NextAge is not { } nextAge)
         {
             context.Reject(this, RejectionReason.LastAgeReached);
 
             return;
         }
 
-        // Ages are numbered from 1 and listed from index 0, so the next Age is at the current number.
-        var cost = issuer.Faction.Ages[issuer.Age].AdvanceCost;
+        var cost = nextAge.AdvanceCost;
 
         if (!issuer.CanAfford(cost))
         {

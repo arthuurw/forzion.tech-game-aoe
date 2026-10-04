@@ -102,7 +102,7 @@ msgid "FACTION_PORTUGUESE_AGE_2"
 msgstr "Era dos Engenhos"
 
 msgid "FACTION_PORTUGUESE_VILLAGER"
-msgstr "Aldeão"
+msgstr "Colono"
 
 msgid "FACTION_PORTUGUESE_MELEE_SOLDIER"
 msgstr "Rodeleiro"
@@ -111,7 +111,7 @@ msgid "FACTION_PORTUGUESE_RANGED_SOLDIER"
 msgstr "Arcabuzeiro"
 
 msgid "FACTION_PORTUGUESE_HEAVY_SOLDIER"
-msgstr "Piqueiro"
+msgstr "Cavaleiro"
 
 # Nomes genéricos das unidades, para uma Facção que não dê nome próprio a uma delas.
 msgid "UNIT_VILLAGER"
