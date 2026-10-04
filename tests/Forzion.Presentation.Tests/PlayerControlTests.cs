@@ -230,6 +230,25 @@ public class PlayerControlTests
         Assert.Equal(source.Id, villager.GatherSource);
     }
 
+    // Resource sources stand lower than buildings: a line of sight that passes over a
+    // source's top but would cross a building's meets the ground behind the source.
+    [Fact]
+    public void Right_clicking_the_ground_just_behind_a_resource_source_seen_from_a_slanted_camera_walks_there()
+    {
+        var control = NewControl(out var match, Slanted);
+        var villager = UnitsOf(match, FirstPlayer)[0];
+        control.Select(Over(villager.Position), Over(villager.Position));
+        var source = match.State.ResourceSources.First(source =>
+            source.Cell.Y > 0 && match.State.Map[source.Cell with { Y = source.Cell.Y - 1 }] == CellKind.Free);
+        var behind = source.Cell with { Y = source.Cell.Y - 1 };
+
+        control.OrderAt(new ScreenPoint(source.Cell.X + 0.5, source.Cell.Y - 0.6));
+        Tick(match);
+
+        Assert.Null(villager.GatherSource);
+        Assert.Equal(behind, villager.Path[^1]);
+    }
+
     [Fact]
     public void Right_clicking_with_nothing_selected_gives_no_order()
     {

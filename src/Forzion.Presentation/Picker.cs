@@ -59,35 +59,36 @@ internal sealed class Picker(MatchDriver driver, PickSizes sizes)
     }
 
     /// <summary>
-    /// The building or resource source the line meets first coming down from the camera.
-    /// Footprints never overlap, so on a tie the first in the state's order is as good as any.
+    /// The building or resource source the line meets first coming down from the camera: the
+    /// one it enters highest above the ground. Footprints never overlap, so on a tie the first
+    /// in the state's order is as good as any.
     /// </summary>
     private Pick? BuildingOrSourceAt(SightLine sight, CellPosition ground)
     {
-        var top = sight.At(sizes.BuildingAndSourceHeight);
         var bottom = sight.At(0);
         Pick? first = null;
-        var firstEntry = double.PositiveInfinity;
+        var highestEntry = double.NegativeInfinity;
 
-        void Consider(Pick pick, CellPosition origin, int width, int height)
+        void Consider(Pick pick, double shapeHeight, CellPosition origin, int width, int height)
         {
-            var entry = EntryAlong(top, bottom, origin.X, origin.Y, origin.X + width, origin.Y + height);
+            var entry = EntryAlong(sight.At(shapeHeight), bottom, origin.X, origin.Y, origin.X + width, origin.Y + height);
+            var entryHeight = shapeHeight * (1 - entry);
 
-            if (entry < firstEntry)
+            if (entryHeight > highestEntry)
             {
                 first = pick;
-                firstEntry = entry;
+                highestEntry = entryHeight;
             }
         }
 
         foreach (var building in driver.State.Buildings)
         {
-            Consider(new BuildingPick(building, ground), building.Origin, building.Width, building.Height);
+            Consider(new BuildingPick(building, ground), sizes.BuildingHeight, building.Origin, building.Width, building.Height);
         }
 
         foreach (var source in driver.State.ResourceSources)
         {
-            Consider(new SourcePick(source, ground), source.Cell, 1, 1);
+            Consider(new SourcePick(source, ground), sizes.SourceHeight, source.Cell, 1, 1);
         }
 
         return first;
