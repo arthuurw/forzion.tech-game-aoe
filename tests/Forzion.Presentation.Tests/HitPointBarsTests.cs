@@ -8,7 +8,7 @@ public class HitPointBarsTests
     [Fact]
     public void Whole_entities_that_are_not_selected_show_no_bar()
     {
-        var driver = NewDriver(PlainConfig());
+        var driver = NewDriver();
 
         Assert.Empty(HitPointBars.Shown(driver, []));
     }
@@ -16,7 +16,7 @@ public class HitPointBarsTests
     [Fact]
     public void A_selected_whole_unit_shows_a_full_bar_where_it_is_drawn()
     {
-        var driver = NewDriver(PlainConfig());
+        var driver = NewDriver();
         var villager = UnitsOf(driver.Match, FirstPlayer)[0];
 
         var bar = Assert.Single(HitPointBars.Shown(driver, [villager.Id]));
@@ -72,26 +72,8 @@ public class HitPointBarsTests
     [Fact]
     public void A_selected_entity_no_longer_in_the_match_shows_no_bar()
     {
-        var driver = NewDriver(PlainConfig());
+        var driver = NewDriver();
 
         Assert.Empty(HitPointBars.Shown(driver, [new EntityId(9_999)]));
-    }
-
-    private static MatchDriver NewDriver(MatchConfig config) =>
-        new(Match.Create(config), new TickClock(Match.TicksPerSecond));
-
-    private static void TickUntil(MatchDriver driver, Func<bool> condition)
-    {
-        for (var tick = 0; tick < 2_000; tick++)
-        {
-            driver.Advance(1.0 / Match.TicksPerSecond);
-
-            if (condition())
-            {
-                return;
-            }
-        }
-
-        throw new InvalidOperationException("The condition still did not hold after 2000 ticks.");
     }
 }

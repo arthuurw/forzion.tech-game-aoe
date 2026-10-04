@@ -418,7 +418,7 @@ public class PlayerControlTests
 
     private PlayerControl NewControl(out Match match, Func<ScreenPoint, SightLine?>? camera = null, MatchConfig? config = null)
     {
-        driver = new MatchDriver(Match.Create(config ?? PlainConfig()), new TickClock(Match.TicksPerSecond));
+        driver = NewDriver(config);
         match = driver.Match;
 
         return new PlayerControl(driver, FirstPlayer, camera ?? TopDown, Sizes);
