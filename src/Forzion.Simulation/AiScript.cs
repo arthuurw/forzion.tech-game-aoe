@@ -246,7 +246,7 @@ internal sealed class AiScript
     /// </summary>
     private void AdvanceAge()
     {
-        if (player.Age >= player.Faction.Ages.Count
+        if (player.NextAge is not { } nextAge
             || TownCenter() is not { IsComplete: true, AgeAdvanceProgress: null } townCenter
             || !OwnBuildings(BuildingKind.Barracks).Any(barracks => barracks.IsComplete)
             || Army().Count() < Balance.AiArmyBeforeAdvance)
@@ -254,8 +254,7 @@ internal sealed class AiScript
             return;
         }
 
-        // Ages are numbered from 1 and listed from index 0, so the next Age is at the current number.
-        var cost = player.Faction.Ages[player.Age].AdvanceCost;
+        var cost = nextAge.AdvanceCost;
 
         if (Spend(cost))
         {
@@ -299,7 +298,7 @@ internal sealed class AiScript
     /// </summary>
     private List<UnitKind> AffordableSoldiersOfTheLatestAge() => Enumerable.Range(1, player.Age)
         .Reverse()
-        .Select(age => player.Faction.Ages[age - 1].Units
+        .Select(age => player.Faction.AgeAt(age).Units
             .Where(kind => Balance.Of(kind).Attack is not null && CanSpend(Balance.Of(kind).Cost, savings))
             .Order()
             .ToList())
