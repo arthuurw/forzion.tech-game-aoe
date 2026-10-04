@@ -1,4 +1,3 @@
-using System.Text;
 using Forzion.Presentation;
 using Forzion.Simulation;
 using Godot;
@@ -70,7 +69,7 @@ public partial class Hud : CanvasLayer
         ShowStatus(PlayerStatus.Of(MatchView.State, MatchView.HumanPlayer));
 
         var panel = SelectionPanel.For(MatchView.State, MatchView.HumanPlayer, PlayerControl.Selected);
-        var layout = LayoutOf(panel);
+        var layout = panel.Layout;
 
         if (layout != shownLayout)
         {
@@ -163,28 +162,6 @@ public partial class Hud : CanvasLayer
             ageAdvanceLabel.Text = $"{Format(HudTexts.AdvancingTo, Tr(advance.AgeNameKey))} {Percent(advance.Progress)}";
             ageAdvanceBar.Value = advance.Progress;
         }
-    }
-
-    /// <summary>
-    /// What decides the controls of the panel: the entities shown, the choices offered and
-    /// whether each is locked, the units queued and whether an Age Advance is underway.
-    /// Progress and hit points change without changing it.
-    /// </summary>
-    private static string LayoutOf(SelectionPanel panel)
-    {
-        var layout = new StringBuilder();
-        layout.Append(string.Join(',', panel.Units.Select(unit => unit.Id.Value))).Append('|');
-        layout.Append(string.Join(',', panel.BuildingChoices.Select(choice => $"{choice.Kind}:{choice.IsLocked}"))).Append('|');
-
-        if (panel.Building is { } building)
-        {
-            layout.Append(building.Id.Value).Append(':').Append(building.ConstructionProgress is null).Append('|');
-            layout.Append(string.Join(',', building.TrainingQueue.Select(queued => queued.Kind))).Append('|');
-            layout.Append(string.Join(',', building.UnitChoices.Select(choice => $"{choice.Kind}:{choice.IsLocked}"))).Append('|');
-            layout.Append(building.AgeAdvance?.AgeNameKey).Append(':').Append(building.AgeAdvance?.IsUnderway);
-        }
-
-        return layout.ToString();
     }
 
     private void Rebuild(SelectionPanel panel)

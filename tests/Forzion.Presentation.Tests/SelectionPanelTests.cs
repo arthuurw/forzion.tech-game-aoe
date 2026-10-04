@@ -202,6 +202,59 @@ public class SelectionPanelTests
         Assert.Null(building.AgeAdvance);
     }
 
+    [Fact]
+    public void The_layout_of_the_panel_stays_the_same_while_only_progress_changes()
+    {
+        var match = Match.Create(PlainConfig());
+        var townCenter = TownCenterOf(match, FirstPlayer);
+        match.Enqueue(new TrainCommand(FirstPlayer, townCenter.Id, UnitKind.Villager));
+        match.Tick();
+        var before = SelectionPanel.For(match.State, FirstPlayer, [townCenter.Id]);
+
+        Run(match, Match.TrainTime(UnitKind.Villager) / 2);
+
+        var after = SelectionPanel.For(match.State, FirstPlayer, [townCenter.Id]);
+        Assert.NotEqual(before.Building!.TrainingQueue[0].Progress, after.Building!.TrainingQueue[0].Progress);
+        Assert.Equal(before.Layout, after.Layout);
+    }
+
+    [Fact]
+    public void The_layout_of_the_panel_changes_when_a_unit_joins_the_training_queue()
+    {
+        var match = Match.Create(PlainConfig());
+        var townCenter = TownCenterOf(match, FirstPlayer);
+        var before = SelectionPanel.For(match.State, FirstPlayer, [townCenter.Id]);
+
+        match.Enqueue(new TrainCommand(FirstPlayer, townCenter.Id, UnitKind.Villager));
+        match.Tick();
+
+        Assert.NotEqual(before.Layout, SelectionPanel.For(match.State, FirstPlayer, [townCenter.Id]).Layout);
+    }
+
+    [Fact]
+    public void The_layout_of_the_panel_changes_when_the_Age_unlocks_a_choice()
+    {
+        var match = OfThreeAges();
+        var villager = UnitsOf(match, FirstPlayer)[0];
+        var before = SelectionPanel.For(match.State, FirstPlayer, [villager.Id]);
+
+        AdvanceAge(match, FirstPlayer);
+
+        Assert.NotEqual(before.Layout, SelectionPanel.For(match.State, FirstPlayer, [villager.Id]).Layout);
+    }
+
+    [Fact]
+    public void The_layout_of_the_panel_changes_with_the_units_selected()
+    {
+        var match = Match.Create(PlainConfig());
+        var villagers = UnitsOf(match, FirstPlayer);
+
+        var one = SelectionPanel.For(match.State, FirstPlayer, [villagers[0].Id]);
+        var another = SelectionPanel.For(match.State, FirstPlayer, [villagers[1].Id]);
+
+        Assert.NotEqual(one.Layout, another.Layout);
+    }
+
     /// <summary>Places a site of the first Player near its Town Center, with the given builders, and returns it.</summary>
     private static BuildingState PlaceNear(Match match, BuildingKind kind, IReadOnlyList<EntityId> builders)
     {

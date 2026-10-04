@@ -1,3 +1,4 @@
+using System.Text;
 using Forzion.Simulation;
 
 namespace Forzion.Presentation;
@@ -51,6 +52,32 @@ public sealed record SelectionPanel(
             units.Select(unit => new SelectedUnit(unit.Id, TextKeys.NameOf(faction, unit.Kind), unit.HitPoints, unit.MaxHitPoints)).ToList(),
             building is null ? null : Show(building, playerState),
             buildingChoices);
+    }
+
+    /// <summary>
+    /// What decides the controls of the panel: the entities shown, the choices offered and
+    /// whether each is locked, the units queued and whether an Age Advance is underway. Two
+    /// panels of the same layout show the same controls, so the HUD rebuilds its panel only
+    /// when the layout changes; progress and hit points change without changing it.
+    /// </summary>
+    public string Layout
+    {
+        get
+        {
+            var layout = new StringBuilder();
+            layout.Append(string.Join(',', Units.Select(unit => unit.Id.Value))).Append('|');
+            layout.Append(string.Join(',', BuildingChoices.Select(choice => $"{choice.Kind}:{choice.IsLocked}"))).Append('|');
+
+            if (Building is { } building)
+            {
+                layout.Append(building.Id.Value).Append(':').Append(building.ConstructionProgress is null).Append('|');
+                layout.Append(string.Join(',', building.TrainingQueue.Select(queued => queued.Kind))).Append('|');
+                layout.Append(string.Join(',', building.UnitChoices.Select(choice => $"{choice.Kind}:{choice.IsLocked}"))).Append('|');
+                layout.Append(building.AgeAdvance?.AgeNameKey).Append(':').Append(building.AgeAdvance?.IsUnderway);
+            }
+
+            return layout.ToString();
+        }
     }
 
     private static SelectedBuilding Show(BuildingState building, PlayerState player)
