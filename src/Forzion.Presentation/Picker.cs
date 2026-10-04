@@ -69,9 +69,9 @@ internal sealed class Picker(MatchDriver driver, PickSizes sizes)
         Pick? first = null;
         var highestEntry = double.NegativeInfinity;
 
-        void Consider(Pick pick, double shapeHeight, CellPosition origin, int width, int height)
+        void Consider(Pick pick, double shapeHeight, CellPosition origin, int width, int depth)
         {
-            var entry = EntryAlong(sight.At(shapeHeight), bottom, origin.X, origin.Y, origin.X + width, origin.Y + height);
+            var entry = EntryAlong(sight.At(shapeHeight), bottom, origin.X, origin.Y, origin.X + width, origin.Y + depth);
             var entryHeight = shapeHeight * (1 - entry);
 
             if (entryHeight > highestEntry)
