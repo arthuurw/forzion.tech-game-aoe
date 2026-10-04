@@ -429,10 +429,10 @@ public sealed class Placeholders
         new() { TopRadius = topRadius, BottomRadius = bottomRadius, Height = height };
 
     /// <summary>
-    /// A pitched roof <paramref name="width"/> along X and <paramref name="depth"/> along Z
-    /// once turned 90 degrees about Y, which puts its ridge along X and a slope towards the camera.
+    /// A pitched roof <paramref name="width"/> along X and <paramref name="depth"/> along Z,
+    /// its ridge along Z: the camera, looking along Z, sees both slopes, lit apart.
     /// </summary>
-    private static PrismMesh Gable(float width, float height, float depth) => new() { Size = new Vector3(depth, height, width) };
+    private static PrismMesh Gable(float width, float height, float depth) => new() { Size = new Vector3(width, height, depth) };
 
     /// <summary>A sphere, or a squashed one when <paramref name="height"/> is less than its diameter.</summary>
     private static SphereMesh Ball(float radius, float? height = null) => new() { Radius = radius, Height = height ?? radius * 2 };
