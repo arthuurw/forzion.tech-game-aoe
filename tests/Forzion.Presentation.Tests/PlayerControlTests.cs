@@ -65,7 +65,7 @@ public class PlayerControlTests
     {
         var control = NewControl(out var match);
         var townCenter = match.State.Buildings.First(building => building.Owner == FirstPlayer);
-        var middle = new ScreenPoint(townCenter.Origin.X + (townCenter.Width / 2.0), townCenter.Origin.Y + (townCenter.Height / 2.0));
+        var middle = OverCentreOf(townCenter);
 
         control.Select(middle, middle);
 
@@ -222,7 +222,7 @@ public class PlayerControlTests
     {
         var control = NewControl(out var match);
         var townCenter = match.State.Buildings.First(building => building.Owner == FirstPlayer);
-        var middle = new ScreenPoint(townCenter.Origin.X + 1.5, townCenter.Origin.Y + 1.5);
+        var middle = OverCentreOf(townCenter);
         control.Select(middle, middle);
 
         control.OrderAt(new ScreenPoint(-5, -5));
@@ -288,7 +288,7 @@ public class PlayerControlTests
         control.Select(Over(soldier.Position), Over(soldier.Position));
         var townCenter = match.State.Buildings.First(building => building.Owner == SecondPlayer);
 
-        control.OrderAt(new ScreenPoint(townCenter.Origin.X + 1.5, townCenter.Origin.Y + 1.5));
+        control.OrderAt(OverCentreOf(townCenter));
         Tick(match);
 
         Assert.Equal(townCenter.Id, soldier.Target);
@@ -317,7 +317,7 @@ public class PlayerControlTests
         control.Select(Over(villager.Position), Over(villager.Position));
         var townCenter = match.State.Buildings.First(building => building.Owner == SecondPlayer);
 
-        control.OrderAt(new ScreenPoint(townCenter.Origin.X + 1.5, townCenter.Origin.Y + 1.5));
+        control.OrderAt(OverCentreOf(townCenter));
         var events = Tick(match);
 
         Assert.DoesNotContain(events, matchEvent => matchEvent is CommandRejected);
@@ -333,7 +333,7 @@ public class PlayerControlTests
         var villager = UnitsOf(match, FirstPlayer)[0];
         control.Select(Over(villager.Position), Over(villager.Position));
 
-        control.OrderAt(new ScreenPoint(site.Origin.X + (site.Width / 2.0), site.Origin.Y + (site.Height / 2.0)));
+        control.OrderAt(OverCentreOf(site));
         var events = Tick(match);
 
         Assert.DoesNotContain(events, matchEvent => matchEvent is CommandRejected);
@@ -349,7 +349,7 @@ public class PlayerControlTests
         var villager = UnitsOf(match, FirstPlayer)[0];
         control.Select(Over(villager.Position), Over(villager.Position));
 
-        control.OrderAt(new ScreenPoint(site.Origin.X + (site.Width / 2.0), site.Origin.Y + (site.Height / 2.0)));
+        control.OrderAt(OverCentreOf(site));
         Tick(match);
 
         Assert.Equal(site.Id, villager.ConstructionSite);
@@ -448,6 +448,14 @@ public class PlayerControlTests
     private static SightLine? Slanted(ScreenPoint point) => new SightLine(new MapPoint(point.X, point.Y), new MapPoint(0, 0.7));
 
     private static ScreenPoint Over(MapPosition position) => new(position.X.ToDouble(), position.Y.ToDouble());
+
+    // On the top-down screen, the point over the centre of the building's footprint.
+    private static ScreenPoint OverCentreOf(BuildingState building)
+    {
+        var centre = MapPoint.CentreOf(building);
+
+        return new ScreenPoint(centre.X, centre.Y);
+    }
 
     /// <summary>
     /// The corners of a box on the top-down screen around the positions, with 3 Cells to spare
