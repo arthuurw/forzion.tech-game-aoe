@@ -18,6 +18,9 @@ _Avoid_: Turno
 Uma imagem da Partida desenhada na tela. Quadros não seguem o ritmo dos Ticks: entre dois Ticks podem ser desenhados vários Quadros ou nenhum.
 _Avoid_: Tick
 
+**Seleção** (`Selection`):
+As unidades ou a construção do Jogador escolhidas com o mouse, que recebem as ordens do botão direito. Existe só na tela: a Partida não a conhece.
+
 ## Modos de jogo
 
 **Partida livre** (`Skirmish`):
@@ -135,6 +138,9 @@ Unidade militar que ataca de longe, sem projétil simulado. Nome provisório at�
 **Pontos de vida** (`Hit Points`):
 Quanto dano uma unidade ou construção ainda aguenta. Ao chegar a zero, ela sai do mapa no mesmo tick.
 _Avoid_: HP, saúde, energia
+
+**Barra de vida** (`Hit Point Bar`):
+Barra desenhada sobre uma unidade ou construção selecionada ou ferida, preenchida na proporção dos Pontos de vida que restam.
 
 **Alvo** (`Target`):
 A unidade ou construção inimiga que uma unidade militar está atacando.

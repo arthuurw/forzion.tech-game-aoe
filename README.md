@@ -13,7 +13,7 @@ Jogo de estratégia em tempo real (RTS) em 3D sobre a história do Brasil. O jog
 ### Arquitetura
 
 - **Núcleo de simulação** (`src/Forzion.Simulation`): biblioteca .NET sem nenhuma referência ao Godot. Contém economia, construção, produção, combate, IA e movimento.
-- **Apresentação** (`game/` e `src/Forzion.Presentation`): projeto Godot 4 .NET que mostra o estado em 3D e transforma o input do jogador em comandos. Avança a simulação a 20 ticks por segundo e interpola as posições entre os ticks. A parte que não depende da engine (relógio de ticks, interpolação, o que um clique ou um retângulo seleciona, que comando o botão direito dá conforme o alvo e que aviso mostrar para uma ordem recusada) fica numa biblioteca C# pura testada sem o Godot.
+- **Apresentação** (`game/` e `src/Forzion.Presentation`): projeto Godot 4 .NET que mostra o estado em 3D e transforma o input do jogador em comandos. Avança a simulação a 20 ticks por segundo e interpola as posições entre os ticks. A parte que não depende da engine (relógio de ticks, interpolação, o que um clique ou um retângulo seleciona, que comando o botão direito dá conforme o alvo, que barras de vida mostrar e que aviso mostrar para uma ordem recusada) fica numa biblioteca C# pura testada sem o Godot.
 - **Determinismo**: ticks fixos, aritmética de ponto fixo e gerador aleatório com seed. A mesma seed com os mesmos comandos produz o mesmo estado em Windows, Linux e macOS.
 
 As decisões e os motivos estão em [`docs/adr/`](docs/adr/). O vocabulário do domínio está em [`GLOSSARY.md`](GLOSSARY.md).
@@ -42,7 +42,7 @@ godot --path game
 
 Câmera: WASD, setas ou mouse na borda da tela deslocam; roda do mouse ou Page Up e Page Down aproximam e afastam.
 
-Seleção e ordens: clique com o botão esquerdo seleciona uma unidade ou construção sua; arrastar com o botão esquerdo seleciona suas unidades dentro do retângulo; clique em terreno vazio limpa a seleção. O botão direito manda as unidades selecionadas coletar numa Fonte de Recurso, atacar uma unidade ou construção inimiga, construir uma Obra sua ou andar até o ponto clicado; Aldeões sem soldado junto andam até o inimigo em vez de atacar. Unidades mortas saem da seleção. Uma ordem recusada aparece como aviso no topo da tela.
+Seleção e ordens: clique com o botão esquerdo seleciona uma unidade ou construção sua; arrastar com o botão esquerdo seleciona suas unidades dentro do retângulo; clique em terreno vazio limpa a seleção. O botão direito manda as unidades selecionadas coletar numa Fonte de Recurso, atacar uma unidade ou construção inimiga, construir uma Obra sua ou andar até o ponto clicado; Aldeões sem soldado junto andam até o inimigo em vez de atacar. Unidades mortas saem da seleção. Unidades e construções selecionadas ou feridas mostram uma barra de vida. Uma ordem recusada aparece como aviso no topo da tela.
 
 Os textos do jogo ficam em `game/translations/pt_BR.po` (gettext); outro idioma entra como outro arquivo `.po` com as mesmas chaves.
 
@@ -83,7 +83,7 @@ This is a software engineering portfolio project in C#. The focus is the archite
 ### Architecture
 
 - **Simulation core** (`src/Forzion.Simulation`): a .NET library with no reference to Godot. It holds economy, construction, production, combat, AI and movement.
-- **Presentation** (`game/` and `src/Forzion.Presentation`): a Godot 4 .NET project that shows the state in 3D and turns player input into commands. It advances the simulation at 20 ticks per second and interpolates positions between ticks. The part that needs no engine (tick clock, interpolation, what a click or a box selects, which command a right-click gives on each target and which notice a refused order shows) lives in a plain C# library tested without Godot.
+- **Presentation** (`game/` and `src/Forzion.Presentation`): a Godot 4 .NET project that shows the state in 3D and turns player input into commands. It advances the simulation at 20 ticks per second and interpolates positions between ticks. The part that needs no engine (tick clock, interpolation, what a click or a box selects, which command a right-click gives on each target, which hit point bars to show and which notice a refused order shows) lives in a plain C# library tested without Godot.
 - **Determinism**: fixed ticks, fixed-point arithmetic and a seeded random generator. The same seed with the same commands produces the same state on Windows, Linux and macOS.
 
 The decisions and their reasons are in [`docs/adr/`](docs/adr/). The domain vocabulary is in [`GLOSSARY.md`](GLOSSARY.md). Both are written in Portuguese; code, comments and commits are in English.
@@ -112,7 +112,7 @@ godot --path game
 
 Camera: WASD, the arrow keys or the mouse at the screen edge pan; the mouse wheel or Page Up and Page Down zoom in and out.
 
-Selection and orders: a left click selects one of your units or buildings; dragging with the left button selects your units inside the box; clicking bare ground clears the selection. The right button sends the selected units to gather from a resource source, attack an enemy unit or building, build one of your construction sites or walk to the clicked point; Villagers with no soldier among them walk up to an enemy instead of attacking. Units that die leave the selection. A refused order shows as a notice at the top of the screen.
+Selection and orders: a left click selects one of your units or buildings; dragging with the left button selects your units inside the box; clicking bare ground clears the selection. The right button sends the selected units to gather from a resource source, attack an enemy unit or building, build one of your construction sites or walk to the clicked point; Villagers with no soldier among them walk up to an enemy instead of attacking. Units that die leave the selection. Selected or wounded units and buildings show a hit point bar. A refused order shows as a notice at the top of the screen.
 
 The game texts live in `game/translations/pt_BR.po` (gettext); another language comes in as another `.po` file with the same keys.
 
