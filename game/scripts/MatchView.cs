@@ -100,7 +100,7 @@ public partial class MatchView : Node3D
 
         foreach (var unit in state.Units)
         {
-            unitViews[unit.Id].Position = WorldSpace.ToWorld(Driver.PositionOf(unit), Placeholders.UnitStandingHeight);
+            unitViews[unit.Id].Position = WorldSpace.ToWorld(Driver.PositionOf(unit));
         }
     }
 

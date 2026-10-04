@@ -147,11 +147,14 @@ internal static class TestMatches
     public static List<UnitState> UnitsOf(Match match, PlayerId player) =>
         match.State.Units.Where(unit => unit.Owner == player).ToList();
 
-    /// <summary>Units 0.4 Cell across and 1 tall, buildings and resource sources 1.2 tall.</summary>
-    public static readonly PickSizes Sizes = new(UnitRadius: 0.4, UnitHeight: 1, BuildingAndSourceHeight: 1.2);
+    /// <summary>Units 0.4 Cell across and 1 tall, buildings 1.2 tall and resource sources 0.6 tall.</summary>
+    public static readonly PickSizes Sizes = new(UnitRadius: 0.4, UnitHeight: 1, BuildingHeight: 1.2, SourceHeight: 0.6);
 
     /// <summary>A camera looking straight down: one pixel of the screen is one Cell of the map.</summary>
     public static SightLine? TopDown(ScreenPoint point) => new SightLine(new MapPoint(point.X, point.Y), new MapPoint(0, 0));
+
+    /// <summary>The position as the presentation draws it.</summary>
+    public static MapPoint PointOf(MapPosition position) => new(position.X.ToDouble(), position.Y.ToDouble());
 
     /// <summary>On the top-down screen, the point over the position.</summary>
     public static ScreenPoint Over(MapPosition position) => new(position.X.ToDouble(), position.Y.ToDouble());

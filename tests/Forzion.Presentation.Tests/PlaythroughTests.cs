@@ -57,15 +57,12 @@ public class PlaythroughTests
         DragBoxAround(trained);
         control.OrderAt(OverSourceNearHome(ResourceKind.Gold));
 
-        // The builders, one click each, to the Food and the Wood. They finish the Barracks
-        // stacked on one Cell, where a click picks the one with the lowest ID: each walks off
-        // the stack, a Cell in ten ticks, before the next can be clicked.
+        // The builders, one click each where it is drawn, to the Food and the Wood. They
+        // finish the Barracks standing on one Cell, drawn side by side.
         ClickOn(builders[0]);
         control.OrderAt(OverSourceNearHome(ResourceKind.Food));
-        Run(10);
         ClickOn(builders[1]);
         control.OrderAt(OverSourceNearHome(ResourceKind.Food));
-        Run(10);
         ClickOn(builders[2]);
         control.OrderAt(OverSourceNearHome(ResourceKind.Wood));
         Run(1);

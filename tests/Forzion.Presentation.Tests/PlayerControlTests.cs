@@ -45,6 +45,22 @@ public class PlayerControlTests
     }
 
     [Fact]
+    public void Clicking_where_each_unit_standing_on_one_Cell_is_drawn_selects_that_unit()
+    {
+        var stacked = new StartingUnit(UnitKind.MeleeSoldier, BesideFirstHome());
+        var control = NewControl(out var match, config: PlainConfig(firstExtras: [stacked, stacked, stacked]));
+        var soldiers = match.State.Units.Where(unit => unit.Kind == UnitKind.MeleeSoldier).ToList();
+
+        foreach (var soldier in soldiers)
+        {
+            var drawnAt = Over(driver.PositionOf(soldier));
+            control.Select(drawnAt, drawnAt);
+
+            Assert.Equal([soldier.Id], control.Selected);
+        }
+    }
+
+    [Fact]
     public void Clicking_bare_ground_clears_the_selection()
     {
         var control = NewControl(out var match);
@@ -212,6 +228,25 @@ public class PlayerControlTests
         Tick(match);
 
         Assert.Equal(source.Id, villager.GatherSource);
+    }
+
+    // Resource sources stand lower than buildings: a line of sight that passes over a
+    // source's top but would cross a building's meets the ground behind the source.
+    [Fact]
+    public void Right_clicking_the_ground_just_behind_a_resource_source_seen_from_a_slanted_camera_walks_there()
+    {
+        var control = NewControl(out var match, Slanted);
+        var villager = UnitsOf(match, FirstPlayer)[0];
+        control.Select(Over(villager.Position), Over(villager.Position));
+        var source = match.State.ResourceSources.First(source =>
+            source.Cell.Y > 0 && match.State.Map[source.Cell with { Y = source.Cell.Y - 1 }] == CellKind.Free);
+        var behind = source.Cell with { Y = source.Cell.Y - 1 };
+
+        control.OrderAt(new ScreenPoint(source.Cell.X + 0.5, source.Cell.Y - 0.6));
+        Tick(match);
+
+        Assert.Null(villager.GatherSource);
+        Assert.Equal(behind, villager.Path[^1]);
     }
 
     [Fact]

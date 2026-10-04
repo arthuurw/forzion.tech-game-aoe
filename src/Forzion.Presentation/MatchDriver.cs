@@ -8,9 +8,22 @@ namespace Forzion.Presentation;
 /// </summary>
 public sealed class MatchDriver
 {
+    /// <summary>
+    /// How fast, in Cells per real second, a unit slides to its place in a stack: quick enough
+    /// to cross the half Cell between neighbours in a quarter of a second, slow enough to read
+    /// as a move and not a jump.
+    /// </summary>
+    private const double StackSlideSpeed = 2;
+
     private readonly Match match;
     private readonly TickClock clock;
     private readonly Dictionary<EntityId, MapPoint> positionsBeforeLastTick = [];
+
+    // A unit's drawn offset trails its place in the stack, so that it slides there.
+    private readonly Dictionary<EntityId, MapPoint> stackPlaces = [];
+    private Dictionary<EntityId, MapPoint> stackOffsets = [];
+    private Dictionary<EntityId, MapPoint> nextStackOffsets = [];
+    private int? stackPlacesTick;
 
     /// <param name="match">The match to drive. From here on only <see cref="Advance"/> ticks it, or the interpolation goes wrong.</param>
     /// <param name="clock">The clock that decides when ticks are due.</param>
@@ -49,6 +62,8 @@ public sealed class MatchDriver
             events.AddRange(match.Events);
         }
 
+        SlideIntoStacks(elapsedSeconds);
+
         return events;
     }
 
@@ -58,6 +73,11 @@ public sealed class MatchDriver
     /// towards the next tick. Drawing one tick behind the simulation is what keeps the motion
     /// smooth at any frame rate.
     /// </summary>
+    /// <remarks>
+    /// Units do not block one another, so several may stand still on one Cell. Those are drawn
+    /// apart, in rows across the Cell, so each stays visible and can be clicked. A unit slides
+    /// to its place in a stack, or back from it, a little at a time as real time passes.
+    /// </remarks>
     public MapPoint PositionOf(UnitState unit)
     {
         ArgumentNullException.ThrowIfNull(unit);
@@ -65,16 +85,63 @@ public sealed class MatchDriver
         var current = ToPoint(unit.Position);
 
         // A unit created by the last tick has no earlier position: it is drawn where it stands.
-        if (!positionsBeforeLastTick.TryGetValue(unit.Id, out var previous))
-        {
-            return current;
-        }
-
-        var factor = clock.InterpolationFactor;
+        var factor = positionsBeforeLastTick.TryGetValue(unit.Id, out var previous) ? clock.InterpolationFactor : 1;
+        var offset = StackOffsetOf(unit);
 
         return new MapPoint(
-            previous.X + ((current.X - previous.X) * factor),
-            previous.Y + ((current.Y - previous.Y) * factor));
+            previous.X + ((current.X - previous.X) * factor) + offset.X,
+            previous.Y + ((current.Y - previous.Y) * factor) + offset.Y);
+    }
+
+    /// <summary>
+    /// How far from where it stands the unit is drawn to keep it apart from the other units
+    /// standing still on its Cell. A unit not drawn before is drawn in its place at once.
+    /// </summary>
+    private MapPoint StackOffsetOf(UnitState unit) =>
+        stackOffsets.TryGetValue(unit.Id, out var offset) ? offset : StackPlaceOf(unit.Id);
+
+    /// <summary>Where the unit belongs in the stack on its Cell; nothing for a unit alone there or walking.</summary>
+    private MapPoint StackPlaceOf(EntityId unit)
+    {
+        // Positions change only on a tick, so the places are worked out once per tick.
+        if (stackPlacesTick != match.State.Tick)
+        {
+            StackLayout.Lay(match.State.Units, stackPlaces);
+            stackPlacesTick = match.State.Tick;
+        }
+
+        return stackPlaces.GetValueOrDefault(unit);
+    }
+
+    /// <summary>
+    /// Moves every unit's drawn offset towards its place in its stack by as far as
+    /// <see cref="StackSlideSpeed"/> takes it in <paramref name="elapsedSeconds"/>, and forgets
+    /// the units that are gone.
+    /// </summary>
+    private void SlideIntoStacks(double elapsedSeconds)
+    {
+        var reach = StackSlideSpeed * elapsedSeconds;
+
+        nextStackOffsets.Clear();
+
+        foreach (var unit in match.State.Units)
+        {
+            var place = StackPlaceOf(unit.Id);
+
+            nextStackOffsets[unit.Id] = stackOffsets.TryGetValue(unit.Id, out var offset) ? Towards(offset, place, reach) : place;
+        }
+
+        (stackOffsets, nextStackOffsets) = (nextStackOffsets, stackOffsets);
+    }
+
+    /// <summary>The point <paramref name="reach"/> along the way from <paramref name="from"/> to <paramref name="to"/>, or <paramref name="to"/> when nearer.</summary>
+    private static MapPoint Towards(MapPoint from, MapPoint to, double reach)
+    {
+        var dx = to.X - from.X;
+        var dy = to.Y - from.Y;
+        var distance = Math.Sqrt((dx * dx) + (dy * dy));
+
+        return distance <= reach ? to : new MapPoint(from.X + (dx * reach / distance), from.Y + (dy * reach / distance));
     }
 
     private void RememberPositions()
