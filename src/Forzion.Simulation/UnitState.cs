@@ -68,6 +68,9 @@ public sealed class UnitState
     /// <summary>Hit points the unit has when whole.</summary>
     public int MaxHitPoints => Balance.HitPoints(Kind);
 
+    /// <summary>Whether the unit fights: military units do, Villagers do not.</summary>
+    public bool CanAttack => Balance.Attack(Kind) is not null;
+
     /// <summary>Hit points left. The unit dies when they reach zero.</summary>
     public int HitPoints { get; internal set; }
 

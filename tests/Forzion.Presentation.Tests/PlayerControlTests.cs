@@ -296,6 +296,37 @@ public class PlayerControlTests
     }
 
     [Fact]
+    public void Right_clicking_an_enemy_unit_with_only_Villagers_selected_sends_them_walking_to_it()
+    {
+        var control = NewControl(out var match);
+        var villager = UnitsOf(match, FirstPlayer)[0];
+        control.Select(Over(villager.Position), Over(villager.Position));
+        var enemy = UnitsOf(match, SecondPlayer)[0];
+
+        control.OrderAt(Over(enemy.Position));
+        var events = Tick(match);
+
+        Assert.DoesNotContain(events, matchEvent => matchEvent is CommandRejected);
+        Assert.Equal(enemy.Position.Cell, villager.Path[^1]);
+    }
+
+    [Fact]
+    public void Right_clicking_an_enemy_building_with_only_Villagers_selected_sends_them_walking_up_to_it()
+    {
+        var control = NewControl(out var match);
+        var villager = UnitsOf(match, FirstPlayer)[0];
+        control.Select(Over(villager.Position), Over(villager.Position));
+        var townCenter = match.State.Buildings.First(building => building.Owner == SecondPlayer);
+
+        control.OrderAt(new ScreenPoint(townCenter.Origin.X + 1.5, townCenter.Origin.Y + 1.5));
+        var events = Tick(match);
+
+        Assert.DoesNotContain(events, matchEvent => matchEvent is CommandRejected);
+        Assert.True(villager.IsMoving);
+        Assert.Null(villager.Target);
+    }
+
+    [Fact]
     public void Right_clicking_an_unfinished_building_of_the_Player_sends_the_selected_Villagers_to_build_it()
     {
         var control = NewControl(out var match);

@@ -42,7 +42,7 @@ godot --path game
 
 Câmera: WASD, setas ou mouse na borda da tela deslocam; roda do mouse ou Page Up e Page Down aproximam e afastam.
 
-Seleção e ordens: clique com o botão esquerdo seleciona uma unidade ou construção sua; arrastar com o botão esquerdo seleciona suas unidades dentro do retângulo; clique em terreno vazio limpa a seleção. O botão direito manda as unidades selecionadas coletar numa Fonte de Recurso, atacar uma unidade ou construção inimiga, construir uma Obra sua ou andar até o ponto clicado. Unidades mortas saem da seleção. Uma ordem recusada aparece como aviso no topo da tela.
+Seleção e ordens: clique com o botão esquerdo seleciona uma unidade ou construção sua; arrastar com o botão esquerdo seleciona suas unidades dentro do retângulo; clique em terreno vazio limpa a seleção. O botão direito manda as unidades selecionadas coletar numa Fonte de Recurso, atacar uma unidade ou construção inimiga, construir uma Obra sua ou andar até o ponto clicado; Aldeões sem soldado junto andam até o inimigo em vez de atacar. Unidades mortas saem da seleção. Uma ordem recusada aparece como aviso no topo da tela.
 
 Os textos do jogo ficam em `game/translations/pt_BR.po` (gettext); outro idioma entra como outro arquivo `.po` com as mesmas chaves.
 
@@ -112,7 +112,7 @@ godot --path game
 
 Camera: WASD, the arrow keys or the mouse at the screen edge pan; the mouse wheel or Page Up and Page Down zoom in and out.
 
-Selection and orders: a left click selects one of your units or buildings; dragging with the left button selects your units inside the box; clicking bare ground clears the selection. The right button sends the selected units to gather from a resource source, attack an enemy unit or building, build one of your construction sites or walk to the clicked point. Units that die leave the selection. A refused order shows as a notice at the top of the screen.
+Selection and orders: a left click selects one of your units or buildings; dragging with the left button selects your units inside the box; clicking bare ground clears the selection. The right button sends the selected units to gather from a resource source, attack an enemy unit or building, build one of your construction sites or walk to the clicked point; Villagers with no soldier among them walk up to an enemy instead of attacking. Units that die leave the selection. A refused order shows as a notice at the top of the screen.
 
 The game texts live in `game/translations/pt_BR.po` (gettext); another language comes in as another `.po` file with the same keys.
 
