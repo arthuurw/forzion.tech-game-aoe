@@ -81,7 +81,7 @@ internal static class TestMatches
                 {
                     var origin = new CellPosition(home.X + dx, home.Y + dy);
 
-                    if (match.CanPlace(kind, origin) && IsClearAround(match, origin, size))
+                    if (match.CanPlace(kind, origin) && IsClearAround(match.State.Map, origin, size))
                     {
                         return origin;
                     }
@@ -147,8 +147,101 @@ internal static class TestMatches
     public static List<UnitState> UnitsOf(Match match, PlayerId player) =>
         match.State.Units.Where(unit => unit.Owner == player).ToList();
 
+    /// <summary>Units 0.4 Cell across and 1 tall, buildings and resource sources 1.2 tall.</summary>
+    public static readonly PickSizes Sizes = new(UnitRadius: 0.4, UnitHeight: 1, BuildingAndSourceHeight: 1.2);
+
+    /// <summary>A camera looking straight down: one pixel of the screen is one Cell of the map.</summary>
+    public static SightLine? TopDown(ScreenPoint point) => new SightLine(new MapPoint(point.X, point.Y), new MapPoint(0, 0));
+
+    /// <summary>On the top-down screen, the point over the position.</summary>
+    public static ScreenPoint Over(MapPosition position) => new(position.X.ToDouble(), position.Y.ToDouble());
+
+    /// <summary>On the top-down screen, the point over where a unit is drawn.</summary>
+    public static ScreenPoint Over(MapPoint point) => new(point.X, point.Y);
+
+    /// <summary>On the top-down screen, the point over the centre of the building's footprint.</summary>
+    public static ScreenPoint OverCentreOf(BuildingState building) => Over(MapPoint.CentreOf(building));
+
+    /// <summary>
+    /// The corners of a box on the top-down screen around the positions, with 3 Cells to spare
+    /// across and 1 up and down: wide enough to count as a drag, not a click.
+    /// </summary>
+    public static (ScreenPoint From, ScreenPoint To) BoxAround(IEnumerable<MapPosition> positions)
+    {
+        var points = positions.Select(Over).ToList();
+
+        return (new ScreenPoint(points.Min(point => point.X) - 3, points.Min(point => point.Y) - 1),
+                new ScreenPoint(points.Max(point => point.X) + 3, points.Max(point => point.Y) + 1));
+    }
+
+    /// <summary>
+    /// The point of the top-down screen, searched outward from the Player's Town Center, where
+    /// the placement preview of the building the control is placing is valid with a free Cell
+    /// to spare all around it.
+    /// </summary>
+    public static ScreenPoint PlacementSpotNearHome(PlayerControl control, MatchState state, PlayerId player)
+    {
+        var kind = control.PlacingBuilding ?? throw new InvalidOperationException("No building is being placed.");
+        var home = state.Buildings.First(building => building.Owner == player && building.Kind == BuildingKind.TownCenter).Origin;
+        var size = Match.BuildingSize(kind);
+
+        for (var reach = 4; reach < 20; reach++)
+        {
+            for (var dy = -reach; dy <= reach; dy++)
+            {
+                for (var dx = -reach; dx <= reach; dx++)
+                {
+                    // The preview centres the footprint on the mouse.
+                    var point = new ScreenPoint(home.X + dx + (size / 2.0), home.Y + dy + (size / 2.0));
+
+                    if (control.PlacementAt(point) is { IsValid: true } placement && IsClearAround(state.Map, placement.Origin, size))
+                    {
+                        return point;
+                    }
+                }
+            }
+        }
+
+        throw new InvalidOperationException("No valid placement near the Town Center.");
+    }
+
+    /// <summary>A free Cell with nothing beside it and no unit within 3 Cells.</summary>
+    public static CellPosition FreeCellAwayFromUnits(MatchState state)
+    {
+        var map = state.Map;
+
+        for (var y = 1; y < map.Height - 1; y++)
+        {
+            for (var x = 1; x < map.Width - 1; x++)
+            {
+                var cell = new CellPosition(x, y);
+                var clear = Neighbourhood(cell).All(near => map[near] == CellKind.Free);
+                var farFromUnits = state.Units.All(unit =>
+                    Math.Abs(unit.Position.Cell.X - x) > 3 || Math.Abs(unit.Position.Cell.Y - y) > 3);
+
+                if (clear && farFromUnits)
+                {
+                    return cell;
+                }
+            }
+        }
+
+        throw new InvalidOperationException("The map has no free Cell away from units.");
+    }
+
+    private static IEnumerable<CellPosition> Neighbourhood(CellPosition cell)
+    {
+        for (var dy = -1; dy <= 1; dy++)
+        {
+            for (var dx = -1; dx <= 1; dx++)
+            {
+                yield return new CellPosition(cell.X + dx, cell.Y + dy);
+            }
+        }
+    }
+
     /// <summary>Whether the footprint and the ring of Cells around it are free: builders can walk all around.</summary>
-    private static bool IsClearAround(Match match, CellPosition origin, int size)
+    private static bool IsClearAround(MapState map, CellPosition origin, int size)
     {
         for (var y = origin.Y - 1; y <= origin.Y + size; y++)
         {
@@ -156,7 +249,7 @@ internal static class TestMatches
             {
                 var cell = new CellPosition(x, y);
 
-                if (!match.State.Map.Contains(cell) || match.State.Map[cell] != CellKind.Free)
+                if (!map.Contains(cell) || map[cell] != CellKind.Free)
                 {
                     return false;
                 }
