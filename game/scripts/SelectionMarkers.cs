@@ -68,8 +68,7 @@ public partial class SelectionMarkers : Node3D
     /// <summary>Puts the entity's ring around it; false when the entity is no longer in the match.</summary>
     private bool PlaceRing(EntityId id, MatchState state)
     {
-        var unit = state.Units.FirstOrDefault(unit => unit.Id == id);
-        var building = unit is null ? state.Buildings.FirstOrDefault(building => building.Id == id) : null;
+        var (unit, building) = state.FindUnitOrBuilding(id);
 
         if (unit is null && building is null)
         {

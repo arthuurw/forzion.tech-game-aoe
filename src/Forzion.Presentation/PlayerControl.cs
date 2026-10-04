@@ -53,7 +53,7 @@ public sealed class PlayerControl
             var state = driver.State;
 
             return selected
-                .Where(id => state.Units.Any(unit => unit.Id == id) || state.Buildings.Any(building => building.Id == id))
+                .Where(id => state.FindUnitOrBuilding(id) is not (null, null))
                 .ToList();
         }
     }

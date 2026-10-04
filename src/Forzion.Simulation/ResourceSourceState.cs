@@ -29,8 +29,7 @@ public sealed class ResourceSourceState
     public int Amount { get; internal set; }
 
     /// <summary>Whether the given Cell lies beside the source, by a side or by a corner.</summary>
-    internal bool IsBeside(CellPosition cell) =>
-        cell != Cell && Math.Abs(cell.X - Cell.X) <= 1 && Math.Abs(cell.Y - Cell.Y) <= 1;
+    internal bool IsBeside(CellPosition cell) => cell.Touches(Cell);
 
     internal void WriteTo(StateHasher hasher)
     {

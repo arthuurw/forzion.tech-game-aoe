@@ -15,4 +15,13 @@ internal sealed class TickContext
 
     public void Reject(Command command, RejectionReason reason) =>
         Emit(new CommandRejected(command, reason));
+
+    /// <summary>
+    /// Whether something in this tick may have opened a way for Villagers waiting for one:
+    /// Cells were freed or a drop-off point was completed.
+    /// </summary>
+    public bool WaysMayHaveOpened { get; private set; }
+
+    /// <summary>Notes that Cells were freed or a drop-off point was completed in this tick.</summary>
+    public void NoteWaysMayHaveOpened() => WaysMayHaveOpened = true;
 }

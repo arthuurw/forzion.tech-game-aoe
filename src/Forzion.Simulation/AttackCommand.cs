@@ -19,7 +19,8 @@ public sealed record AttackCommand(PlayerId Player, IReadOnlyList<EntityId> Unit
     internal override void Execute(TickContext context, PlayerState issuer)
     {
         var state = context.State;
-        PlayerId? targetOwner = state.FindUnit(Target)?.Owner ?? state.FindBuilding(Target)?.Owner;
+        var (targetUnit, targetBuilding) = state.FindUnitOrBuilding(Target);
+        var targetOwner = targetUnit?.Owner ?? targetBuilding?.Owner;
 
         if (targetOwner is null)
         {
@@ -35,7 +36,7 @@ public sealed record AttackCommand(PlayerId Player, IReadOnlyList<EntityId> Unit
             return;
         }
 
-        var units = OrderedUnits.Find(
+        var units = CommandedUnits.Find(
             context, this, issuer, Units, unit => unit.CanAttack, RejectionReason.UnitCannotAttack);
 
         if (units is null)

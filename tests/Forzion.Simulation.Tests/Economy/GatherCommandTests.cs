@@ -125,6 +125,30 @@ public class GatherCommandTests
         }
     }
 
+    // A player clicking the source again and again must not keep the Villager from gathering.
+    [Fact]
+    public void A_gathering_Villager_ordered_again_to_the_same_source_keeps_its_progress()
+    {
+        var match = TestMatches.TwoPlayerMatch();
+        var villager = TestMatches.MiddleVillager(match);
+        var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Food);
+        match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
+        TestMatches.TickUntil(match, () => villager.GatherPhase == GatherPhase.Gathering);
+        TestMatches.TickUntil(match, () => villager.GatherProgress == 5);
+
+        for (var order = 0; villager.Load.Amount == 0; order++)
+        {
+            Assert.True(order < 10, "The repeated order kept the Villager from taking a unit.");
+            var progress = villager.GatherProgress;
+
+            match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [villager.Id], source.Id));
+            match.Tick();
+
+            Assert.Equal(GatherPhase.Gathering, villager.GatherPhase);
+            Assert.True(villager.Load.Amount > 0 || villager.GatherProgress == progress + 1);
+        }
+    }
+
     [Fact]
     public void A_gather_from_a_source_that_does_not_exist_is_rejected()
     {
