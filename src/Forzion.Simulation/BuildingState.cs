@@ -129,7 +129,7 @@ public sealed class BuildingState
     internal CellPosition? FreeCellBeside(MapState map, CellPosition toward)
     {
         CellPosition? nearest = null;
-        var nearestDistance = long.MaxValue;
+        var nearestDistance = int.MaxValue;
 
         // Row by row, from the lowest: ascending Cell index, so a strict comparison keeps the lowest index among the equally near.
         for (var y = Origin.Y - 1; y <= Origin.Y + Height; y++)
@@ -143,7 +143,7 @@ public sealed class BuildingState
                     continue;
                 }
 
-                var distance = ((long)(x - toward.X) * (x - toward.X)) + ((long)(y - toward.Y) * (y - toward.Y));
+                var distance = cell.SquaredDistanceTo(toward);
 
                 if (distance < nearestDistance)
                 {
