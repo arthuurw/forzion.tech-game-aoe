@@ -92,6 +92,48 @@ public class WalledInTests
         Assert.True(MapProbe.IsBeside(site, villager.Path[^1]));
     }
 
+    [Fact]
+    public void A_Villager_walking_towards_a_source_it_cannot_reach_goes_up_to_it_once_a_way_opens_on_its_way()
+    {
+        var match = Battle.Raiders();
+        var raiders = Battle.RaidersOf(match);
+        var home = raiders[0].Position.Cell;
+        Site.Stockpile(match, First, 4 * Match.BuildingCost(BuildingKind.House).Wood);
+        var villager = Site.VillagersOf(match, First)[1];
+        var (source, origins) = Gather.SourceToBoxIn(match, villager);
+
+        foreach (var origin in origins)
+        {
+            match.Enqueue(new PlaceBuildingCommand(First, BuildingKind.House, origin, []));
+        }
+
+        match.Tick();
+        Assert.Empty(match.Events.OfType<CommandRejected>());
+        var walls = match.State.Buildings.TakeLast(origins.Count).ToList();
+
+        // Far enough that the wall falls while the Villager is still on its way.
+        var far = Site.FreeOriginNear(match.State, new CellPosition(source.Cell.X, source.Cell.Y + 20), 1);
+        match.Enqueue(new MoveCommand(First, [villager.Id], far));
+        Walk.UntilStopped(match, villager);
+
+        Battle.Raid(match, walls[0]);
+        TestMatches.TickUntil(match, () => walls[0].HitPoints <= walls[0].MaxHitPoints / 2);
+        match.Enqueue(new GatherCommand(First, [villager.Id], source.Id));
+        TestMatches.TickUntil(match, () => Battle.Building(match, walls[0].Id) is null);
+
+        // Still on its way to the Cell nearest to the source: the wake-up passed it by.
+        Assert.True(villager.IsMoving);
+        Assert.False(MapProbe.Touch(villager.Path[^1], source.Cell));
+
+        // The raiders head home, out of reach of the Villager.
+        match.Enqueue(new MoveCommand(TestMatches.SecondPlayer, raiders.Select(raider => raider.Id).ToList(), home));
+        Walk.UntilStopped(match, villager);
+        match.Tick();
+
+        Assert.Equal(GatherPhase.Gathering, villager.GatherPhase);
+        Assert.True(MapProbe.Touch(villager.Position.Cell, source.Cell));
+    }
+
     // A depleted source frees its Cell like a destroyed building frees its own.
     [Fact]
     public void A_Villager_walled_in_by_its_source_sets_out_with_its_load_once_others_deplete_it()

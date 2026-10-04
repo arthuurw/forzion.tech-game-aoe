@@ -39,6 +39,15 @@ internal static class Rerouting
         }
     }
 
+    /// <summary>
+    /// Has the job of a unit that has just stopped walking, if it has one, choose its way again.
+    /// A unit short of where its job takes it walked to the Cell nearest to it that it could
+    /// reach, and a way that opened on its way there was not for it: <see cref="ForStandingJobs"/>
+    /// sends only units standing still. One already where its job takes it, or with no nearer
+    /// Cell to reach, stays, and waits for the next way to open.
+    /// </summary>
+    public static void AfterStopping(MatchState state, UnitState unit) => JobChoosesWayAgain(state, unit);
+
     // The Cell nearest the old destination need not be beside the source, a drop-off point or
     // the site, and a Villager that stops away from them does not do its job: its job chooses.
     private static void ChooseWayAgain(MatchState state, UnitState unit)

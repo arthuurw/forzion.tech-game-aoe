@@ -3,7 +3,7 @@ namespace Forzion.Simulation;
 /// <summary>
 /// Moves every walking unit along its path by what its speed covers in one tick. A unit walks
 /// in a straight line to the centre of the next Cell of its path and stops on the centre of
-/// the last one.
+/// the last one. A unit that stops has its job, if it has one, choose its way again.
 /// </summary>
 internal sealed class MovementSystem : ISystem
 {
@@ -55,9 +55,16 @@ internal sealed class MovementSystem : ISystem
     {
         foreach (var unit in context.State.Units)
         {
-            if (unit.IsMoving)
+            if (!unit.IsMoving)
             {
-                Advance(unit);
+                continue;
+            }
+
+            Advance(unit);
+
+            if (!unit.IsMoving)
+            {
+                Rerouting.AfterStopping(context.State, unit);
             }
         }
     }
