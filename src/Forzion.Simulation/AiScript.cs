@@ -491,9 +491,17 @@ internal sealed class AiScript
 
     private IEnumerable<UnitState> OwnUnits() => state.Units.Where(unit => unit.Owner == player.Id);
 
-    /// <summary>A Villager with no source, no construction site and nowhere to walk.</summary>
-    private static bool IsIdleVillager(UnitState unit) =>
-        unit.Kind == UnitKind.Villager && unit.GatherSource is null && unit.ConstructionSite is null && !unit.IsMoving;
+    /// <summary>
+    /// A Villager standing still with no job, or waiting with one it cannot reach: a source or a
+    /// construction site with no way to it. The AI gives either a new job, as the Villager would
+    /// otherwise wait until a way opens.
+    /// </summary>
+    private bool IsIdleVillager(UnitState unit) =>
+        unit.CanGather
+        && !unit.IsMoving
+        && ((unit.GatherSource is null && unit.ConstructionSite is null)
+            || (unit.GatherPhase == GatherPhase.ToSource && !state.FindResourceSource(unit.GatherSource!.Value)!.IsBeside(unit.Position.Cell))
+            || (unit.ConstructionSite is { } site && !state.FindBuilding(site)!.IsBeside(unit.Position.Cell)));
 
     private static int KingDistance(CellPosition a, CellPosition b) => Math.Max(Math.Abs(a.X - b.X), Math.Abs(a.Y - b.Y));
 
