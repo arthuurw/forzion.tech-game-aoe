@@ -75,10 +75,7 @@ public class BuildCommandTests
         var villager = Site.VillagersOf(match, TestMatches.FirstPlayer)[0];
         var soldier = match.State.SoldierOf(TestMatches.FirstPlayer);
         var house = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.House, []);
-        match.Enqueue(new MoveCommand(
-            TestMatches.FirstPlayer, [soldier.Id], new CellPosition(soldier.Position.Cell.X - 6, soldier.Position.Cell.Y)));
-        match.Tick();
-        var destination = soldier.Path[^1];
+        var destination = TestArmies.WalkAway(match, soldier);
 
         match.Enqueue(new BuildCommand(TestMatches.FirstPlayer, [soldier.Id, villager.Id], house.Id));
         match.Tick();

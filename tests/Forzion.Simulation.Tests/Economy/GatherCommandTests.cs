@@ -192,10 +192,7 @@ public class GatherCommandTests
         var villager = TestMatches.MiddleVillager(match);
         var soldier = match.State.SoldierOf(TestMatches.FirstPlayer);
         var source = Gather.NearestSource(match.State, villager.Position.Cell, ResourceKind.Wood);
-        match.Enqueue(new MoveCommand(
-            TestMatches.FirstPlayer, [soldier.Id], new CellPosition(soldier.Position.Cell.X - 6, soldier.Position.Cell.Y)));
-        match.Tick();
-        var destination = soldier.Path[^1];
+        var destination = TestArmies.WalkAway(match, soldier);
 
         match.Enqueue(new GatherCommand(TestMatches.FirstPlayer, [soldier.Id, villager.Id], source.Id));
         match.Tick();

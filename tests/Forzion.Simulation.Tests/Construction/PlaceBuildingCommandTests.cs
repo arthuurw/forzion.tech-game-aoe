@@ -126,10 +126,7 @@ public class PlaceBuildingCommandTests
         var soldier = match.State.SoldierOf(TestMatches.FirstPlayer);
         Site.Stockpile(match, TestMatches.FirstPlayer, Match.BuildingCost(BuildingKind.House).Wood);
         var origin = Site.FreeOriginNear(match.State, match.State.Buildings[0].Origin, Match.BuildingSize(BuildingKind.House));
-        match.Enqueue(new MoveCommand(
-            TestMatches.FirstPlayer, [soldier.Id], new CellPosition(soldier.Position.Cell.X - 6, soldier.Position.Cell.Y)));
-        match.Tick();
-        var destination = soldier.Path[^1];
+        var destination = TestArmies.WalkAway(match, soldier);
 
         match.Enqueue(new PlaceBuildingCommand(TestMatches.FirstPlayer, BuildingKind.House, origin, [soldier.Id, villager.Id]));
         match.Tick();

@@ -13,14 +13,8 @@ public class DestroyedBuildingTests
     [Fact]
     public void Villagers_building_a_site_destroyed_in_combat_stop_building_and_stand_idle()
     {
-        var match = Battle.Raiders();
-        var builder = Site.VillagersOf(match, First)[1];
-        var site = Site.Place(match, First, BuildingKind.House, []);
-        Battle.Raid(match, site);
-        TestMatches.TickUntil(match, () => site.HitPoints < site.MaxHitPoints);
+        var (match, site, builder) = BuilderAtARaidedSite();
 
-        match.Enqueue(new BuildCommand(First, [builder.Id], site.Id));
-        TestMatches.TickUntil(match, () => site.BuildProgress > 0);
         TestMatches.TickUntil(match, () => Battle.Building(match, site.Id) is null);
 
         Assert.False(site.IsComplete);
@@ -33,13 +27,7 @@ public class DestroyedBuildingTests
     [Fact]
     public void A_site_destroyed_in_a_tick_gets_no_work_from_its_builders_in_that_tick()
     {
-        var match = Battle.Raiders();
-        var builder = Site.VillagersOf(match, First)[1];
-        var site = Site.Place(match, First, BuildingKind.House, []);
-        Battle.Raid(match, site);
-        TestMatches.TickUntil(match, () => site.HitPoints < site.MaxHitPoints);
-        match.Enqueue(new BuildCommand(First, [builder.Id], site.Id));
-        TestMatches.TickUntil(match, () => site.BuildProgress > 0);
+        var (match, site, _) = BuilderAtARaidedSite();
         var progress = site.BuildProgress;
 
         TestMatches.TickUntil(match, () =>
@@ -61,26 +49,8 @@ public class DestroyedBuildingTests
     public void A_Villager_carrying_its_load_to_a_Storehouse_destroyed_on_the_way_carries_it_to_the_Town_Center()
     {
         var match = Battle.Raiders();
-        var state = match.State;
         var townCenter = Battle.TownCenter(match, First);
-        var villagers = Site.VillagersOf(match, First);
-        var carrier = villagers[1];
-
-        // A Wood source away from home, and a Storehouse halfway to it: nearer the source than the Town Center is.
-        var source = Gather.NearestSource(state, TestArmies.BesideHome(match, First, 12, 8), ResourceKind.Wood);
-        var home = TestArmies.BesideHome(match, First, 0, 0);
-        Site.Stockpile(match, First, Match.BuildingCost(BuildingKind.Storehouse).Wood);
-        var origin = Site.FreeOriginNear(
-            state, new CellPosition((source.Cell.X + home.X) / 2, (source.Cell.Y + home.Y) / 2), Match.BuildingSize(BuildingKind.Storehouse));
-        match.Enqueue(new PlaceBuildingCommand(First, BuildingKind.Storehouse, origin, villagers.Select(villager => villager.Id).ToList()));
-        match.Tick();
-        var storehouse = state.Buildings[^1];
-        TestMatches.TickUntil(match, () => storehouse.IsComplete);
-
-        // The carrier fills its load at the source and waits there with it.
-        match.Enqueue(new GatherCommand(First, [carrier.Id], source.Id));
-        TestMatches.TickUntil(match, () => carrier.GatherPhase == GatherPhase.ToDropOffPoint);
-        Site.Halt(match, [carrier]);
+        var (storehouse, carrier, source) = StorehouseAwayFromHome(match);
 
         // The raiders bring the Storehouse down to its last hit.
         Battle.Raid(match, storehouse);
@@ -166,10 +136,44 @@ public class DestroyedBuildingTests
     private static (Match Match, BuildingState Storehouse, UnitState Carrier, ResourceSourceState Source) StorehouseUnderRaid()
     {
         var match = Battle.Raiders();
+        var (storehouse, carrier, source) = StorehouseAwayFromHome(match);
+
+        // The ring of Cells around a site placed by FreeOriginNear is free; on its side away from home it is not beside the Town Center.
+        var beside = new CellPosition(storehouse.Origin.X + storehouse.Width, storehouse.Origin.Y);
+        match.Enqueue(new MoveCommand(First, [carrier.Id], beside));
+        TestMatches.TickUntil(match, () => !carrier.IsMoving);
+        Battle.Raid(match, storehouse);
+
+        return (match, storehouse, carrier, source);
+    }
+
+    /// <summary>
+    /// The raiders' match, in which the first Player's middle Villager is building an
+    /// unfinished House that the raiders have started to attack.
+    /// </summary>
+    private static (Match Match, BuildingState Site, UnitState Builder) BuilderAtARaidedSite()
+    {
+        var match = Battle.Raiders();
+        var builder = Site.VillagersOf(match, First)[1];
+        var site = Site.Place(match, First, BuildingKind.House, []);
+        Battle.Raid(match, site);
+        TestMatches.TickUntil(match, () => site.HitPoints < site.MaxHitPoints);
+        match.Enqueue(new BuildCommand(First, [builder.Id], site.Id));
+        TestMatches.TickUntil(match, () => site.BuildProgress > 0);
+
+        return (match, site, builder);
+    }
+
+    /// <summary>
+    /// Has the first Player's Villagers build a Storehouse halfway to a Wood source away from
+    /// home, nearer the source than the Town Center is, then has the middle Villager fill its
+    /// load at that source and stand there with it.
+    /// </summary>
+    private static (BuildingState Storehouse, UnitState Carrier, ResourceSourceState Source) StorehouseAwayFromHome(Match match)
+    {
         var state = match.State;
         var villagers = Site.VillagersOf(match, First);
         var carrier = villagers[1];
-
         var source = Gather.NearestSource(state, TestArmies.BesideHome(match, First, 12, 8), ResourceKind.Wood);
         var home = TestArmies.BesideHome(match, First, 0, 0);
         Site.Stockpile(match, First, Match.BuildingCost(BuildingKind.Storehouse).Wood);
@@ -184,12 +188,6 @@ public class DestroyedBuildingTests
         TestMatches.TickUntil(match, () => carrier.GatherPhase == GatherPhase.ToDropOffPoint);
         Site.Halt(match, [carrier]);
 
-        // The ring of Cells around a site placed by FreeOriginNear is free; on its side away from home it is not beside the Town Center.
-        var beside = new CellPosition(storehouse.Origin.X + storehouse.Width, storehouse.Origin.Y);
-        match.Enqueue(new MoveCommand(First, [carrier.Id], beside));
-        TestMatches.TickUntil(match, () => !carrier.IsMoving);
-        Battle.Raid(match, storehouse);
-
-        return (match, storehouse, carrier, source);
+        return (storehouse, carrier, source);
     }
 }
