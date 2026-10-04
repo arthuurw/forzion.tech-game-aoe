@@ -136,7 +136,7 @@ internal sealed class CombatSystem : ISystem
 
         unit.AttackProgress++;
 
-        if (unit.AttackProgress < attack.IntervalTicks)
+        if (unit.AttackProgress < attack.AttackInterval)
         {
             return;
         }

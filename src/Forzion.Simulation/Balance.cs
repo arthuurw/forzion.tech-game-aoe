@@ -52,12 +52,12 @@ internal static class Balance
     private static readonly UnitStats MeleeSoldier = new(
         Speed: Fix64.FromInt(2),
         HitPoints: 45,
-        Attack: new AttackStats(Damage: 6, Range: Fix64.One, IntervalTicks: 20, PerceptionRadius: Fix64.FromInt(6)));
+        Attack: new AttackStats(Damage: 6, Range: Fix64.One, AttackInterval: 20, PerceptionRadius: Fix64.FromInt(6)));
 
     private static readonly UnitStats RangedSoldier = new(
         Speed: Fix64.FromInt(2),
         HitPoints: 30,
-        Attack: new AttackStats(Damage: 4, Range: Fix64.FromInt(5), IntervalTicks: 30, PerceptionRadius: Fix64.FromInt(7)));
+        Attack: new AttackStats(Damage: 4, Range: Fix64.FromInt(5), AttackInterval: 30, PerceptionRadius: Fix64.FromInt(7)));
 
     private static readonly BuildingStats TownCenter = new(
         Size: TownCenterSize, HitPoints: 600, Cost: null, BuildTime: 60 * Match.TicksPerSecond, PopulationProvided: 5);
@@ -150,6 +150,6 @@ internal sealed record ResourceStats(int SourceAmount, int GatherTicksPerUnit);
 /// Farthest the target may be for a hit, in Cells: from the attacker's position to the
 /// target's position, or to the nearest point of a building's footprint.
 /// </param>
-/// <param name="IntervalTicks">Ticks spent within range for each hit, which lands at the end of them.</param>
+/// <param name="AttackInterval">Ticks spent within range for each hit, which lands at the end of them.</param>
 /// <param name="PerceptionRadius">How far, in Cells, an idle unit notices an enemy unit or building and attacks it.</param>
-internal sealed record AttackStats(int Damage, Fix64 Range, int IntervalTicks, Fix64 PerceptionRadius);
+internal sealed record AttackStats(int Damage, Fix64 Range, int AttackInterval, Fix64 PerceptionRadius);
