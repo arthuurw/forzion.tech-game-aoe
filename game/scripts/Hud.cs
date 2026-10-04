@@ -6,10 +6,11 @@ namespace Forzion.Game;
 
 /// <summary>
 /// The HUD: a bar at the top with the human Player's Resources, population, Faction and Age
-/// and a button that pauses the match, and a panel at the bottom with the selection and the orders it takes, beside the
-/// <see cref="MinimapView"/>. What each shows comes from <see cref="PlayerStatus"/> and
-/// <see cref="SelectionPanel"/>, and each button calls <see cref="PlayerControl"/>, which
-/// sends the command; this node only lays them out. Texts come from the project's translations.
+/// and a button that pauses the match, and a panel at the bottom with the selection and the
+/// orders it takes, beside the <see cref="MinimapView"/>. What each shows comes from
+/// <see cref="PlayerStatus"/> and <see cref="SelectionPanel"/>, and each button calls
+/// <see cref="PlayerControl"/>, which sends the command; this node only lays them out. Texts
+/// come from the project's translations.
 /// </summary>
 public partial class Hud : CanvasLayer
 {
