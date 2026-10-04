@@ -55,7 +55,7 @@ public partial class PlacementPreview : Node3D
 
     public override void _Process(double delta)
     {
-        var placement = pointer is { } at ? SelectionInput.Control.PlacementAt(at) : null;
+        var placement = pointer is { } at ? SelectionInput.PlayerControl.PlacementAt(at) : null;
 
         box.Visible = placement is not null;
 

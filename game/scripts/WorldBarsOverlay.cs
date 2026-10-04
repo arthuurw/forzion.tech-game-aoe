@@ -6,7 +6,7 @@ namespace Forzion.Game;
 
 /// <summary>
 /// Draws the bars over the entities on the map that <see cref="WorldBars"/> names: hit points
-/// over wounded units and buildings, construction over construction sites. Each bar is drawn
+/// over selected and wounded units and buildings, construction over construction sites. Each bar is drawn
 /// on the screen above where the entity stands, so it keeps its size at any zoom.
 /// </summary>
 public partial class WorldBarsOverlay : Control
@@ -26,6 +26,10 @@ public partial class WorldBarsOverlay : Control
     [Export]
     public MatchView MatchView { get; set; } = null!;
 
+    /// <summary>The input whose selected entities show their hit points.</summary>
+    [Export]
+    public SelectionInput SelectionInput { get; set; } = null!;
+
     /// <summary>The camera the person looks through.</summary>
     [Export]
     public Camera3D Camera { get; set; } = null!;
@@ -40,12 +44,12 @@ public partial class WorldBarsOverlay : Control
 
     public override void _Draw()
     {
-        var state = MatchView.Match.State;
+        var state = MatchView.State;
 
         // Bars of one entity stack upward: hit points at the bottom, construction above.
         var stacked = new Dictionary<EntityId, int>();
 
-        foreach (var bar in WorldBars.Of(state))
+        foreach (var bar in WorldBars.Of(state, SelectionInput.PlayerControl.Selected))
         {
             var (anchor, width) = AnchorOf(state, bar.Entity);
 
@@ -81,16 +85,11 @@ public partial class WorldBarsOverlay : Control
     /// <summary>The world point the entity's bars hang from and how wide they are; no point when the entity is gone.</summary>
     private (Vector3? Anchor, float Width) AnchorOf(MatchState state, EntityId id)
     {
-        if (state.Units.FirstOrDefault(unit => unit.Id == id) is { } unit)
+        return state.FindUnitOrBuilding(id) switch
         {
-            return (WorldSpace.ToWorld(MatchView.Driver.PositionOf(unit), AboveUnit), UnitBarWidth);
-        }
-
-        if (state.Buildings.FirstOrDefault(building => building.Id == id) is { } building)
-        {
-            return (WorldSpace.CentreOf(building, AboveBuilding), BuildingBarWidth);
-        }
-
-        return (null, 0);
+            ({ } unit, _) => (WorldSpace.ToWorld(MatchView.Driver.PositionOf(unit), AboveUnit), UnitBarWidth),
+            (_, { } building) => (WorldSpace.CentreOf(building, AboveBuilding), BuildingBarWidth),
+            _ => (null, 0),
+        };
     }
 }

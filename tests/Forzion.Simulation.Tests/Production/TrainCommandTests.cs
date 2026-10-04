@@ -1,4 +1,5 @@
 using Forzion.Simulation.Tests.Economy;
+using Forzion.Simulation.Tests.Maps;
 using Forzion.Simulation.Tests.Matches;
 
 namespace Forzion.Simulation.Tests.Production;
@@ -48,7 +49,7 @@ public class TrainCommandTests
         Assert.Equal(UnitKind.Villager, villager.Kind);
         Assert.Equal(TestMatches.FirstPlayer, villager.Owner);
         Assert.Equal(MapPosition.CentreOf(villager.Position.Cell), villager.Position);
-        Assert.True(Gather.Touches(townCenter, villager.Position.Cell));
+        Assert.True(MapProbe.IsBeside(townCenter, villager.Position.Cell));
         Assert.Equal(CellKind.Free, match.State.Map[villager.Position.Cell]);
         Assert.False(villager.IsMoving);
         Assert.Empty(townCenter.TrainingQueue);

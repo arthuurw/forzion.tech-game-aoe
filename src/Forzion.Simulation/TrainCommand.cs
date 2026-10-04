@@ -25,7 +25,7 @@ public sealed record TrainCommand(PlayerId Player, EntityId Building, UnitKind K
             return;
         }
 
-        if (!Enum.IsDefined(Kind) || Balance.TrainedAt(Kind) != building.Kind)
+        if (!Enum.IsDefined(Kind) || Balance.Of(Kind).TrainedAt != building.Kind)
         {
             context.Reject(this, RejectionReason.BuildingCannotTrainUnit);
 
@@ -39,7 +39,7 @@ public sealed record TrainCommand(PlayerId Player, EntityId Building, UnitKind K
             return;
         }
 
-        var cost = Balance.UnitCost(Kind);
+        var cost = Balance.Of(Kind).Cost;
 
         if (!issuer.CanAfford(cost))
         {

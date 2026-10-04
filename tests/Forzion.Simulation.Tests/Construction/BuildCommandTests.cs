@@ -1,4 +1,4 @@
-using Forzion.Simulation.Tests.Economy;
+using Forzion.Simulation.Tests.Maps;
 using Forzion.Simulation.Tests.Matches;
 
 namespace Forzion.Simulation.Tests.Construction;
@@ -13,9 +13,9 @@ public class BuildCommandTests
         var house = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.House, []);
         match.Enqueue(new BuildCommand(TestMatches.FirstPlayer, [villager.Id], house.Id));
 
-        Gather.Until(match, () => house.IsComplete);
+        TestMatches.TickUntil(match, () => house.IsComplete);
 
-        Assert.True(Gather.Touches(house, villager.Position.Cell));
+        Assert.True(MapProbe.IsBeside(house, villager.Position.Cell));
         Assert.Null(villager.ConstructionSite);
     }
 
@@ -71,14 +71,11 @@ public class BuildCommandTests
     [Fact]
     public void A_build_order_given_to_Villagers_and_soldiers_sends_the_Villagers_and_leaves_the_soldiers_to_what_they_were_doing()
     {
-        var match = MatchWithSoldier();
+        var match = TestArmies.MatchWithSoldier();
         var villager = Site.VillagersOf(match, TestMatches.FirstPlayer)[0];
-        var soldier = match.State.UnitsOf(TestMatches.FirstPlayer).Single(unit => unit.Kind == UnitKind.MeleeSoldier);
+        var soldier = match.State.SoldierOf(TestMatches.FirstPlayer);
         var house = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.House, []);
-        match.Enqueue(new MoveCommand(
-            TestMatches.FirstPlayer, [soldier.Id], new CellPosition(soldier.Position.Cell.X - 6, soldier.Position.Cell.Y)));
-        match.Tick();
-        var destination = soldier.Path[^1];
+        var destination = TestArmies.WalkAway(match, soldier);
 
         match.Enqueue(new BuildCommand(TestMatches.FirstPlayer, [soldier.Id, villager.Id], house.Id));
         match.Tick();
@@ -92,8 +89,8 @@ public class BuildCommandTests
     [Fact]
     public void A_build_order_given_to_soldiers_alone_is_rejected_and_sends_none_of_them()
     {
-        var match = MatchWithSoldier();
-        var soldier = match.State.UnitsOf(TestMatches.FirstPlayer).Single(unit => unit.Kind == UnitKind.MeleeSoldier);
+        var match = TestArmies.MatchWithSoldier();
+        var soldier = match.State.SoldierOf(TestMatches.FirstPlayer);
         var house = Site.Place(match, TestMatches.FirstPlayer, BuildingKind.House, []);
         var command = new BuildCommand(TestMatches.FirstPlayer, [soldier.Id], house.Id);
         match.Enqueue(command);
@@ -103,15 +100,6 @@ public class BuildCommandTests
         Assert.Equal([new CommandRejected(command, RejectionReason.UnitCannotBuild)], match.Events);
         Assert.Null(soldier.ConstructionSite);
         Assert.False(soldier.IsMoving);
-    }
-
-    /// <summary>The default two-Player match, the first Player starting with a melee soldier beside its Town Center.</summary>
-    private static Match MatchWithSoldier()
-    {
-        var plain = TestMatches.TwoPlayerMatch();
-
-        return Match.Create(TestArmies.Config(
-            first: [new StartingUnit(UnitKind.MeleeSoldier, TestArmies.BesideHome(plain, TestMatches.FirstPlayer, -2, 0))]));
     }
 
     /// <summary>

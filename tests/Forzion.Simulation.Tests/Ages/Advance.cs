@@ -1,5 +1,6 @@
 using Forzion.Simulation.Tests.Construction;
 using Forzion.Simulation.Tests.Economy;
+using Forzion.Simulation.Tests.Matches;
 using Forzion.Simulation.Tests.Production;
 
 namespace Forzion.Simulation.Tests.Ages;
@@ -21,7 +22,7 @@ internal static class Advance
         {
             var source = Gather.NearestSource(state, villagers[1].Position.Cell, kind);
             match.Enqueue(new GatherCommand(player, villagers.Select(villager => villager.Id).ToList(), source.Id));
-            Gather.Until(match, () => holder.AmountOf(kind) >= cost.AmountOf(kind));
+            TestMatches.TickUntil(match, () => holder.AmountOf(kind) >= cost.AmountOf(kind));
         }
 
         Site.Halt(match, villagers);
@@ -40,7 +41,7 @@ internal static class Advance
         var age = holder.Age;
         Afford(match, player, NextAge(holder).AdvanceCost);
         match.Enqueue(new AgeAdvanceCommand(player, Train.TownCenter(match, player).Id));
-        Gather.Until(match, () => holder.Age > age);
+        TestMatches.TickUntil(match, () => holder.Age > age);
     }
 
     /// <summary>

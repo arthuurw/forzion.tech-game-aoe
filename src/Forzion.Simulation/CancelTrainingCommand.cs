@@ -33,6 +33,6 @@ public sealed record CancelTrainingCommand(PlayerId Player, EntityId Building, i
         }
 
         var kind = building.CancelTraining(Position);
-        issuer.Refund(Balance.UnitCost(kind));
+        issuer.Refund(Balance.Of(kind).Cost);
     }
 }
