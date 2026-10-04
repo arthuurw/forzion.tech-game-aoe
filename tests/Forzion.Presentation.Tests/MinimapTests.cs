@@ -18,8 +18,8 @@ public class MinimapTests
 
         var minimap = NewMinimap(match);
 
-        Assert.Equal(new ScreenPoint(0, 32), minimap.ToMinimap(new MapPoint(0, 0)));
-        Assert.Equal(new ScreenPoint(256, 224), minimap.ToMinimap(new MapPoint(64, 48)));
+        Assert.Equal(new ScreenPoint(0, SpareAbove), minimap.ToMinimap(new MapPoint(0, 0)));
+        Assert.Equal(new ScreenPoint(BoxSize, BoxSize - SpareAbove), minimap.ToMinimap(new MapPoint(64, 48)));
     }
 
     [Fact]
@@ -27,8 +27,8 @@ public class MinimapTests
     {
         var minimap = NewMinimap(Match.Create(PlainConfig()));
 
-        Assert.Equal(new MapPoint(32, 24), minimap.ToMap(new ScreenPoint(128, 128)));
-        Assert.Equal(new MapPoint(10.5, 3), minimap.ToMap(new ScreenPoint(42, 44)));
+        Assert.Equal(new MapPoint(32, 24), minimap.ToMap(new ScreenPoint(BoxSize / 2, BoxSize / 2)));
+        Assert.Equal(new MapPoint(10.5, 3), minimap.ToMap(InBox(10.5, 3)));
     }
 
     [Fact]
@@ -36,8 +36,11 @@ public class MinimapTests
     {
         var minimap = NewMinimap(Match.Create(PlainConfig()));
 
-        Assert.Equal(new MapPoint(2.5, 0), minimap.ToMap(new ScreenPoint(10, 5)));
-        Assert.Equal(new MapPoint(64, 48), minimap.ToMap(new ScreenPoint(300, 250)));
+        // Above the map's top edge, in the room spare above it.
+        Assert.Equal(new MapPoint(2.5, 0), minimap.ToMap(InBox(2.5, -6)));
+
+        // Past its right edge and below its bottom edge, in the room spare below it.
+        Assert.Equal(new MapPoint(64, 48), minimap.ToMap(InBox(75, 52)));
     }
 
     [Fact]
