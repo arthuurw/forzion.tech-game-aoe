@@ -441,7 +441,7 @@ public partial class Hud : CanvasLayer
 
     private static void ShowHitPoints(ProgressBar bar, int hitPoints, int maxHitPoints)
     {
-        var fraction = maxHitPoints <= 0 ? 0 : (double)hitPoints / maxHitPoints;
+        var fraction = Fractions.Of(hitPoints, maxHitPoints);
         bar.Value = fraction;
         ((StyleBoxFlat)bar.GetThemeStylebox("fill")).BgColor = WorldBarsOverlay.HealthColour(fraction);
     }
