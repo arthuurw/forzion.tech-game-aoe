@@ -37,6 +37,26 @@ internal static class TestMatches
         return new CellPosition(townCenter.Origin.X + (townCenter.Width / 2) - 2, townCenter.Origin.Y + (townCenter.Height / 2));
     }
 
+    /// <summary>A driver of a new match of the configuration, the plain match by default.</summary>
+    public static MatchDriver NewDriver(MatchConfig? config = null) =>
+        new(Match.Create(config ?? PlainConfig()), new TickClock(Match.TicksPerSecond));
+
+    /// <summary>Advances the driver one tick at a time until the condition holds.</summary>
+    public static void TickUntil(MatchDriver driver, Func<bool> condition)
+    {
+        for (var tick = 0; tick < 2_000; tick++)
+        {
+            driver.Advance(1.0 / Match.TicksPerSecond);
+
+            if (condition())
+            {
+                return;
+            }
+        }
+
+        throw new InvalidOperationException("The condition still did not hold after 2000 ticks.");
+    }
+
     /// <summary>The Player's units, in ascending ID order.</summary>
     public static List<UnitState> UnitsOf(Match match, PlayerId player) =>
         match.State.Units.Where(unit => unit.Owner == player).ToList();

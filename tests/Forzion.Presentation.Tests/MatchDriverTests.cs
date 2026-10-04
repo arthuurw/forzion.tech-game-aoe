@@ -1,12 +1,11 @@
 using Forzion.Simulation;
+using static Forzion.Presentation.Tests.TestMatches;
 
 namespace Forzion.Presentation.Tests;
 
 public class MatchDriverTests
 {
     private const double OneTick = 1.0 / Match.TicksPerSecond;
-
-    private static readonly PlayerId FirstPlayer = TestMatches.FirstPlayer;
 
     [Fact]
     public void Before_any_tick_a_unit_is_drawn_where_it_stands()
@@ -78,11 +77,6 @@ public class MatchDriverTests
         Assert.NotEmpty(driver.Advance(OneTick));
 
         Assert.Empty(driver.Advance(OneTick / 2));
-    }
-
-    private static MatchDriver NewDriver()
-    {
-        return new MatchDriver(Match.Create(TestMatches.PlainConfig()), new TickClock(Match.TicksPerSecond));
     }
 
     private static UnitState FirstVillager(Match match) => match.State.Units.First(unit => unit.Owner == FirstPlayer);

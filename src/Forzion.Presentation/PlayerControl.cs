@@ -112,7 +112,7 @@ public sealed class PlayerControl
         ResourceSourceState source => new GatherCommand(player, units, source.Id),
         UnitState enemy when enemy.Owner != player && AnyCanAttack(units) => new AttackCommand(player, units, enemy.Id),
         BuildingState enemy when enemy.Owner != player && AnyCanAttack(units) => new AttackCommand(player, units, enemy.Id),
-        BuildingState site when !site.IsComplete => new BuildCommand(player, units, site.Id),
+        BuildingState site when site.Owner == player && !site.IsComplete => new BuildCommand(player, units, site.Id),
         _ => new MoveCommand(player, units, ground),
     };
 

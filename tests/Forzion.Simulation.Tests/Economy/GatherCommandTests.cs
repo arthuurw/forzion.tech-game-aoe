@@ -437,6 +437,4 @@ public class GatherCommandTests
 
         return largest;
     }
-
-    /// <summary>The default two-Player match, the first Player starting with a melee soldier beside its Town Center.</summary>
 }
