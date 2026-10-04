@@ -19,6 +19,7 @@ public class MinimapTests
         var minimap = NewMinimap(match);
 
         Assert.Equal(new ScreenPoint(0, SpareAbove), minimap.ToMinimap(new MapPoint(0, 0)));
+        // Centred: the room left below the map is the same as the room above it.
         Assert.Equal(new ScreenPoint(BoxSize, BoxSize - SpareAbove), minimap.ToMinimap(new MapPoint(64, 48)));
     }
 
