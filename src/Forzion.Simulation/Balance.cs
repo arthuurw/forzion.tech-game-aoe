@@ -144,6 +144,77 @@ internal static class Balance
     /// Town Center always find one another.
     /// </summary>
     public const int SourceSearchRadius = 15;
+
+    /// <summary>
+    /// The AI's share of Villagers for each Resource: an idle Villager goes to the Resource
+    /// whose gatherers are fewest for its share.
+    /// </summary>
+    public static int AiGatherShare(ResourceKind kind) => kind switch
+    {
+        ResourceKind.Food => 6,
+        ResourceKind.Wood => 2,
+        ResourceKind.Gold => 3,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
+    /// <summary>
+    /// Among how many of the sources of a Resource nearest its drop-off points the AI draws the
+    /// one an idle Villager goes to. More than one keeps a Villager that cannot reach a source
+    /// from being sent back to it every time.
+    /// </summary>
+    public const int AiSourceChoices = 3;
+
+    /// <summary>
+    /// How much farther than the nearest source of a Resource, in Cells, another may lie and
+    /// still be drawn by the AI for an idle Villager.
+    /// </summary>
+    public const int AiSourceSlack = 3;
+
+    /// <summary>
+    /// Farthest, in Cells, the AI lets a source it sends a Villager to lie from its drop-off
+    /// points before it places a Storehouse by the source.
+    /// </summary>
+    public const int AiStorehouseDistance = 8;
+
+    /// <summary>Farthest the AI places a Storehouse from the source it serves, in Cells along either axis.</summary>
+    public const int AiStorehouseReach = 4;
+
+    /// <summary>How many Villagers the AI trains, one at a time, before it stops.</summary>
+    public const int AiVillagers = 12;
+
+    /// <summary>
+    /// How close the AI lets its population come to the population limit before it places a
+    /// House: once no more than this many units are left to train, it places one.
+    /// </summary>
+    public const int AiPopulationHeadroom = 2;
+
+    /// <summary>How many Villagers the AI has before it places its Barracks.</summary>
+    public const int AiVillagersBeforeBarracks = 6;
+
+    /// <summary>
+    /// How large an army the AI trains before it saves up for its Age Advance. Until the
+    /// advance is paid, it trains more soldiers only from what is left beyond its cost.
+    /// </summary>
+    public const int AiArmyBeforeAdvance = 3;
+
+    /// <summary>How many soldiers attacking nothing the AI gathers before it sends them against the enemy Town Center.</summary>
+    public const int AiAttackArmySize = 6;
+
+    /// <summary>How many Villagers the AI sends to build a building of the given kind when it places it.</summary>
+    public static int AiBuilders(BuildingKind kind) => kind switch
+    {
+        BuildingKind.TownCenter => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Town Centers are not placed."),
+        BuildingKind.House => 1,
+        BuildingKind.Storehouse => 1,
+        BuildingKind.Barracks => 2,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
+    /// <summary>Farthest the AI places a building from the centre of its Town Center, in Cells along either axis.</summary>
+    public const int AiBuildingReach = 10;
+
+    /// <summary>Among how many of the places nearest its Town Center the AI draws the one a building goes to.</summary>
+    public const int AiPlacementChoices = 3;
 }
 
 /// <summary>The balance values of a kind of unit.</summary>

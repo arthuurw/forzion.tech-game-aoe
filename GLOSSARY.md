@@ -11,15 +11,24 @@ Disputa entre Jogadores num mapa, do início até a vitória de um deles. Partid
 _Avoid_: Jogo, sessão, rodada
 
 **Tick** (`Tick`):
-Passo fixo em que a Partida avança, vinte por segundo de jogo. As ordens dadas pelos Jogadores valem a partir do Tick seguinte.
+Passo fixo em que a Partida avança, vinte por segundo de jogo. Os Comandos dos Jogadores valem a partir do Tick seguinte.
 _Avoid_: Turno
 
 **Quadro** (`Frame`):
 Uma imagem da Partida desenhada na tela. Quadros não seguem o ritmo dos Ticks: entre dois Ticks podem ser desenhados vários Quadros ou nenhum.
 _Avoid_: Tick
 
+**Ordem** (`Order`):
+O que o Jogador manda fazer pela interface: um clique, um botão. Cada Ordem vira um Comando enviado à Partida; é a Partida que decide se ele vale.
+_Avoid_: Comando, ação
+
+**Comando** (`Command`):
+Pedido que a Partida recebe de um Jogador, humano ou IA, e aplica no Tick seguinte ou recusa com um motivo. É a única forma de mudar a Partida de fora.
+_Avoid_: Ordem, instrução
+
 **Seleção** (`Selection`):
-As unidades ou a construção do Jogador escolhidas com o mouse, que recebem as ordens do botão direito. Existe só na tela: a Partida não a conhece.
+As unidades ou a construção do Jogador escolhidas com o mouse, que recebem as suas próximas Ordens. Existe só na tela: a Partida não a conhece.
+_Avoid_: Grupo
 
 ## Modos de jogo
 
@@ -40,6 +49,10 @@ _Avoid_: História, modo história
 **Jogador** (`Player`):
 Participante de uma partida, humano ou IA, que controla uma Facção.
 _Avoid_: Time, lado
+
+**IA** (`AI`):
+Jogador controlado pelo próprio jogo. Lê o estado da Partida e envia os mesmos Comandos que as Ordens de um Jogador humano enviariam, seguindo um roteiro fixo (`AI Script`): coletar, erguer Casas e um Quartel, treinar, fazer o Avanço de Era e atacar o Centro inimigo quando o Exército chega a um tamanho. Joga com as mesmas regras e Custos e não vê nada que um humano não veja. Quais Jogadores são IA é dado da configuração da Partida.
+_Avoid_: Bot, computador, CPU
 
 **Facção** (`Faction`):
 Povo ou potência jogável, com unidades, construções e nomes de Era próprios. Povos indígenas e quilombolas são Facções com a mesma agência das europeias. As Eras de uma Facção, com o nome de cada uma e o que cada uma libera, são dados da Facção, e não regras.
@@ -170,6 +183,13 @@ Unidade militar corpo a corpo mais forte, liberada pela Era II. É um tipo de un
 Quanto dano uma unidade ou construção ainda aguenta. Ao chegar a zero, ela sai do mapa no mesmo tick.
 _Avoid_: HP, saúde, energia
 
+**Exército** (`Army`):
+As unidades militares de um Jogador. Aldeões não fazem parte dele.
+_Avoid_: Tropa, força
+
+**Dano** (`Damage`):
+Pontos de vida que um golpe tira do Alvo.
+
 **Alvo** (`Target`):
 A unidade ou construção inimiga que uma unidade militar está atacando.
 
@@ -184,7 +204,7 @@ Distância, em Células, em que uma unidade militar parada e sem alvo nota um in
 _Avoid_: Visão, campo de visão
 
 **Derrota** (`Defeat`):
-Jogador sem Centro é derrotado e não dá mais ordens. Quando resta no máximo um Jogador não derrotado, a partida termina; esse Jogador, se houver, é o vencedor (`Winner`).
+Jogador sem Centro é derrotado e não dá mais Comandos; suas unidades e construções que restam ficam no mapa e agem sozinhas. Quando resta no máximo um Jogador não derrotado, a partida termina; esse Jogador, se houver, é o vencedor (`Winner`).
 
 ## Mapa
 

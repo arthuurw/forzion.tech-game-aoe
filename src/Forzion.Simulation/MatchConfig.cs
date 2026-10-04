@@ -21,7 +21,11 @@ public sealed record MapConfig(int Width, int Height);
 /// free Cell of the map. A Skirmish leaves it empty: it lets tests and replays start with
 /// soldiers without training them first.
 /// </param>
-public sealed record PlayerConfig(FactionId Faction, IReadOnlyList<StartingUnit>? ExtraUnits = null);
+/// <param name="IsAi">
+/// Whether the Player is an AI, played by the match itself through the same commands a human
+/// gives, rather than by commands enqueued from outside.
+/// </param>
+public sealed record PlayerConfig(FactionId Faction, IReadOnlyList<StartingUnit>? ExtraUnits = null, bool IsAi = false);
 
 /// <summary>A unit a Player starts the match with, standing on the centre of <paramref name="Cell"/>.</summary>
 public sealed record StartingUnit(UnitKind Kind, CellPosition Cell);

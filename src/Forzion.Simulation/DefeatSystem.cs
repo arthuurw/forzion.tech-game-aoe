@@ -16,8 +16,7 @@ internal sealed class DefeatSystem : ISystem
 
         foreach (var player in state.Players)
         {
-            if (!player.IsDefeated
-                && !state.Buildings.Any(building => building.Owner == player.Id && building.Kind == BuildingKind.TownCenter))
+            if (!player.IsDefeated && state.TownCenterOf(player.Id) is null)
             {
                 player.IsDefeated = true;
                 context.Emit(new PlayerDefeated(player.Id));

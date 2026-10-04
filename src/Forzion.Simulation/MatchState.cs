@@ -41,7 +41,8 @@ public sealed class MatchState
                 factions.FirstOrDefault(faction => faction.Id == player.Faction)
                     ?? throw new ArgumentException(
                         $"Player {index + 1} controls Faction {player.Faction.Value}, which the match does not have.",
-                        nameof(config))))
+                        nameof(config)),
+                player.IsAi))
             .ToList();
 
         var generated = MapGenerator.Generate(Map, Random);
@@ -119,6 +120,13 @@ public sealed class MatchState
 
     /// <summary>The building with the given ID, or null when the match has no such building.</summary>
     internal BuildingState? FindBuilding(EntityId id) => buildings.Find(building => building.Id == id);
+
+    /// <summary>
+    /// The Player's Town Center, or null once it has none. Town Centers are not placed, so a
+    /// Player has at most the one it starts with.
+    /// </summary>
+    internal BuildingState? TownCenterOf(PlayerId player) =>
+        buildings.Find(building => building.Owner == player && building.Kind == BuildingKind.TownCenter);
 
     /// <summary>
     /// The unit or the building with the given ID: one of the two, the other null, or both
@@ -311,10 +319,11 @@ public sealed class PlayerState
     // How much of each Resource the Player has, indexed by ResourceKind.
     private readonly int[] resources = new int[Enum.GetValues<ResourceKind>().Length];
 
-    internal PlayerState(PlayerId id, Faction faction)
+    internal PlayerState(PlayerId id, Faction faction, bool isAi)
     {
         Id = id;
         Faction = faction;
+        IsAi = isAi;
 
         foreach (var kind in Enum.GetValues<ResourceKind>())
         {
@@ -342,6 +351,12 @@ public sealed class PlayerState
     /// Player is in the Faction's last Age.
     /// </summary>
     public FactionAge? NextAge => Age < Faction.Ages.Count ? Faction.AgeAt(Age + 1) : null;
+
+    /// <summary>
+    /// Whether the Player is an AI, as configured: the match itself plays it, deciding its
+    /// commands at the start of every tick. It never changes during the match.
+    /// </summary>
+    public bool IsAi { get; }
 
     /// <summary>Whether the Player has been defeated. A defeated Player stays in the state.</summary>
     public bool IsDefeated { get; internal set; }
@@ -389,5 +404,8 @@ public sealed class PlayerState
         // The Faction's data decides what the Player may train and place and what advancing
         // costs, so matches configured with different data for the same Faction ID diverge.
         Faction.WriteTo(hasher);
+
+        // Likewise an AI Player gives commands of its own every tick, and a human one does not.
+        hasher.Write(IsAi);
     }
 }

@@ -75,11 +75,14 @@ public class EconomyReplayTests
     // state with the layout before, and gave this one with training state added.
     // Likewise when the rally point joined it, and when the Ages joined it: each Player's Age
     // and its Faction's data, and each building's Age Advance underway.
+    // When whether each Player is an AI joined the hash, after its Faction's data, the model
+    // reproduced the value before from the same final state with the layout before, gave this
+    // one with the flag added and matched the match's own hash at every tick.
     // When main's gatherers and builders, walking to the Cell beside their target with the
-    // shortest way to it, met the Ages here, no code that writes the hash changed: the layout
-    // is the one above, and this value is the outcome of both behaviours, each covered by its
-    // own behaviour tests.
-    private const ulong ExpectedFinalHash = 1590088656739279143UL;
+    // shortest way to it, met the AI flag here, no code that writes the hash changed: the
+    // layout is the one above, and this value is the outcome of both behaviours, each covered
+    // by its own behaviour tests.
+    private const ulong ExpectedFinalHash = 14257415974152831399UL;
 
     [Fact]
     public void A_recorded_replay_of_gathering_reaches_the_recorded_final_hash()

@@ -44,7 +44,8 @@ public partial class MatchView : Node3D
         var config = new MatchConfig(
             Seed,
             new MapConfig(MapWidth, MapHeight),
-            [new PlayerConfig(Portuguese), new PlayerConfig(Portuguese)]);
+            // The person at the screen plays the first Player; the match itself plays the second.
+            [new PlayerConfig(Portuguese), new PlayerConfig(Portuguese, IsAi: true)]);
 
         Driver = new MatchDriver(Match.Create(config), new TickClock(Match.TicksPerSecond));
 
