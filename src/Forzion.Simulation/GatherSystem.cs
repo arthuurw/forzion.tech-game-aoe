@@ -233,7 +233,7 @@ internal sealed class GatherSystem : ISystem
 
         foreach (var source in state.ResourceSources)
         {
-            var distance = SquaredDistance(source.Cell, cell);
+            var distance = source.Cell.SquaredDistanceTo(cell);
 
             if (source.Kind == kind && distance < nearestDistance)
             {
@@ -287,7 +287,4 @@ internal sealed class GatherSystem : ISystem
     /// <summary>The Player's drop-off points, in ascending ID order.</summary>
     private static List<BuildingState> DropOffPointsOf(MatchState state, PlayerId owner) =>
         state.Buildings.Where(building => building.Owner == owner && building.IsDropOffPoint).ToList();
-
-    private static int SquaredDistance(CellPosition a, CellPosition b) =>
-        ((a.X - b.X) * (a.X - b.X)) + ((a.Y - b.Y) * (a.Y - b.Y));
 }

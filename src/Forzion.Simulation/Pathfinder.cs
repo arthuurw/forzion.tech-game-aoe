@@ -197,7 +197,7 @@ internal static class Pathfinder
     private static int NearestClosed(MapState map, bool[] closed, int[] costs, CellPosition destination)
     {
         var nearest = -1;
-        var nearestDistance = long.MaxValue;
+        var nearestDistance = int.MaxValue;
 
         for (var index = 0; index < closed.Length; index++)
         {
@@ -206,10 +206,7 @@ internal static class Pathfinder
                 continue;
             }
 
-            var cell = map.CellAt(index);
-            long deltaX = cell.X - destination.X;
-            long deltaY = cell.Y - destination.Y;
-            var distance = (deltaX * deltaX) + (deltaY * deltaY);
+            var distance = map.CellAt(index).SquaredDistanceTo(destination);
 
             if (distance < nearestDistance || (distance == nearestDistance && costs[index] < costs[nearest]))
             {

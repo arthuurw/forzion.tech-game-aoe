@@ -77,12 +77,7 @@ public sealed class BuildingState
         Math.Clamp(cell.Y, Origin.Y, Origin.Y + Height - 1));
 
     /// <summary>Whether the given Cell lies beside the footprint, by a side or by a corner.</summary>
-    internal bool IsBeside(CellPosition cell)
-    {
-        var nearest = NearestCellTo(cell);
-
-        return cell != nearest && Math.Abs(cell.X - nearest.X) <= 1 && Math.Abs(cell.Y - nearest.Y) <= 1;
-    }
+    internal bool IsBeside(CellPosition cell) => cell.Touches(NearestCellTo(cell));
 
     internal void WriteTo(StateHasher hasher)
     {
