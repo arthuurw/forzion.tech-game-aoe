@@ -11,6 +11,9 @@ public sealed class MatchDriver
     /// <summary>How far apart, in Cells, units standing on one Cell are drawn: as wide as two of their placeholders.</summary>
     private const double StackSpacing = 0.5;
 
+    /// <summary>How many units standing on one Cell are drawn side by side in a row: three rows span a Cell.</summary>
+    private const int StackRowLength = 3;
+
     private readonly Match match;
     private readonly TickClock clock;
     private readonly Dictionary<EntityId, MapPoint> positionsBeforeLastTick = [];
@@ -65,7 +68,7 @@ public sealed class MatchDriver
     /// </summary>
     /// <remarks>
     /// Units do not block one another, so several may stand still on one Cell. Those are drawn
-    /// apart, on a ring around the Cell's centre, so each stays visible and can be clicked.
+    /// apart, in rows across the Cell, so each stays visible and can be clicked.
     /// </remarks>
     public MapPoint PositionOf(UnitState unit)
     {
@@ -104,9 +107,11 @@ public sealed class MatchDriver
     }
 
     /// <summary>
-    /// Places the units standing still on each Cell evenly on a ring around its centre, in
-    /// ascending ID order, the ring just wide enough to keep neighbours
-    /// <see cref="StackSpacing"/> apart.
+    /// Lays out the units standing still on each Cell in rows of up to
+    /// <see cref="StackRowLength"/> along the map's X, <see cref="StackSpacing"/> apart and
+    /// centred on the Cell, in ascending ID order. The camera looks along the map's Y, so units
+    /// side by side never hide one another; every other row is shifted half a step, so the
+    /// units of a row behind show between those in front.
     /// </summary>
     private void SpreadStacks()
     {
@@ -120,12 +125,17 @@ public sealed class MatchDriver
         foreach (var stack in stacks)
         {
             var units = stack.ToList();
-            var step = 2 * Math.PI / units.Count;
-            var radius = StackSpacing / 2 / Math.Sin(step / 2);
+            var rows = (units.Count + StackRowLength - 1) / StackRowLength;
 
             for (var index = 0; index < units.Count; index++)
             {
-                stackOffsets[units[index].Id] = new MapPoint(radius * Math.Cos(step * index), radius * Math.Sin(step * index));
+                var row = index / StackRowLength;
+                var inRow = Math.Min(StackRowLength, units.Count - (row * StackRowLength));
+                var stagger = row % 2 == 1 ? StackSpacing / 2 : 0;
+
+                stackOffsets[units[index].Id] = new MapPoint(
+                    ((index % StackRowLength) - ((inRow - 1) / 2.0)) * StackSpacing + stagger,
+                    (row - ((rows - 1) / 2.0)) * StackSpacing);
             }
         }
     }

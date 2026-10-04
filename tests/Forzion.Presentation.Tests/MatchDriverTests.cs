@@ -20,7 +20,7 @@ public class MatchDriverTests
     }
 
     [Fact]
-    public void Units_standing_on_one_Cell_are_drawn_apart_around_it()
+    public void Units_standing_on_one_Cell_are_drawn_apart_side_by_side_across_it()
     {
         var cell = BesideFirstHome();
         var stacked = new StartingUnit(UnitKind.Villager, cell);
@@ -29,8 +29,10 @@ public class MatchDriverTests
 
         var drawn = match.State.Units.Where(unit => unit.Position == centre).Select(driver.PositionOf).ToList();
 
-        // Half a Cell apart: as far as two unit placeholders are wide, so none hides another.
+        // Half a Cell apart: as far as two unit placeholders are wide. In one row across the
+        // map, so that a camera looking along the map's Y sees none behind another.
         Assert.Equal(3, drawn.Count);
+        Assert.All(drawn, point => Assert.Equal(drawn[0].Y, point.Y));
         Assert.All(Pairs(drawn), pair => Assert.True(Distance(pair.First, pair.Second) >= 0.5 - 1e-9));
         Assert.All(drawn, point => Assert.True(Distance(point, new MapPoint(centre.X.ToDouble(), centre.Y.ToDouble())) <= 0.5));
     }
