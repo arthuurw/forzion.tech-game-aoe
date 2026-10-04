@@ -90,9 +90,11 @@ public sealed class PlayerControl
     /// as a command the next tick applies: gather from a resource source, attack a unit or
     /// building of another Player, build an unfinished building of the Player, otherwise walk
     /// to the Cell under the mouse. Units none of which can attack walk up to an enemy instead
-    /// of being refused an attack. With a building of the Player selected instead, the Cell
-    /// under the mouse becomes its rally point. Nothing is sent while nothing is selected. The
-    /// command goes out even when the match will refuse it; the refusal comes back as a
+    /// of being refused an attack. With a complete building of the Player that trains units
+    /// selected instead, the Cell under the mouse becomes its rally point; any other building
+    /// selected, such as a House or a construction site, takes no order from the right button
+    /// and nothing is sent. Nothing is sent while nothing is selected. A unit order goes out
+    /// even when the match will refuse it; the refusal comes back as a
     /// <see cref="CommandRejected"/> event.
     /// </summary>
     public void OrderAt(ScreenPoint point)
@@ -107,7 +109,12 @@ public sealed class PlayerControl
 
         if (units.Count == 0)
         {
-            SendToSelectedBuilding(building => new SetRallyPointCommand(player, building, pick.Ground));
+            // A right-click on the map with a building that has no rally point selected is no
+            // order at all, so it brings no refusal notice either.
+            if (SelectedBuilding() is { IsComplete: true } building && Match.Trains(building.Kind))
+            {
+                driver.Enqueue(new SetRallyPointCommand(player, building.Id, pick.Ground));
+            }
 
             return;
         }
@@ -192,16 +199,18 @@ public sealed class PlayerControl
 
     private void SendToSelectedBuilding(Func<EntityId, Command> commandFor)
     {
-        var state = driver.State;
-        var building = Selected
-            .Where(id => state.Buildings.Any(each => each.Id == id && each.Owner == player))
-            .Select(id => (EntityId?)id)
-            .FirstOrDefault();
-
-        if (building is { } id)
+        if (SelectedBuilding() is { } building)
         {
-            driver.Enqueue(commandFor(id));
+            driver.Enqueue(commandFor(building.Id));
         }
+    }
+
+    /// <summary>The selected building of the Player, or null when none is selected.</summary>
+    private BuildingState? SelectedBuilding()
+    {
+        var selection = Selected;
+
+        return driver.State.Buildings.FirstOrDefault(each => each.Owner == player && selection.Contains(each.Id));
     }
 
     /// <summary>The command a right-click on <paramref name="target"/> gives.</summary>

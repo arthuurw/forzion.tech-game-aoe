@@ -19,8 +19,8 @@ public static class Factions
                 [BuildingKind.House, BuildingKind.Storehouse, BuildingKind.Barracks]),
             new FactionAge(
                 "FACTION_PORTUGUESE_AGE_2",
-                Balance.SecondAgeAdvanceCost,
-                Balance.SecondAgeAdvanceTime,
+                Balance.PortugueseSecondAgeAdvanceCost,
+                Balance.PortugueseSecondAgeAdvanceTime,
                 [UnitKind.HeavySoldier],
                 []),
         ],

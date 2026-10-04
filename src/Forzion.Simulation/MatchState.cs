@@ -336,6 +336,15 @@ public sealed class PlayerState
     /// </summary>
     public int Age { get; internal set; } = 1;
 
+    /// <summary>The Age of the Player's Faction that the Player is in: what it is called and what it unlocked.</summary>
+    public FactionAge CurrentAge => Faction.AgeAt(Age);
+
+    /// <summary>
+    /// The Age of the Player's Faction that an Age Advance would take it to, or null when the
+    /// Player is in the Faction's last Age.
+    /// </summary>
+    public FactionAge? NextAge => Age < Faction.Ages.Count ? Faction.AgeAt(Age + 1) : null;
+
     /// <summary>
     /// Whether the Player is an AI, as configured: the match itself plays it, deciding its
     /// commands at the start of every tick. It never changes during the match.

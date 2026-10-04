@@ -59,7 +59,7 @@ Povo ou potência jogável, com unidades, construções e nomes de Era próprios
 _Avoid_: Civilização, raça, nação, tribo
 
 **Portugueses** (`Portuguese`):
-Facção da Coroa portuguesa e dos colonos que ela mandou ao Brasil. O nome exibido fica sob a chave `FACTION_PORTUGUESE`; suas Eras e unidades estão em [Nomes dos Portugueses](#nomes-dos-portugueses).
+Facção da Coroa portuguesa e dos colonos e moradores luso-brasileiros. O nome exibido fica sob a chave `FACTION_PORTUGUESE`; suas Eras e unidades estão em [Nomes dos Portugueses](#nomes-dos-portugueses).
 
 ## Progressão
 
@@ -141,14 +141,14 @@ Quantas unidades o Jogador pode ter ao mesmo tempo. O Centro dá um valor base e
 _Avoid_: Capacidade, teto
 
 **Centro** (`Town Center`):
-Construção principal do Jogador: produz Aldeões, recebe Recursos e executa o Avanço de Era. Perder o Centro é perder a partida.
+Construção principal do Jogador: treina Aldeões, recebe Recursos e executa o Avanço de Era. Perder o Centro é perder a partida.
 _Avoid_: Base, sede, prefeitura
 
 **Casa** (`House`):
 Construção que aumenta o limite de população do Jogador.
 
 **Quartel** (`Barracks`):
-Construção que produz unidades militares.
+Construção que treina unidades militares.
 
 ## Produção
 
@@ -190,9 +190,6 @@ _Avoid_: Tropa, força
 **Dano** (`Damage`):
 Pontos de vida que um golpe tira do Alvo.
 
-**Barra de vida** (`Hit Point Bar`):
-Barra desenhada sobre uma unidade ou construção selecionada ou ferida, preenchida na proporção dos Pontos de vida que restam.
-
 **Alvo** (`Target`):
 A unidade ou construção inimiga que uma unidade militar está atacando.
 
@@ -222,23 +219,45 @@ _Avoid_: Mata, bosque, árvores
 **Água** (`Water`):
 Obstáculo que ocupa Células inteiras: Unidades não a atravessam e Construções não são erguidas sobre ela.
 
+## Tela
+
+**HUD** (`Hud`):
+Os controles desenhados sobre a Partida: a barra do topo, com os Recursos, a População sobre o Limite de população, a Era e o Avanço de Era em andamento do Jogador, e embaixo o Painel de seleção. Existe só na tela: os botões da HUD dão ordens, e a Partida as aceita ou recusa.
+_Avoid_: Interface, UI
+
+**Painel de seleção** (`Selection Panel`):
+Parte de baixo da HUD que mostra a Seleção: as unidades com seus Pontos de vida, ou a construção com seus Pontos de vida, sua Obra, sua Fila de treino e as ordens que aceita. Com Aldeões selecionados, oferece as construções que eles podem posicionar.
+
+**Prévia de posicionamento** (`Placement Preview`):
+A construção escolhida no Painel de seleção, desenhada sob o mouse onde seria posicionada: verde onde o local está livre e vermelha onde não está. Mostra só se o local está livre, e não se o Jogador pode pagar o Custo.
+
+**Barra sobre o mapa** (`World Bar`):
+Barra desenhada sobre uma unidade ou construção, acima de onde ela está no mapa e do mesmo tamanho em qualquer zoom. Há dois tipos (`WorldBarKind`): a Barra de vida e a Barra de obra.
+
+**Barra de vida** (`Hit Point Bar`):
+Barra sobre o mapa de uma unidade ou construção selecionada ou ferida, preenchida na proporção dos Pontos de vida que restam.
+
+**Barra de obra** (`Construction Bar`):
+Barra sobre o mapa de cada Obra, preenchida na proporção do trabalho de construção já feito.
+
 ## Nomes dos Portugueses
 
-Nomes que a Facção Portugueses dá às suas Eras e unidades, escolhidos na história do Brasil colonial dos séculos XVI e XVII. São textos do jogo: ficam em `game/translations/pt_BR.po`, sob as chaves entre parênteses, e os dados da Facção guardam só a chave. O código continua usando os nomes genéricos (`Age` 1, `MeleeSoldier` e assim por diante).
+Nomes que a Facção Portugueses dá às suas Eras e unidades, escolhidos na história do Brasil colonial dos séculos XVI e XVII. As fontes de cada verbete estão em [docs/fontes-historicas.md](docs/fontes-historicas.md). São textos do jogo: ficam em `game/translations/pt_BR.po`, sob as chaves entre parênteses, e os dados da Facção guardam só a chave. O código continua usando os nomes genéricos (`Age` 1, `MeleeSoldier` e assim por diante).
 
 **Era das Feitorias** (Era I, `FACTION_PORTUGUESE_AGE_1`):
-Os primeiros anos da colônia, até a década de 1530, quando a Coroa explorava o pau-brasil por meio de feitorias no litoral.
+Os primeiros anos da presença portuguesa, até a década de 1530, quando o pau-brasil, monopólio da Coroa arrendado a mercadores, era trocado com os indígenas e embarcado em feitorias no litoral.
 
 **Era dos Engenhos** (Era II, `FACTION_PORTUGUESE_AGE_2`):
-A colônia do açúcar, da segunda metade do século XVI em diante, organizada em torno dos engenhos.
+A colônia do açúcar. Os primeiros engenhos são da década de 1530; da segunda metade do século XVI em diante, sobretudo a partir da década de 1570, a colônia se organiza em torno deles.
 
 **Rodeleiro** (`MeleeSoldier`, `FACTION_PORTUGUESE_MELEE_SOLDIER`):
-Infante de espada e rodela, o escudo redondo, das tropas portuguesas dos séculos XVI e XVII.
+Combatente de espada e rodela, o escudo redondo, das tropas portuguesas dos séculos XVI e XVII. No Brasil, os rodeleiros cobriam os arcabuzeiros contra as flechas na conquista da Paraíba, entre 1585 e 1587; na guerra holandesa, a espada e rodela seguiu em uso.
 
 **Arcabuzeiro** (`RangedSoldier`, `FACTION_PORTUGUESE_RANGED_SOLDIER`):
-Infante armado de arcabuz, a arma de fogo portátil das expedições portuguesas do século XVI.
+Combatente armado de arcabuz. O Regimento de 1548 obrigava cada capitão a ter arcabuzes, e arcabuzeiros combateram na conquista da Paraíba, em 1585.
 
-**Piqueiro** (`HeavySoldier`, `FACTION_PORTUGUESE_HEAVY_SOLDIER`):
-Infante de pique e corselete, o núcleo pesado dos terços que defenderam o Brasil no século XVII.
+**Cavaleiro** (`HeavySoldier`, `FACTION_PORTUGUESE_HEAVY_SOLDIER`):
+Combatente a cavalo. No Brasil quinhentista, os de cavalo do ouvidor-geral Martim Leitão combateram na conquista da Paraíba, em 1585.
 
-O Aldeão (`Villager`, `FACTION_PORTUGUESE_VILLAGER`) mantém o nome genérico.
+**Colono** (`Villager`, `FACTION_PORTUGUESE_VILLAGER`):
+O povoador, que as fontes de época chamam de morador. Na colônia, o trabalho nos canaviais e engenhos era feito sobretudo por indígenas e africanos escravizados.

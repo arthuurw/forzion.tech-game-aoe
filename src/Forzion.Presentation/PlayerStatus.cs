@@ -7,18 +7,14 @@ namespace Forzion.Presentation;
 /// population limit, its Faction and Age, and the Age Advance underway. Names are keys of the
 /// game's translations, as the Faction stores them.
 /// </summary>
-/// <param name="Food">Food the Player has.</param>
-/// <param name="Wood">Wood the Player has.</param>
-/// <param name="Gold">Gold the Player has.</param>
+/// <param name="Resources">How much of each Resource the Player has, one entry per Resource in <see cref="ResourceKind"/> order.</param>
 /// <param name="Population">Units of the Player, counting those in training queues.</param>
 /// <param name="PopulationLimit">How many units the Player may have at once.</param>
 /// <param name="FactionNameKey">Key of the text that names the Player's Faction.</param>
 /// <param name="AgeNameKey">Key of the text that names, in the Player's Faction, the Age the Player is in.</param>
 /// <param name="AgeAdvance">The Age Advance underway, or null while the Player makes none.</param>
 public sealed record PlayerStatus(
-    int Food,
-    int Wood,
-    int Gold,
+    IReadOnlyList<ResourceAmount> Resources,
     int Population,
     int PopulationLimit,
     string FactionNameKey,
@@ -31,21 +27,23 @@ public sealed record PlayerStatus(
     {
         ArgumentNullException.ThrowIfNull(state);
 
-        var playerState = state.Players.FirstOrDefault(each => each.Id == player)
-            ?? throw new ArgumentException($"The match has no Player {player.Value}.", nameof(player));
+        var playerState = PlayerLookup.Find(state, player);
         var faction = playerState.Faction;
 
         return new PlayerStatus(
-            playerState.AmountOf(ResourceKind.Food),
-            playerState.AmountOf(ResourceKind.Wood),
-            playerState.AmountOf(ResourceKind.Gold),
+            Enum.GetValues<ResourceKind>().Select(kind => new ResourceAmount(kind, playerState.AmountOf(kind))).ToList(),
             state.PopulationOf(player),
             state.PopulationLimitOf(player),
             faction.NameKey,
-            faction.Ages[playerState.Age - 1].NameKey,
+            playerState.CurrentAge.NameKey,
             AgeAdvanceProgress.Of(state, playerState));
     }
 }
+
+/// <summary>How much of one Resource a Player has.</summary>
+/// <param name="Kind">The Resource.</param>
+/// <param name="Amount">How much of it the Player has.</param>
+public sealed record ResourceAmount(ResourceKind Kind, int Amount);
 
 /// <summary>An Age Advance underway: the Age it leads to and how far it has gone.</summary>
 /// <param name="AgeNameKey">Key of the text that names the Age the advance leads to.</param>
@@ -64,13 +62,10 @@ public sealed record AgeAdvanceProgress(string AgeNameKey, double Progress)
     /// <summary>The Age Advance the building is making for its Player, or null when it makes none.</summary>
     internal static AgeAdvanceProgress? Of(BuildingState building, PlayerState player)
     {
-        if (building.AgeAdvanceProgress is not { } ticks || player.Age >= player.Faction.Ages.Count)
+        if (building.AgeAdvanceProgress is not { } ticks || player.NextAge is not { } next)
         {
             return null;
         }
-
-        // Ages are numbered from 1 and listed from index 0, so the next Age is at the current number.
-        var next = player.Faction.Ages[player.Age];
 
         return new AgeAdvanceProgress(next.NameKey, Fractions.Of(ticks, next.AdvanceTime));
     }

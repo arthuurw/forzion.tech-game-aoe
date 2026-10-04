@@ -67,42 +67,26 @@ public class CancelTrainingCommandTests
     [InlineData(1)]
     public void Cancelling_a_position_the_training_queue_does_not_have_is_rejected_and_changes_nothing(int position)
     {
-        AssertRejected(
+        Train.AssertRejected(
             RejectionReason.NotInTrainingQueue,
-            match => new CancelTrainingCommand(TestMatches.FirstPlayer, Train.TownCenter(match, TestMatches.FirstPlayer).Id, position));
+            match => new CancelTrainingCommand(TestMatches.FirstPlayer, QueueOneVillager(match).Id, position));
     }
 
     [Fact]
     public void Cancelling_training_at_another_Players_building_is_rejected_and_changes_nothing()
     {
-        AssertRejected(
+        Train.AssertRejected(
             RejectionReason.BuildingOfAnotherPlayer,
-            match => new CancelTrainingCommand(TestMatches.SecondPlayer, Train.TownCenter(match, TestMatches.FirstPlayer).Id, 0));
+            match => new CancelTrainingCommand(TestMatches.SecondPlayer, QueueOneVillager(match).Id, 0));
     }
 
-    /// <summary>
-    /// In two matches alike, has the first Player queue one Villager at its Town Center, then
-    /// sends the command <paramref name="cancel"/> builds in one of them only, and checks that
-    /// it was rejected for <paramref name="reason"/> and left the two with the same hash.
-    /// </summary>
-    private static void AssertRejected(RejectionReason reason, Func<Match, Command> cancel)
+    /// <summary>Has the first Player queue one Villager at its Town Center, ticks once and returns the Town Center.</summary>
+    private static BuildingState QueueOneVillager(Match match)
     {
-        var withRejection = TestMatches.TwoPlayerMatch();
-        var without = TestMatches.TwoPlayerMatch();
+        var townCenter = Train.TownCenter(match, TestMatches.FirstPlayer);
+        match.Enqueue(new TrainCommand(TestMatches.FirstPlayer, townCenter.Id, UnitKind.Villager));
+        match.Tick();
 
-        foreach (var match in new[] { withRejection, without })
-        {
-            match.Enqueue(new TrainCommand(TestMatches.FirstPlayer, Train.TownCenter(match, TestMatches.FirstPlayer).Id, UnitKind.Villager));
-            match.Tick();
-        }
-
-        var command = cancel(withRejection);
-        withRejection.Enqueue(command);
-
-        withRejection.Tick();
-        without.Tick();
-
-        Assert.Equal([new CommandRejected(command, reason)], withRejection.Events);
-        Assert.Equal(without.StateHash, withRejection.StateHash);
+        return townCenter;
     }
 }

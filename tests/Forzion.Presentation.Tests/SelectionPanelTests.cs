@@ -1,5 +1,5 @@
 using Forzion.Simulation;
-using static Forzion.Presentation.Tests.HudMatches;
+using static Forzion.Presentation.Tests.TestMatches;
 
 namespace Forzion.Presentation.Tests;
 
@@ -8,7 +8,7 @@ public class SelectionPanelTests
     [Fact]
     public void With_nothing_selected_the_panel_shows_nothing()
     {
-        var match = Portuguese();
+        var match = Match.Create(PlainConfig());
 
         var panel = SelectionPanel.For(match.State, FirstPlayer, []);
 
@@ -20,7 +20,7 @@ public class SelectionPanelTests
     [Fact]
     public void Selected_units_are_shown_with_their_Faction_name_and_hit_points()
     {
-        var match = Portuguese();
+        var match = Match.Create(PlainConfig());
         var villagers = UnitsOf(match, FirstPlayer);
 
         var panel = SelectionPanel.For(match.State, FirstPlayer, villagers.Select(unit => unit.Id).ToList());
@@ -37,7 +37,7 @@ public class SelectionPanelTests
     [Fact]
     public void With_Villagers_selected_the_panel_offers_every_building_the_Faction_places_with_its_cost()
     {
-        var match = Portuguese();
+        var match = Match.Create(PlainConfig());
 
         var panel = SelectionPanel.For(match.State, FirstPlayer, [UnitsOf(match, FirstPlayer)[0].Id]);
 
@@ -69,7 +69,7 @@ public class SelectionPanelTests
     [Fact]
     public void Without_Villagers_selected_the_panel_offers_no_building()
     {
-        var match = Portuguese(firstExtras: [new StartingUnit(UnitKind.MeleeSoldier, BesideFirstHome())]);
+        var match = Match.Create(PlainConfig(firstExtras: [new StartingUnit(UnitKind.MeleeSoldier, BesideFirstHome())]));
         var soldier = UnitsOf(match, FirstPlayer).Single(unit => unit.Kind == UnitKind.MeleeSoldier);
 
         var panel = SelectionPanel.For(match.State, FirstPlayer, [soldier.Id]);
@@ -81,7 +81,7 @@ public class SelectionPanelTests
     [Fact]
     public void The_selected_Town_Center_is_shown_with_its_hit_points_the_units_it_trains_and_the_next_Age_Advance()
     {
-        var match = Portuguese();
+        var match = Match.Create(PlainConfig());
         var townCenter = TownCenterOf(match, FirstPlayer);
 
         var building = SelectionPanel.For(match.State, FirstPlayer, [townCenter.Id]).Building;
@@ -104,7 +104,7 @@ public class SelectionPanelTests
     [Fact]
     public void The_training_queue_is_shown_in_order_with_how_far_the_first_unit_has_trained()
     {
-        var match = Portuguese();
+        var match = Match.Create(PlainConfig());
         var townCenter = TownCenterOf(match, FirstPlayer);
         match.Enqueue(new TrainCommand(FirstPlayer, townCenter.Id, UnitKind.Villager));
         match.Enqueue(new TrainCommand(FirstPlayer, townCenter.Id, UnitKind.Villager));
@@ -122,7 +122,7 @@ public class SelectionPanelTests
     [Fact]
     public void The_rally_point_of_the_selected_building_is_shown()
     {
-        var match = Portuguese();
+        var match = Match.Create(PlainConfig());
         var townCenter = TownCenterOf(match, FirstPlayer);
         match.Enqueue(new SetRallyPointCommand(FirstPlayer, townCenter.Id, new CellPosition(5, 6)));
         match.Tick();
@@ -135,7 +135,7 @@ public class SelectionPanelTests
     [Fact]
     public void A_selected_construction_site_shows_how_far_its_construction_has_gone_and_takes_no_order()
     {
-        var match = Portuguese();
+        var match = Match.Create(PlainConfig());
         var builder = UnitsOf(match, FirstPlayer)[0];
         var site = PlaceNear(match, BuildingKind.Barracks, [builder.Id]);
 
@@ -200,6 +200,59 @@ public class SelectionPanelTests
             ],
             building!.UnitChoices);
         Assert.Null(building.AgeAdvance);
+    }
+
+    [Fact]
+    public void The_layout_of_the_panel_stays_the_same_while_only_progress_changes()
+    {
+        var match = Match.Create(PlainConfig());
+        var townCenter = TownCenterOf(match, FirstPlayer);
+        match.Enqueue(new TrainCommand(FirstPlayer, townCenter.Id, UnitKind.Villager));
+        match.Tick();
+        var before = SelectionPanel.For(match.State, FirstPlayer, [townCenter.Id]);
+
+        Run(match, Match.TrainTime(UnitKind.Villager) / 2);
+
+        var after = SelectionPanel.For(match.State, FirstPlayer, [townCenter.Id]);
+        Assert.NotEqual(before.Building!.TrainingQueue[0].Progress, after.Building!.TrainingQueue[0].Progress);
+        Assert.Equal(before.Layout, after.Layout);
+    }
+
+    [Fact]
+    public void The_layout_of_the_panel_changes_when_a_unit_joins_the_training_queue()
+    {
+        var match = Match.Create(PlainConfig());
+        var townCenter = TownCenterOf(match, FirstPlayer);
+        var before = SelectionPanel.For(match.State, FirstPlayer, [townCenter.Id]);
+
+        match.Enqueue(new TrainCommand(FirstPlayer, townCenter.Id, UnitKind.Villager));
+        match.Tick();
+
+        Assert.NotEqual(before.Layout, SelectionPanel.For(match.State, FirstPlayer, [townCenter.Id]).Layout);
+    }
+
+    [Fact]
+    public void The_layout_of_the_panel_changes_when_the_Age_unlocks_a_choice()
+    {
+        var match = OfThreeAges();
+        var villager = UnitsOf(match, FirstPlayer)[0];
+        var before = SelectionPanel.For(match.State, FirstPlayer, [villager.Id]);
+
+        AdvanceAge(match, FirstPlayer);
+
+        Assert.NotEqual(before.Layout, SelectionPanel.For(match.State, FirstPlayer, [villager.Id]).Layout);
+    }
+
+    [Fact]
+    public void The_layout_of_the_panel_changes_with_the_units_selected()
+    {
+        var match = Match.Create(PlainConfig());
+        var villagers = UnitsOf(match, FirstPlayer);
+
+        var one = SelectionPanel.For(match.State, FirstPlayer, [villagers[0].Id]);
+        var another = SelectionPanel.For(match.State, FirstPlayer, [villagers[1].Id]);
+
+        Assert.NotEqual(one.Layout, another.Layout);
     }
 
     /// <summary>Places a site of the first Player near its Town Center, with the given builders, and returns it.</summary>

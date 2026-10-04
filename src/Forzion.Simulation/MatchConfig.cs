@@ -18,7 +18,8 @@ public sealed record MapConfig(int Width, int Height);
 /// <param name="Faction">The ID of the Faction the Player controls, one of the match's Factions.</param>
 /// <param name="ExtraUnits">
 /// Units the Player starts with on top of what every Player starts with. Each must stand on a
-/// free Cell of the map.
+/// free Cell of the map. A Skirmish leaves it empty: it lets tests and replays start with
+/// soldiers without training them first.
 /// </param>
 /// <param name="IsAi">
 /// Whether the Player is an AI, played by the match itself through the same commands a human

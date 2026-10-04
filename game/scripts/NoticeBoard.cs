@@ -1,4 +1,3 @@
-using System.Globalization;
 using Forzion.Presentation;
 using Forzion.Simulation;
 using Godot;
@@ -54,7 +53,7 @@ public partial class NoticeBoard : CanvasLayer
 
         foreach (var ageKey in HudTexts.AgesReachedBy(events, MatchView.State, MatchView.HumanPlayer))
         {
-            AddNotice(string.Format(CultureInfo.InvariantCulture, Tr(HudTexts.AgeReached), Tr(ageKey)), AgeColour);
+            AddNotice(HudTexts.Format(key => Tr(key), HudTexts.AgeReached, Tr(ageKey)), AgeColour);
         }
     }
 

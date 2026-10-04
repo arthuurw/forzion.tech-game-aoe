@@ -124,9 +124,9 @@ public sealed class Placeholders
     {
         const float LowestShare = 0.15f;
 
-        var share = building.IsComplete || building.BuildTime <= 0
+        var share = building.IsComplete
             ? 1
-            : Math.Max(LowestShare, (float)building.BuildProgress / building.BuildTime);
+            : Math.Max(LowestShare, (float)Fractions.Of(building.BuildProgress, building.BuildTime));
 
         view.Scale = new Vector3(1, share, 1);
         view.Position = WorldSpace.CentreOf(building, BuildingHeight * share / 2);

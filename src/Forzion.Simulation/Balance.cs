@@ -80,16 +80,16 @@ internal static class Balance
         TrainedAt: BuildingKind.Barracks);
 
     private static readonly BuildingStats TownCenter = new(
-        Size: TownCenterSize, HitPoints: 600, Cost: null, BuildTime: 60 * Match.TicksPerSecond, PopulationProvided: 5, Trains: true);
+        Size: TownCenterSize, HitPoints: 600, Cost: null, BuildTime: 60 * Match.TicksPerSecond, PopulationProvided: 5);
 
     private static readonly BuildingStats House = new(
-        Size: 2, HitPoints: 150, Cost: new Cost(0, 30, 0), BuildTime: 15 * Match.TicksPerSecond, PopulationProvided: 5, Trains: false);
+        Size: 2, HitPoints: 150, Cost: new Cost(0, 30, 0), BuildTime: 15 * Match.TicksPerSecond, PopulationProvided: 5);
 
     private static readonly BuildingStats Storehouse = new(
-        Size: 2, HitPoints: 200, Cost: new Cost(0, 50, 0), BuildTime: 20 * Match.TicksPerSecond, PopulationProvided: 0, Trains: false);
+        Size: 2, HitPoints: 200, Cost: new Cost(0, 50, 0), BuildTime: 20 * Match.TicksPerSecond, PopulationProvided: 0);
 
     private static readonly BuildingStats Barracks = new(
-        Size: 3, HitPoints: 300, Cost: new Cost(0, 100, 0), BuildTime: 30 * Match.TicksPerSecond, PopulationProvided: 0, Trains: true);
+        Size: 3, HitPoints: 300, Cost: new Cost(0, 100, 0), BuildTime: 30 * Match.TicksPerSecond, PopulationProvided: 0);
 
     private static readonly ResourceStats Food = new(StartingAmount: 200, SourceAmount: 300, GatherTicksPerUnit: 10);
 
@@ -117,6 +117,9 @@ internal static class Balance
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
+    /// <summary>Whether a complete building of the given kind trains units: whether some kind of unit is trained at it.</summary>
+    public static bool Trains(BuildingKind kind) => Enum.GetValues<UnitKind>().Any(unit => Of(unit).TrainedAt == kind);
+
     /// <summary>The balance values of the given Resource.</summary>
     public static ResourceStats Of(ResourceKind kind) => kind switch
     {
@@ -127,10 +130,10 @@ internal static class Balance
     };
 
     /// <summary>What the Portuguese Age Advance to Age II costs.</summary>
-    public static readonly Cost SecondAgeAdvanceCost = new(300, 0, 100);
+    public static readonly Cost PortugueseSecondAgeAdvanceCost = new(300, 0, 100);
 
     /// <summary>Ticks the Portuguese Age Advance to Age II takes.</summary>
-    public const int SecondAgeAdvanceTime = 40 * Match.TicksPerSecond;
+    public const int PortugueseSecondAgeAdvanceTime = 40 * Match.TicksPerSecond;
 
     /// <summary>The most a Villager carries at once.</summary>
     public const int VillagerCarryCapacity = 10;
@@ -238,8 +241,7 @@ internal sealed record UnitStats(Fix64 Speed, int HitPoints, AttackStats? Attack
 /// How much the complete building adds to its Player's population limit: the Town Center gives
 /// the base and each House adds to it.
 /// </param>
-/// <param name="Trains">Whether the complete building trains units.</param>
-internal sealed record BuildingStats(int Size, int HitPoints, Cost? Cost, int BuildTime, int PopulationProvided, bool Trains);
+internal sealed record BuildingStats(int Size, int HitPoints, Cost? Cost, int BuildTime, int PopulationProvided);
 
 /// <summary>The balance values of a Resource.</summary>
 /// <param name="StartingAmount">How much of the Resource each Player starts the match with.</param>

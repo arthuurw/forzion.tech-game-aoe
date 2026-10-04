@@ -1,5 +1,3 @@
-using System.Globalization;
-using System.Text;
 using Forzion.Presentation;
 using Forzion.Simulation;
 using Godot;
@@ -25,9 +23,9 @@ public partial class Hud : CanvasLayer
     // rebuild never swallows a click; in between, these refresh the values shown.
     private readonly List<Action<SelectionPanel>> refreshers = [];
 
-    private Label food = null!;
-    private Label wood = null!;
-    private Label gold = null!;
+    // The amount of each Resource in the top bar.
+    private readonly Dictionary<ResourceKind, Label> resources = [];
+
     private Label population = null!;
     private Label age = null!;
     private ProgressBar ageAdvanceBar = null!;
@@ -71,7 +69,7 @@ public partial class Hud : CanvasLayer
         ShowStatus(PlayerStatus.Of(MatchView.State, MatchView.HumanPlayer));
 
         var panel = SelectionPanel.For(MatchView.State, MatchView.HumanPlayer, PlayerControl.Selected);
-        var layout = LayoutOf(panel);
+        var layout = panel.Layout;
 
         if (layout != shownLayout)
         {
@@ -105,13 +103,13 @@ public partial class Hud : CanvasLayer
         row.AddThemeConstantOverride("separation", 28);
         bar.AddChild(row);
 
-        food = NewLabel("", 18, new Color(0.95f, 0.55f, 0.6f));
-        wood = NewLabel("", 18, new Color(0.85f, 0.65f, 0.4f));
-        gold = NewLabel("", 18, new Color(1f, 0.85f, 0.35f));
+        foreach (var kind in Enum.GetValues<ResourceKind>())
+        {
+            resources[kind] = NewLabel("", 18, ResourceColour(kind));
+            row.AddChild(resources[kind]);
+        }
+
         population = NewLabel("", 18, new Color(0.85f, 0.9f, 1f));
-        row.AddChild(food);
-        row.AddChild(wood);
-        row.AddChild(gold);
         row.AddChild(population);
 
         row.AddChild(new Control { SizeFlagsHorizontal = Godot.Control.SizeFlags.ExpandFill, MouseFilter = Godot.Control.MouseFilterEnum.Ignore });
@@ -144,11 +142,16 @@ public partial class Hud : CanvasLayer
 
     private void ShowStatus(PlayerStatus status)
     {
-        food.Text = $"{Tr(TextKeys.NameOf(ResourceKind.Food))}: {status.Food}";
-        wood.Text = $"{Tr(TextKeys.NameOf(ResourceKind.Wood))}: {status.Wood}";
-        gold.Text = $"{Tr(TextKeys.NameOf(ResourceKind.Gold))}: {status.Gold}";
-        population.Text = $"{Tr(HudTexts.Population)}: {status.Population}/{status.PopulationLimit}";
-        age.Text = $"{Tr(status.FactionNameKey)} · {Tr(status.AgeNameKey)}";
+        foreach (var resource in status.Resources)
+        {
+            resources[resource.Kind].Text = Format(HudTexts.Labelled, Tr(TextKeys.NameOf(resource.Kind)), resource.Amount);
+        }
+
+        population.Text = Format(
+            HudTexts.Labelled,
+            Tr(HudTexts.Population),
+            Format(HudTexts.PopulationOfLimit, status.Population, status.PopulationLimit));
+        age.Text = Format(HudTexts.FactionAndAge, Tr(status.FactionNameKey), Tr(status.AgeNameKey));
 
         var advance = status.AgeAdvance;
         ageAdvanceLabel.Visible = advance is not null;
@@ -156,31 +159,9 @@ public partial class Hud : CanvasLayer
 
         if (advance is not null)
         {
-            ageAdvanceLabel.Text = $"{Format(HudTexts.AdvancingTo, Tr(advance.AgeNameKey))} {HudTexts.Percent(advance.Progress)}";
+            ageAdvanceLabel.Text = HudTexts.AdvancingText(advance.AgeNameKey, advance.Progress, key => Tr(key));
             ageAdvanceBar.Value = advance.Progress;
         }
-    }
-
-    /// <summary>
-    /// What decides the controls of the panel: the entities shown, the choices offered and
-    /// whether each is locked, the units queued and whether an Age Advance is underway.
-    /// Progress and hit points change without changing it.
-    /// </summary>
-    private static string LayoutOf(SelectionPanel panel)
-    {
-        var layout = new StringBuilder();
-        layout.Append(string.Join(',', panel.Units.Select(unit => unit.Id.Value))).Append('|');
-        layout.Append(string.Join(',', panel.BuildingChoices.Select(choice => $"{choice.Kind}:{choice.IsLocked}"))).Append('|');
-
-        if (panel.Building is { } building)
-        {
-            layout.Append(building.Id.Value).Append(':').Append(building.ConstructionProgress is null).Append('|');
-            layout.Append(string.Join(',', building.TrainingQueue.Select(queued => queued.Kind))).Append('|');
-            layout.Append(string.Join(',', building.UnitChoices.Select(choice => $"{choice.Kind}:{choice.IsLocked}"))).Append('|');
-            layout.Append(building.AgeAdvance?.AgeNameKey).Append(':').Append(building.AgeAdvance?.IsUnderway);
-        }
-
-        return layout.ToString();
     }
 
     private void Rebuild(SelectionPanel panel)
@@ -223,13 +204,13 @@ public partial class Hud : CanvasLayer
         if (building.ConstructionProgress is not null)
         {
             var label = NewLabel("", 16, HintColour);
-            var bar = NewBar(new Color(0.95f, 0.7f, 0.25f), new Vector2(260, 14));
+            var bar = NewBar(BarColours.Construction, new Vector2(260, 14));
             column.AddChild(label);
             column.AddChild(bar);
             refreshers.Add(panel =>
             {
                 var progress = panel.Building!.ConstructionProgress ?? 1;
-                label.Text = $"{Tr(HudTexts.Construction)}: {HudTexts.Percent(progress)}";
+                label.Text = Format(HudTexts.Labelled, Tr(HudTexts.Construction), Percent(progress));
                 bar.Value = progress;
             });
         }
@@ -296,7 +277,7 @@ public partial class Hud : CanvasLayer
         {
             if (panel.Building?.AgeAdvance is { Progress: { } progress } underway)
             {
-                label.Text = $"{Format(HudTexts.AdvancingTo, Tr(underway.AgeNameKey))} {HudTexts.Percent(progress)}";
+                label.Text = HudTexts.AdvancingText(underway.AgeNameKey, progress, key => Tr(key));
                 bar.Value = progress;
             }
         });
@@ -371,7 +352,7 @@ public partial class Hud : CanvasLayer
             var at = index;
             var entry = new VBoxContainer();
             entry.AddChild(NewLabel(Tr(units[at].NameKey), 13, Colors.White));
-            var bar = NewBar(new Color(0.35f, 0.85f, 0.35f), new Vector2(90, 6));
+            var bar = NewBar(BarColours.HitPoints(1), new Vector2(90, 6));
             entry.AddChild(bar);
             grid.AddChild(entry);
             refreshers.Add(panel => ShowHitPoints(bar, panel.Units[at].HitPoints, panel.Units[at].MaxHitPoints));
@@ -404,12 +385,15 @@ public partial class Hud : CanvasLayer
     {
         var box = new VBoxContainer();
         var label = NewLabel("", 15, HintColour);
-        var bar = NewBar(new Color(0.35f, 0.85f, 0.35f), new Vector2(260, 12));
+        var bar = NewBar(BarColours.HitPoints(1), new Vector2(260, 12));
         box.AddChild(label);
         box.AddChild(bar);
         refreshers.Add(panel =>
         {
-            label.Text = $"{Tr(HudTexts.HitPoints)}: {hitPoints(panel)}/{maxHitPoints(panel)}";
+            label.Text = Format(
+                HudTexts.Labelled,
+                Tr(HudTexts.HitPoints),
+                Format(HudTexts.HitPointsOfMax, hitPoints(panel), maxHitPoints(panel)));
             ShowHitPoints(bar, hitPoints(panel), maxHitPoints(panel));
         });
 
@@ -434,15 +418,25 @@ public partial class Hud : CanvasLayer
 
     private static void ShowHitPoints(ProgressBar bar, int hitPoints, int maxHitPoints)
     {
-        var fraction = maxHitPoints <= 0 ? 0 : (double)hitPoints / maxHitPoints;
+        var fraction = Fractions.Of(hitPoints, maxHitPoints);
         bar.Value = fraction;
-        ((StyleBoxFlat)bar.GetThemeStylebox("fill")).BgColor = WorldBarsOverlay.HealthColour(fraction);
+        ((StyleBoxFlat)bar.GetThemeStylebox("fill")).BgColor = BarColours.HitPoints(fraction);
     }
+
+    /// <summary>The colour of the amount of a Resource in the top bar.</summary>
+    private static Color ResourceColour(ResourceKind kind) => kind switch
+    {
+        ResourceKind.Food => new Color(0.95f, 0.55f, 0.6f),
+        ResourceKind.Wood => new Color(0.85f, 0.65f, 0.4f),
+        ResourceKind.Gold => new Color(1f, 0.85f, 0.35f),
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown Resource."),
+    };
 
     private string CostText(Cost cost) => HudTexts.CostText(cost, key => Tr(key));
 
-    private string Format(string key, object argument) =>
-        string.Format(CultureInfo.InvariantCulture, Tr(key), argument);
+    private string Percent(double fraction) => HudTexts.Percent(fraction, key => Tr(key));
+
+    private string Format(string key, params object[] arguments) => HudTexts.Format(text => Tr(text), key, arguments);
 
     private static VBoxContainer NewColumn(int width)
     {

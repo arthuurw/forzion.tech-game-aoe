@@ -1,5 +1,5 @@
 using Forzion.Simulation;
-using static Forzion.Presentation.Tests.HudMatches;
+using static Forzion.Presentation.Tests.TestMatches;
 
 namespace Forzion.Presentation.Tests;
 
@@ -8,7 +8,7 @@ public class PlayerStatusTests
     [Fact]
     public void The_status_shows_the_Resources_and_population_of_the_Player_and_not_of_another()
     {
-        var match = Portuguese();
+        var match = Match.Create(PlainConfig());
         match.Enqueue(new TrainCommand(FirstPlayer, TownCenterOf(match, FirstPlayer).Id, UnitKind.Villager));
         match.Tick();
         var player = match.State.Players[0];
@@ -16,9 +16,13 @@ public class PlayerStatusTests
         var status = PlayerStatus.Of(match.State, FirstPlayer);
 
         Assert.Equal(
-            [player.AmountOf(ResourceKind.Food), player.AmountOf(ResourceKind.Wood), player.AmountOf(ResourceKind.Gold)],
-            [status.Food, status.Wood, status.Gold]);
-        Assert.NotEqual(match.State.Players[1].AmountOf(ResourceKind.Food), status.Food);
+            [
+                new ResourceAmount(ResourceKind.Food, player.AmountOf(ResourceKind.Food)),
+                new ResourceAmount(ResourceKind.Wood, player.AmountOf(ResourceKind.Wood)),
+                new ResourceAmount(ResourceKind.Gold, player.AmountOf(ResourceKind.Gold)),
+            ],
+            status.Resources);
+        Assert.NotEqual(match.State.Players[1].AmountOf(ResourceKind.Food), status.Resources[0].Amount);
         Assert.Equal(match.State.PopulationOf(FirstPlayer), status.Population);
         Assert.NotEqual(match.State.PopulationOf(SecondPlayer), status.Population);
         Assert.Equal(match.State.PopulationLimitOf(FirstPlayer), status.PopulationLimit);
@@ -27,7 +31,7 @@ public class PlayerStatusTests
     [Fact]
     public void The_status_names_the_Faction_and_its_name_for_the_Age_of_the_Player()
     {
-        var match = Portuguese();
+        var match = Match.Create(PlainConfig());
 
         var status = PlayerStatus.Of(match.State, FirstPlayer);
 

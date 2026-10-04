@@ -43,6 +43,7 @@ public sealed class Faction
         UnitNameKeys = new Dictionary<UnitKind, string>(unitNameKeys);
     }
 
+    /// <summary>The Faction's ID, by which each Player's configuration names the Faction it controls.</summary>
     public FactionId Id { get; }
 
     /// <summary>Key of the text that names the Faction.</summary>
@@ -50,6 +51,17 @@ public sealed class Faction
 
     /// <summary>The Faction's Ages in order: Age I at index 0, Age II at index 1, and so on.</summary>
     public IReadOnlyList<FactionAge> Ages { get; }
+
+    /// <summary>The Age of the given number: Age I for 1, listed at index 0 of <see cref="Ages"/>.</summary>
+    /// <param name="number">The number of the Age, from 1 up to the number of Ages.</param>
+    /// <exception cref="ArgumentOutOfRangeException">The Faction has no Age of that number.</exception>
+    public FactionAge AgeAt(int number)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(number, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(number, Ages.Count);
+
+        return Ages[number - 1];
+    }
 
     /// <summary>Key of the text that names each kind of unit in this Faction. A kind may have none.</summary>
     public IReadOnlyDictionary<UnitKind, string> UnitNameKeys { get; }

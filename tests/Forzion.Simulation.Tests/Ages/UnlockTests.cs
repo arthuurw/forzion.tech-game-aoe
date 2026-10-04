@@ -37,7 +37,7 @@ public class UnlockTests
     [Fact]
     public void Placing_a_building_the_Players_Age_has_not_unlocked_is_rejected_and_changes_nothing()
     {
-        Advance.AssertRejected(RejectionReason.BuildingLocked, TestFactions.ThreeAgeMatch, match => BarracksBesideTownCenter(match));
+        Train.AssertRejected(RejectionReason.BuildingLocked, BarracksBesideTownCenter, TestFactions.ThreeAgeMatch);
     }
 
     [Fact]

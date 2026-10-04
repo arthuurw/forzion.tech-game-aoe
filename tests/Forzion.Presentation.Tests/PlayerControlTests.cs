@@ -5,9 +5,6 @@ namespace Forzion.Presentation.Tests;
 
 public class PlayerControlTests
 {
-    // Units 0.4 Cell across and 1 tall, buildings and resource sources 1.2 tall.
-    private static readonly PickSizes Sizes = new(UnitRadius: 0.4, UnitHeight: 1, BuildingAndSourceHeight: 1.2);
-
     private MatchDriver driver = null!;
     private Match driven = null!;
 
@@ -53,7 +50,7 @@ public class PlayerControlTests
         var control = NewControl(out var match);
         var villager = UnitsOf(match, FirstPlayer)[0];
         control.Select(Over(villager.Position), Over(villager.Position));
-        var bareGround = Over(MapPosition.CentreOf(FreeCellAwayFromUnits(match)));
+        var bareGround = Over(MapPosition.CentreOf(FreeCellAwayFromUnits(match.State)));
 
         control.Select(bareGround, bareGround);
 
@@ -177,7 +174,7 @@ public class PlayerControlTests
         var villagers = UnitsOf(match, FirstPlayer);
         var (from, to) = BoxAround(villagers.Select(unit => unit.Position));
         control.Select(from, to);
-        var destination = FreeCellAwayFromUnits(match);
+        var destination = FreeCellAwayFromUnits(match.State);
 
         control.OrderAt(Over(MapPosition.CentreOf(destination)));
         Tick(match);
@@ -221,7 +218,7 @@ public class PlayerControlTests
     public void Right_clicking_with_nothing_selected_gives_no_order()
     {
         var control = NewControl(out var match);
-        var bareGround = Over(MapPosition.CentreOf(FreeCellAwayFromUnits(match)));
+        var bareGround = Over(MapPosition.CentreOf(FreeCellAwayFromUnits(match.State)));
         control.Select(bareGround, bareGround);
 
         control.OrderAt(new ScreenPoint(-5, -5));
@@ -419,9 +416,7 @@ public class PlayerControlTests
     public void Advancing_the_Age_with_the_Town_Center_selected_starts_the_Age_Advance()
     {
         // The made-up Faction's Age Advance is free: the Portuguese one costs more than a Player starts with.
-        var faction = HudMatches.ThreeAges;
-        var config = PlainConfig() with { Players = [new PlayerConfig(faction.Id), new PlayerConfig(faction.Id)], Factions = [faction] };
-        var control = NewControl(out var match, config: config);
+        var control = NewControl(out var match, config: ThreeAgesConfig());
         var townCenter = SelectFirstTownCenter(control, match);
 
         control.AdvanceAge();
@@ -435,7 +430,7 @@ public class PlayerControlTests
     {
         var control = NewControl(out var match);
         var townCenter = SelectFirstTownCenter(control, match);
-        var cell = FreeCellAwayFromUnits(match);
+        var cell = FreeCellAwayFromUnits(match.State);
 
         control.OrderAt(Over(MapPosition.CentreOf(cell)));
         Tick(match);
@@ -444,10 +439,56 @@ public class PlayerControlTests
     }
 
     [Fact]
+    public void Right_clicking_the_ground_with_the_Barracks_selected_sets_its_rally_point()
+    {
+        var control = NewControl(out var match);
+        var barracks = BuildNearHome(match, BuildingKind.Barracks);
+        control.Select(OverCentreOf(barracks), OverCentreOf(barracks));
+        var cell = FreeCellAwayFromUnits(match.State);
+
+        control.OrderAt(Over(MapPosition.CentreOf(cell)));
+        Tick(match);
+
+        Assert.Equal(cell, barracks.RallyPoint);
+    }
+
+    // A House trains no units, so it has no rally point to set: the right button sends nothing,
+    // rather than an order sure to come back as a refusal notice.
+    [Fact]
+    public void Right_clicking_the_ground_with_a_House_selected_sends_nothing()
+    {
+        var control = NewControl(out var match);
+        var house = BuildNearHome(match, BuildingKind.House);
+        control.Select(OverCentreOf(house), OverCentreOf(house));
+        Assert.Equal([house.Id], control.Selected);
+
+        control.OrderAt(Over(MapPosition.CentreOf(FreeCellAwayFromUnits(match.State))));
+        var events = Tick(match);
+
+        Assert.DoesNotContain(events, matchEvent => matchEvent is CommandRejected);
+        Assert.Null(house.RallyPoint);
+    }
+
+    [Fact]
+    public void Right_clicking_the_ground_with_a_construction_site_selected_sends_nothing()
+    {
+        var control = NewControl(out var match);
+        var site = PlaceHouse(match);
+        control.Select(OverCentreOf(site), OverCentreOf(site));
+        Assert.Equal([site.Id], control.Selected);
+
+        control.OrderAt(Over(MapPosition.CentreOf(FreeCellAwayFromUnits(match.State))));
+        var events = Tick(match);
+
+        Assert.DoesNotContain(events, matchEvent => matchEvent is CommandRejected);
+        Assert.Null(site.RallyPoint);
+    }
+
+    [Fact]
     public void The_placement_preview_centres_the_chosen_building_on_the_mouse_and_is_valid_on_free_ground()
     {
         var control = NewControl(out var match);
-        var cell = FreeCellAwayFromUnits(match);
+        var cell = FreeCellAwayFromUnits(match.State);
 
         control.ChooseBuilding(BuildingKind.Barracks);
         var placement = control.PlacementAt(Over(MapPosition.CentreOf(cell)));
@@ -475,7 +516,7 @@ public class PlayerControlTests
         var control = NewControl(out var match);
 
         Assert.Null(control.PlacingBuilding);
-        Assert.Null(control.PlacementAt(Over(MapPosition.CentreOf(FreeCellAwayFromUnits(match)))));
+        Assert.Null(control.PlacementAt(Over(MapPosition.CentreOf(FreeCellAwayFromUnits(match.State)))));
     }
 
     [Fact]
@@ -485,7 +526,7 @@ public class PlayerControlTests
         var villagers = UnitsOf(match, FirstPlayer);
         var (from, to) = BoxAround(villagers.Select(unit => unit.Position));
         control.Select(from, to);
-        var mouse = Over(MapPosition.CentreOf(FreeCellAwayFromUnits(match)));
+        var mouse = Over(MapPosition.CentreOf(FreeCellAwayFromUnits(match.State)));
         control.ChooseBuilding(BuildingKind.House);
         var preview = control.PlacementAt(mouse)!;
 
@@ -506,7 +547,7 @@ public class PlayerControlTests
         control.ChooseBuilding(BuildingKind.House);
 
         control.CancelPlacement();
-        control.PlaceAt(Over(MapPosition.CentreOf(FreeCellAwayFromUnits(match))));
+        control.PlaceAt(Over(MapPosition.CentreOf(FreeCellAwayFromUnits(match.State))));
         Tick(match);
 
         Assert.Null(control.PlacingBuilding);
@@ -515,9 +556,8 @@ public class PlayerControlTests
 
     private static BuildingState SelectFirstTownCenter(PlayerControl control, Match match)
     {
-        var townCenter = match.State.Buildings.First(building => building.Owner == FirstPlayer);
-        var middle = new ScreenPoint(townCenter.Origin.X + (townCenter.Width / 2.0), townCenter.Origin.Y + (townCenter.Height / 2.0));
-        control.Select(middle, middle);
+        var townCenter = TownCenterOf(match, FirstPlayer);
+        control.Select(OverCentreOf(townCenter), OverCentreOf(townCenter));
 
         Assert.Equal([townCenter.Id], control.Selected);
 
@@ -569,6 +609,23 @@ public class PlayerControlTests
         return house;
     }
 
+    /// <summary>
+    /// Places a building of the given kind near the first Player's Town Center, with all its
+    /// Villagers as builders, and runs ticks until it is complete. Returns the building.
+    /// </summary>
+    private BuildingState BuildNearHome(Match match, BuildingKind kind)
+    {
+        var origin = FreeOriginNearFirstHome(match, kind);
+        var builders = UnitsOf(match, FirstPlayer).Select(unit => unit.Id).ToList();
+        match.Enqueue(new PlaceBuildingCommand(FirstPlayer, kind, origin, builders));
+        Tick(match);
+
+        var building = match.State.Buildings.Single(each => each.Origin == origin);
+        TickUntil(driver, () => building.IsComplete);
+
+        return building;
+    }
+
     private PlayerControl NewControl(out Match match, Func<ScreenPoint, SightLine?>? camera = null, MatchConfig? config = null)
     {
         driver = NewDriver(out match, config);
@@ -591,68 +648,8 @@ public class PlayerControlTests
         return driver.Advance(1.0 / Match.TicksPerSecond);
     }
 
-    // A camera looking straight down: one pixel of the screen is one Cell of the map.
-    private static SightLine? TopDown(ScreenPoint point) => new SightLine(new MapPoint(point.X, point.Y), new MapPoint(0, 0));
-
     // A camera looking down towards decreasing Y, like the game's: one pixel of the screen is
     // one Cell of the ground, and the line of sight moves 0.7 Cell towards the camera for each
     // unit it rises.
     private static SightLine? Slanted(ScreenPoint point) => new SightLine(new MapPoint(point.X, point.Y), new MapPoint(0, 0.7));
-
-    private static ScreenPoint Over(MapPosition position) => new(position.X.ToDouble(), position.Y.ToDouble());
-
-    // On the top-down screen, the point over the centre of the building's footprint.
-    private static ScreenPoint OverCentreOf(BuildingState building)
-    {
-        var centre = MapPoint.CentreOf(building);
-
-        return new ScreenPoint(centre.X, centre.Y);
-    }
-
-    /// <summary>
-    /// The corners of a box on the top-down screen around the positions, with 3 Cells to spare
-    /// across and 1 up and down: wide enough to count as a drag, not a click.
-    /// </summary>
-    private static (ScreenPoint From, ScreenPoint To) BoxAround(IEnumerable<MapPosition> positions)
-    {
-        var points = positions.Select(Over).ToList();
-
-        return (new ScreenPoint(points.Min(point => point.X) - 3, points.Min(point => point.Y) - 1),
-                new ScreenPoint(points.Max(point => point.X) + 3, points.Max(point => point.Y) + 1));
-    }
-
-    /// <summary>A free Cell with nothing beside it and no unit within 3 Cells.</summary>
-    private static CellPosition FreeCellAwayFromUnits(Match match)
-    {
-        var map = match.State.Map;
-
-        for (var y = 1; y < map.Height - 1; y++)
-        {
-            for (var x = 1; x < map.Width - 1; x++)
-            {
-                var cell = new CellPosition(x, y);
-                var clear = Neighbourhood(cell).All(near => map[near] == CellKind.Free);
-                var farFromUnits = match.State.Units.All(unit =>
-                    Math.Abs(unit.Position.Cell.X - x) > 3 || Math.Abs(unit.Position.Cell.Y - y) > 3);
-
-                if (clear && farFromUnits)
-                {
-                    return cell;
-                }
-            }
-        }
-
-        throw new InvalidOperationException("The map has no free Cell away from units.");
-    }
-
-    private static IEnumerable<CellPosition> Neighbourhood(CellPosition cell)
-    {
-        for (var dy = -1; dy <= 1; dy++)
-        {
-            for (var dx = -1; dx <= 1; dx++)
-            {
-                yield return new CellPosition(cell.X + dx, cell.Y + dy);
-            }
-        }
-    }
 }

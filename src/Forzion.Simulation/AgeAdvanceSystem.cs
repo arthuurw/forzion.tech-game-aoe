@@ -17,7 +17,7 @@ internal sealed class AgeAdvanceSystem : ISystem
             }
 
             var player = context.State.FindPlayer(building.Owner)!;
-            var advanceTime = player.Faction.Ages[player.Age].AdvanceTime;
+            var advanceTime = player.NextAge!.AdvanceTime;
 
             // The tick that applies the order counts as the first of the advance, as it does for
             // training, so an advance time of zero or one is done in that very tick.
