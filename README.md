@@ -13,7 +13,7 @@ Jogo de estratégia em tempo real (RTS) em 3D sobre a história do Brasil. O jog
 ### Arquitetura
 
 - **Núcleo de simulação** (`src/Forzion.Simulation`): biblioteca .NET sem nenhuma referência ao Godot. Contém economia, construção, produção, combate, IA e movimento.
-- **Apresentação** (`game/` e `src/Forzion.Presentation`): projeto Godot 4 .NET que mostra o estado em 3D e transforma o input do jogador em comandos. Avança a simulação a 20 ticks por segundo e interpola as posições entre os ticks. A parte que não depende da engine (relógio de ticks, interpolação, o que um clique ou um retângulo seleciona, que comando o botão direito dá conforme o alvo, o que a HUD mostra e que aviso mostrar para uma ordem recusada) fica numa biblioteca C# pura testada sem o Godot.
+- **Apresentação** (`game/` e `src/Forzion.Presentation`): projeto Godot 4 .NET que mostra o estado em 3D e transforma o input do jogador em comandos. Avança a simulação a 20 ticks por segundo e interpola as posições entre os ticks. A parte que não depende da engine (relógio de ticks, interpolação, onde desenhar as unidades paradas na mesma Célula, o que um clique ou um retângulo seleciona, que comando o botão direito dá conforme o alvo, o que a HUD mostra e que aviso mostrar para uma ordem recusada) fica numa biblioteca C# pura testada sem o Godot.
 - **Determinismo**: ticks fixos, aritmética de ponto fixo e gerador aleatório com seed. A mesma seed com os mesmos comandos produz o mesmo estado em Windows, Linux e macOS.
 
 As decisões e os motivos estão em [`docs/adr/`](docs/adr/). O vocabulário do domínio está em [`GLOSSARY.md`](GLOSSARY.md).
@@ -41,6 +41,8 @@ godot --path game
 `godot` é o executável do Godot .NET. Também dá para abrir `game/project.godot` no editor e apertar Play.
 
 Câmera: WASD, setas ou mouse na borda da tela deslocam; roda do mouse ou Page Up e Page Down aproximam e afastam.
+
+No mapa: você joga de violeta, e a IA de laranja; os telhados e as roupas mostram o dono. O Centro tem uma torre no meio, a Casa um telhado de duas águas, o Depósito é um pátio de caixotes sob um alpendre e o Quartel um salão comprido com ameias. Uma Obra aparece translúcida, entre andaimes, e sobe conforme é construída. O Colono usa chapéu de palha, o Rodeleiro leva escudo redondo e espada, o Arcabuzeiro o arcabuz na horizontal e o Cavaleiro vai a cavalo, de lança. As Fontes de Recurso ficam rente ao chão: arbusto de frutas vermelhas para Alimento, pilha de toras para Madeira, rocha com pepitas para Ouro. Unidades paradas na mesma Célula aparecem afastadas em volta dela, e um clique em cada uma a seleciona.
 
 Seleção e ordens: clique com o botão esquerdo seleciona uma unidade ou construção sua; arrastar com o botão esquerdo seleciona suas unidades dentro do retângulo; clique em terreno vazio limpa a seleção. O botão direito manda as unidades selecionadas coletar numa Fonte de Recurso, atacar uma unidade ou construção inimiga, construir uma Obra sua ou andar até o ponto clicado; Aldeões sem soldado junto andam até o inimigo em vez de atacar. Unidades mortas saem da seleção. Unidades e construções selecionadas ou feridas mostram uma barra de vida. Uma ordem recusada aparece como aviso no topo da tela.
 
@@ -85,7 +87,7 @@ This is a software engineering portfolio project in C#. The focus is the archite
 ### Architecture
 
 - **Simulation core** (`src/Forzion.Simulation`): a .NET library with no reference to Godot. It holds economy, construction, production, combat, AI and movement.
-- **Presentation** (`game/` and `src/Forzion.Presentation`): a Godot 4 .NET project that shows the state in 3D and turns player input into commands. It advances the simulation at 20 ticks per second and interpolates positions between ticks. The part that needs no engine (tick clock, interpolation, what a click or a box selects, which command a right-click gives on each target, what the HUD shows and which notice a refused order shows) lives in a plain C# library tested without Godot.
+- **Presentation** (`game/` and `src/Forzion.Presentation`): a Godot 4 .NET project that shows the state in 3D and turns player input into commands. It advances the simulation at 20 ticks per second and interpolates positions between ticks. The part that needs no engine (tick clock, interpolation, where to draw units standing on one Cell, what a click or a box selects, which command a right-click gives on each target, what the HUD shows and which notice a refused order shows) lives in a plain C# library tested without Godot.
 - **Determinism**: fixed ticks, fixed-point arithmetic and a seeded random generator. The same seed with the same commands produces the same state on Windows, Linux and macOS.
 
 The decisions and their reasons are in [`docs/adr/`](docs/adr/). The domain vocabulary is in [`GLOSSARY.md`](GLOSSARY.md). Both are written in Portuguese; code, comments and commits are in English.
@@ -113,6 +115,8 @@ godot --path game
 `godot` is the Godot .NET executable. You can also open `game/project.godot` in the editor and press Play.
 
 Camera: WASD, the arrow keys or the mouse at the screen edge pan; the mouse wheel or Page Up and Page Down zoom in and out.
+
+On the map: you play violet and the AI orange; roofs and clothes show the owner. The Town Center has a tower in the middle, the House a pitched roof, the Storehouse is a yard of crates under a lean-to and the Barracks a long battlemented hall. A construction site shows see-through, in scaffolding, and rises as it is built. The Villager wears a straw hat, the melee soldier carries a round shield and a sword, the ranged soldier a gun held level, and the heavy soldier rides a horse with a lance. Resource sources lie low to the ground: a bush of red berries for Food, a pile of logs for Wood, a rock studded with nuggets for Gold. Units standing on one Cell are drawn apart around it, and clicking each one selects it.
 
 Selection and orders: a left click selects one of your units or buildings; dragging with the left button selects your units inside the box; clicking bare ground clears the selection. The right button sends the selected units to gather from a resource source, attack an enemy unit or building, build one of your construction sites or walk to the clicked point; Villagers with no soldier among them walk up to an enemy instead of attacking. Units that die leave the selection. Selected or wounded units and buildings show a hit point bar. A refused order shows as a notice at the top of the screen.
 
