@@ -60,8 +60,9 @@ public sealed class UnitState
 
     /// <summary>
     /// Ticks the Villager has spent beside its source towards the next unit of Resource. It
-    /// goes back to zero when that unit is taken and whenever the Villager is given a new
-    /// gather order or stops gathering.
+    /// goes back to zero when that unit is taken, when the Villager is sent to gather from
+    /// another source or anew, and when it stops gathering; an order to the source it is
+    /// already gathering from keeps it.
     /// </summary>
     public int GatherProgress { get; private set; }
 
