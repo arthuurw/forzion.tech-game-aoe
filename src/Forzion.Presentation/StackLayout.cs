@@ -24,7 +24,7 @@ internal static class StackLayout
     /// map's X, centred on the Cell. More fill rows <see cref="Spacing"/> apart, centred along
     /// the map's Y, in places fixed across the map's X: alternately three, at the middle and
     /// the Cell's sides, and two between them. Up to eight stay within the Cell's bounds,
-    /// those at its corners half outside; more spill past its edges.
+    /// those on its edges half outside and those in its corners more; more spill past its edges.
     /// </summary>
     public static void Lay(IReadOnlyList<UnitState> units, Dictionary<EntityId, MapPoint> places)
     {
