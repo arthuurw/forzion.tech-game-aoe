@@ -128,14 +128,14 @@ Quantas unidades o Jogador pode ter ao mesmo tempo. O Centro dá um valor base e
 _Avoid_: Capacidade, teto
 
 **Centro** (`Town Center`):
-Construção principal do Jogador: produz Aldeões, recebe Recursos e executa o Avanço de Era. Perder o Centro é perder a partida.
+Construção principal do Jogador: treina Aldeões, recebe Recursos e executa o Avanço de Era. Perder o Centro é perder a partida.
 _Avoid_: Base, sede, prefeitura
 
 **Casa** (`House`):
 Construção que aumenta o limite de população do Jogador.
 
 **Quartel** (`Barracks`):
-Construção que produz unidades militares.
+Construção que treina unidades militares.
 
 ## Produção
 

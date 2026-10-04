@@ -27,13 +27,14 @@ internal sealed class TrainingSystem : ISystem
             }
 
             var kind = building.TrainingQueue[0];
+            var trainTime = Balance.Of(kind).TrainTime;
 
-            if (building.TrainingProgress < Balance.Of(kind).TrainTime)
+            if (building.TrainingProgress < trainTime)
             {
                 building.TrainingProgress++;
             }
 
-            if (building.TrainingProgress < Balance.Of(kind).TrainTime)
+            if (building.TrainingProgress < trainTime)
             {
                 continue;
             }
